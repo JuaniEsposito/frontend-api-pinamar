@@ -78,12 +78,12 @@ export default function CategoriesPage() {
             <span className="text-lg font-medium text-dark group-hover:text-primary transition text-center">
               {cat.nombre}
             </span>
-            {cat.subcategorias && cat.subcategorias.length > 0 && (
+            {/*cat.subcategorias && cat.subcategorias.length > 0 && (
               <div className="mt-2 text-xs text-muted text-center">
                 Subcategorías:{" "}
                 {cat.subcategorias.map((sub) => sub.nombre).join(", ")}
               </div>
-            )}
+            )*/}
           </Link>
         ))}
       </div>

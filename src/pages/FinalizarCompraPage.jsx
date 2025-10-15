@@ -92,7 +92,7 @@ export default function FinalizarCompraPage() {
   };
 
   // Maneja la selección de método de entrega. Si elige envío y tiene direcciones, avanza al paso 2.
-  const handleSeleccionMetodo = (tipo) => {
+  /*const handleSeleccionMetodo = (tipo) => {
     if (tipo === "retiro") {
       setEnvio(false);
       setDireccionId("");
@@ -101,10 +101,10 @@ export default function FinalizarCompraPage() {
       setEnvio(true);
       if (direcciones.length > 0) setStep(2);
     }
-  };
+  };*/
 
   // Realiza el pago
-  const handlePagar = async (e) => {
+  /*const handlePagar = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -146,14 +146,14 @@ export default function FinalizarCompraPage() {
       }
     }, 2500);
     setCancelTimeout(timeout);
-  };
+  };*/
 
   // Permite cancelar el pago si está "procesando".
-  const cancelarPago = () => {
+  /*const cancelarPago = () => {
     clearTimeout(cancelTimeout);
     setLoading(false);
     setCancelTimeout(null);
-  };
+  };*/
 
   // Renderiza cada step según el estado actual
   return (
@@ -165,15 +165,15 @@ export default function FinalizarCompraPage() {
       )}
       <AnimatePresence mode="wait">
         {/* Paso 1: Selección de método de entrega */}
-        {step === 1 && (
+        {/*step === 1 && (
           <StepEntrega
             envio={envio}
             direcciones={direcciones}
             handleSeleccionMetodo={handleSeleccionMetodo}
           />
-        )}
+        )*/}
         {/* Paso 2: Resumen y pago */}
-        {step === 2 && (
+        {/*step === 2 && (
           <StepPago
             envio={envio}
             direcciones={direcciones}
@@ -190,7 +190,7 @@ export default function FinalizarCompraPage() {
             cancelarPago={cancelarPago}
             setStep={setStep}
           />
-        )}
+        )*/}
         {/* Paso 3: Comprobante */}
         {step === 3 && orden && orden.items && Array.isArray(orden.items) && (
           <StepComprobante orden={orden} envio={envio} />

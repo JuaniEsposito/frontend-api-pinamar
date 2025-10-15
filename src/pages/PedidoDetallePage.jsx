@@ -15,12 +15,12 @@ export default function PedidoDetallePage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  useEffect(() => {
+  /*useEffect(() => {
     if (!usuario || !usuario.id) return;
     dispatch(fetchPedidoPorId({ token, usuarioId: usuario.id, pedidoId: id }));
-  }, [id, token, usuario, dispatch]);
+  }, [id, token, usuario, dispatch]);*/
 
-  const handleDownloadPDF = async () => {
+  /*const handleDownloadPDF = async () => {
     const input = document.getElementById("pedido-detalle-pdf");
     if (!input) return;
     window.scrollTo(0, 0);
@@ -141,7 +141,7 @@ export default function PedidoDetallePage() {
     } finally {
       document.body.removeChild(tempDiv);
     }
-  };
+  };*/
 
   if (loading)
     return (
@@ -179,7 +179,7 @@ export default function PedidoDetallePage() {
 
   return (
     <div className="max-w-2xl mx-auto mt-10 bg-white rounded-xl shadow-lg p-8">
-      <div className="flex justify-between items-center mb-4">
+      {/*<div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-primary">
           Detalle del Pedido #{pedido.ordenId || pedido.id}
         </h1>
@@ -189,7 +189,7 @@ export default function PedidoDetallePage() {
         >
           Descargar PDF
         </button>
-      </div>
+      </div>*/}
       <div id="pedido-detalle-pdf">
         <div className="mb-4 text-sm text-muted">
           Fecha: {fecha} <br />
@@ -259,10 +259,10 @@ export default function PedidoDetallePage() {
           <div className="text-right font-bold text-lg text-primary">
             Total: ${total}
           </div>
-          <div className="text-right text-xs text-gray-400 mb-2">
+          {/*<div className="text-right text-xs text-gray-400 mb-2">
             Precio sin impuestos nacionales: $
             {pedido.total ? Math.round(Number(pedido.total) / 1.21) : "-"}
-          </div>
+          </div>*/}
         </div>
         <div className="mb-4">
           <h2 className="text-lg font-semibold mb-2 text-dark">
