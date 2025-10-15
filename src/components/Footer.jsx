@@ -36,7 +36,7 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <div className="mt-4 font-bold text-primary">Seguinos</div>
+            <div className="mt-4 font-bold text-primary">Seguinos @springmarket</div>
             <div className="flex gap-2 mt-2">
               {/* Facebook */}
               <a href="#" aria-label="Facebook" className="bg-blue-200 rounded-full w-7 h-7 flex items-center justify-center text-lg hover:bg-blue-600 hover:text-white transition">
