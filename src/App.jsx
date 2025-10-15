@@ -1,8 +1,10 @@
+// src/App.jsx
+
 import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import CategoriesPage from "./pages/CategoriesPage";
-import PromotionsPage from "./pages/PromotionsPage";
+// PromotionsPage ya no se importa
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
 import CartPage from "./pages/CartPage";
@@ -38,7 +40,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/buscar" element={<BuscarPage />} />
           <Route path="/categorias" element={<CategoriesPage />} />
-          <Route path="/promociones" element={<PromotionsPage />} />
+          {/* La ruta de promociones fue eliminada */}
           <Route path="/signin" element={<SignInPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
@@ -59,7 +61,6 @@ function App() {
             <Route path="/step-pago" element={<StepPago />} />
 
             {/* Rutas de edición de productos y categorías */}
-
             <Route
               path="/editar-producto/:id"
               element={<ProductEditPage modo="editar" />}
