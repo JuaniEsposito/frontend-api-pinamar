@@ -13,30 +13,17 @@ export default function Footer() {
               <li>Historia</li>
               <li>Trabajá con nosotros</li>
               <li>Responsabilidad Social</li>
-              <li>G4 Pay</li>
             </ul>
           </div>
           <div>
             <div className="font-bold mb-2 text-primary">TIENDA ONLINE</div>
             <ul className="space-y-1">
-              <li>Cyber Monday</li>
-              <li>Hot Sale</li>
               <li>Cambios y Devoluciones</li>
-              <li>Descuentos y Financiación</li>
               <li>Medios de Pago</li>
               <li>Métodos de Entrega</li>
               <li>Legales</li>
-              <li>Ofertas y Catálogos</li>
+              <li>Catálogos</li>
               <li>Términos y Condiciones</li>
-              <li>Política de Privacidad de Datos</li>
-              <li>Venta Empresa</li>
-              <li>Defensa del consumidor</li>
-              <li>Ley de Defensa al Consumidor</li>
-              <li>Decreto Reglamentario</li>
-              <li>Dirección de Defensa al Consumidor</li>
-              <li>Acuerdo ACYMA - Acción de Clase</li>
-              <li>Libro de quejas online</li>
-              <li>Datos Personales</li>
             </ul>
           </div>
           <div>
@@ -51,14 +38,6 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <div className="font-bold mb-2 text-primary">VISITÁ TAMBIÉN</div>
-            <ul className="space-y-1">
-              <li>G4 Almacenes</li>
-              <li>G4 Kioscos</li>
-              <li>G4 Ferreterias</li>
-              <li>G4+</li>
-              <li>G4 Prime</li>
-            </ul>
             <div className="mt-4 font-bold text-primary">Seguinos</div>
             <div className="flex gap-2 mt-2">
               {/* Facebook */}
@@ -117,10 +96,6 @@ export default function Footer() {
                   <text x="16" y="9" fontFamily="Arial" fontWeight="bold" fontSize="8" fill="#fff" textAnchor="middle">AMEX</text>
                 </svg>
               </span>
-              {/* G4 Pay */}
-              <span className="bg-gray-200 rounded w-10 h-6 flex items-center justify-center text-xs font-bold text-primary">
-                G4 Pay
-              </span>
             </div>
           </div>
         </div>
@@ -131,7 +106,7 @@ export default function Footer() {
             <div>0800-777-7777</div>
           </div>
           <div className="text-center text-xs text-gray-500">
-            Copyright © 2025 Grupo 4 - TPO APIs<br />
+            Copyright © Octubre 2025 Intensivo Pinamar<br />
             Términos y Condiciones | Seguridad y Privacidad | Código de ética
           </div>
         </div>
