@@ -57,7 +57,7 @@ export default function FinalizarCompraPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [step, setStep] = useState(1); // Inicia en el paso 1
+  const [step, setStep] = useState(2); // Inicia en el paso 1
 
 
   // Calcula el total final de la compra
