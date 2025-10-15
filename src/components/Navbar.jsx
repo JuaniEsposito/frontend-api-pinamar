@@ -237,12 +237,7 @@ export default function Navbar() {
           >
             Promociones
           </NavLink> */}
-            <NavLink
-              to="/buscar"
-              className="px-5 py-2 rounded-full font-semibold transition-all duration-200 text-base text-dark hover:bg-accent/70 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              Todos los productos
-            </NavLink>
+            
           </div>
 
           {/* User Actions + Mobile Search */}
@@ -726,13 +721,7 @@ export default function Navbar() {
             >
               Ingresar
             </NavLink>
-            <NavLink
-              to="/buscar"
-              className="py-3 px-4 rounded-full font-semibold text-lg text-dark hover:bg-accent/60 hover:text-primary transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              onClick={() => setOpen(false)}
-            >
-              Todos los productos
-            </NavLink>
+            
           </div>
         </div>
       </header>
