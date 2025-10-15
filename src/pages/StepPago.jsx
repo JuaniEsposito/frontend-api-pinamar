@@ -140,8 +140,7 @@ export default function StepPago({
                     <td className="py-3 px-4 flex items-center gap-3">
                       {/* Corregido: ya no falla si la imagen no existe */}
                       <img
-                        src={imagenesProductos[item.productoId] || ""}
-                        alt={item.nombreProducto}
+                        src={imagenesProductos?.[item.productoId] || ""}  
                         className="w-14 h-14 rounded shadow border border-blue-200 object-cover"
                         style={{ background: "#fff" }}
                       />
