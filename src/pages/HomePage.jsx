@@ -235,7 +235,7 @@ export default function HomePage() {
   // Define los banners que se pasarán al carrusel
   useEffect(() => {
     setBanners([
-      { img: bannerFoto0 },
+      //{ img: bannerFoto0 },
       { img: bannerFoto1 },
       { img: bannerFoto2 },
       { img: bannerFoto3},
