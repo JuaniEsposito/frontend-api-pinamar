@@ -1,6 +1,9 @@
-import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";   // ✅ única línea para hooks
 import ProductCard from "../components/ProductCard";
+import bannerFoto2 from "../assets/harinas-carrusel-2.jpg";
+import bannerFoto1 from "../assets/verduras-carrusel-1.jpg";
+import bannerFoto3 from "../assets/logo-carrusel-3.png";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCarrito, patchCarrito } from "../redux/cartSlice";
 import Carousel from "../components/Carousel"; // <--- ¡Asegurate de que esta ruta sea correcta!
@@ -224,20 +227,17 @@ export default function HomePage() {
   }, [categoriaIdParam, categoriasApi]);
 
   useEffect(() => {
-    async function fetchCategorias() {
-      try {
-        const res = await fetch("http://localhost:4040/categorias");
-        const data = await res.json();
-        setCategoriasApi(
-          Array.isArray(data.content)
-            ? data.content.filter((cat) => cat.parentId === null)
-            : []
-        );
-      } catch (err) {
-        setCategoriasApi([]);
-      }
-    }
-    fetchCategorias();
+    setBanners([
+      {
+        img: bannerFoto3,
+        // title: "¡Super Ofertas de la Semana!",
+        // desc: 'Encontra descuentos exclusivos en cientos de productos filtrando por "En promoción".',
+        // cta: "Explorar promociones",
+        // to: "/buscar",
+      },
+      { img: bannerFoto1 },
+      { img: bannerFoto2 },
+    ]);
   }, []);
 
   useEffect(() => {
@@ -373,204 +373,404 @@ export default function HomePage() {
     setTimeout(() => setAddedId(null), 1200);
   };
 
+    return (
+      <ProductCard
+        {...props}
+        img={props.img}
+        onErrorImg={FALLBACK_IMG}
+        onQuickView={props.onQuickView}
+        showSinImpuestos={true}
+        onAddToCart={handleAddToCartLocal}
+      />
+    );
+  }
+
+  // --------- ACÁ VA LA FUNCION CategoryCard ---------
+  function CategoryCard({ name, img, to }) {
+    const initial = name?.[0]?.toUpperCase() || "?";
+    return (
+      <Link
+        to={to}
+        className="flex flex-col items-center bg-white rounded-xl shadow hover:shadow-xl transition group p-3 sm:p-4 border border-gray-100 hover:border-primary"
+        style={{
+          margin: "0 12px 24px 12px",
+          minWidth: 140,
+          maxWidth: 180,
+        }}
+      >
+        <div
+          className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-full mb-2 border-2 border-accent group-hover:scale-105 transition bg-gray-100 text-primary"
+          style={{
+            fontSize: "2.5rem",
+            fontWeight: 800,
+            letterSpacing: "-0.03em",
+            userSelect: "none",
+          }}
+        >
+          {initial}
+        </div>
+        <span className="text-base sm:text-lg font-medium text-dark group-hover:text-primary transition text-center">
+          {name}
+        </span>
+      </Link>
+    );
+  }
+  // -------------------------------------------------------------------
+function classNames(...xs) {
+  return xs.filter(Boolean).join(" ");
+}
+  // Carrusel de banners
+ 
+   // Carrusel de banners (fix: usa useRef + classNames definido arriba)
+function Carousel({
+  items = [],           // [{ img, title?, desc?, cta?, to? }]
+  autoPlayMs = 6000,
+  showThumbs = true,
+  height = { base: 220, sm: 320, md: 420 }, // alto responsivo
+  brand = { primary: "#6DB33F", dark: "#4C8C2B" }, // Spring Boot green
+}) {
+  const [idx, setIdx] = useState(0);
+  const [prevIdx, setPrevIdx] = useState(0);
+  const [hover, setHover] = useState(false);
+  const timerRef = useRef(null);
+  const touchStartX = useRef(null);
+
+  const len = items.length || 0;
+  if (len === 0) return null;
+
+  const go = (n) => {
+    setPrevIdx(idx);
+    setIdx(((n % len) + len) % len);
+  };
+  const next = () => go(idx + 1);
+  const prev = () => go(idx - 1);
+
+  useEffect(() => {
+    if (hover || len < 2) return;
+    timerRef.current = setInterval(next, autoPlayMs);
+    return () => clearInterval(timerRef.current);
+  }, [hover, idx, len, autoPlayMs]);
+
+  useEffect(() => {
+    const pre = new Image();
+    pre.loading = "eager";
+    pre.src = items[(idx + 1) % len]?.img || "";
+  }, [idx, len, items]);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "ArrowRight") next();
+      if (e.key === "ArrowLeft") prev();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const onTouchStart = (e) => (touchStartX.current = e.touches[0].clientX);
+  const onTouchEnd = (e) => {
+    if (touchStartX.current == null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(delta) > 40) (delta < 0 ? next() : prev());
+    touchStartX.current = null;
+  };
+
+  // OJO con Tailwind: las clases con valores dinámicos no se generan.
+  // Por eso, además de className, seteamos height por style inline:
+  const hStyle = {
+    height: `${height.base}px`,
+  };
+
+  const active = items[idx];
+
   return (
-    <> {/* Agregamos un fragmento para envolver el carrusel y el div principal */}
-      <Carousel /> {/* <--- ¡Aquí se renderiza el carrusel! */}
+    <div
+      className={classNames("relative w-full rounded-2xl overflow-hidden shadow-xl",
+        "sm:[height:unset] md:[height:unset]" // evitamos clases dinámicas
+      )}
+      style={hStyle}
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="Promociones"
+      aria-live="polite"
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
+      {/* Imagen anterior para efecto slide */}
+      <div className="absolute inset-0">
+        {items[prevIdx] && prevIdx !== idx && (
+          <img
+            key={`prev-${prevIdx}`}
+            src={items[prevIdx].img}
+            alt={items[prevIdx].title || "Anterior"}
+            className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 translate-x-0"
+            style={{ transform: "translateX(-8%)", filter: "brightness(0.95)" }}
+            draggable={false}
+          />
+        )}
+        {/* Imagen activa */}
+        <img
+          key={`active-${idx}`}
+          src={active.img}
+          alt={active.title || "Banner"}
+          className="absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-500"
+          style={{ opacity: 1 }}
+          draggable={false}
+        />
+        {/* Overlay verde */}
+        <div
+          className="
+          pointer-events-none absolute inset-0 bg-gradient-to-r
+          from-[#6DB33F]/28   /* antes ~0.88 -> ahora 0.28 */
+          via-[#6DB33F]/14    /* antes ~0.66 -> ahora 0.14 */
+          to-transparent" />
+      </div>
 
-      <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-6 py-8">
-        <h1 className="text-3xl font-bold mb-6 text-primary">Nuestros Productos</h1>
-        <div className="flex flex-col md:flex-row gap-8">
-          <aside className="w-full md:w-72 flex-shrink-0 mb-4 md:mb-0">
-            <form className="bg-white rounded-xl shadow p-6 flex flex-col gap-4 sticky top-28">
-              <div>
-                <label className="block text-sm font-medium mb-1">Buscar</label>
-                <input
-                  type="text"
-                  value={query || ""}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Nombre, marca, etc."
-                  className="w-full px-3 py-2 border border-gray-200 rounded focus:ring-2 focus:ring-primary"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Marca</label>
-                <div className="flex flex-col gap-1 max-h-32 overflow-y-auto">
-                  {marcasDisponibles.length === 0 ? (
-                    <span className="text-xs text-gray-400">No hay marcas</span>
-                  ) : (
-                    marcasDisponibles.map((m) => (
-                      <label key={m} className="flex items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={marcas.includes(m)}
-                          onChange={() => handleMarcaChange(m)}
-                          className="rounded border-gray-300 text-primary focus:ring-primary"
-                        />
-                        {m}
-                      </label>
-                    ))
-                  )}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Categoría
-                </label>
-                <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
-                  {categoriasApi.map((c) => (
-                    <label
-                      key={c.id}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={categorias.includes(String(c.id))}
-                        onChange={() => handleCategoriaChange(String(c.id))}
-                        className="rounded border-gray-300 text-primary focus:ring-primary"
-                      />
-                      {c.nombre}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Subcategoría
-                </label>
-                <div className="flex flex-col gap-1 max-h-32 overflow-y-auto">
-                  {subcategoriasDisponibles.length === 0 && (
-                    <span className="text-xs text-gray-400">
-                      Seleccioná una categoría
-                    </span>
-                  )}
-                  {subcategoriasDisponibles.map((sub) => (
-                    <label
-                      key={sub.id}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={subcategorias.includes(String(sub.id))}
-                        onChange={() => handleSubcategoriaChange(String(sub.id))}
-                        className="rounded border-gray-300 text-primary focus:ring-primary"
-                      />
-                      {sub.nombre}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <label className="block text-sm font-medium mb-1">
-                    Precio mínimo
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={precioMin}
-                    onChange={(e) => setPrecioMin(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-sm font-medium mb-1">
-                    Precio máximo
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={precioMax}
-                    onChange={(e) => setPrecioMax(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  id="promo"
-                  type="checkbox"
-                  checked={promo}
-                  onChange={(e) => setPromo(e.target.checked)}
-                  className="rounded border-gray-300 text-primary focus:ring-primary"
-                />
-                <label htmlFor="promo" className="text-sm font-medium">
-                  Solo en promoción
-                </label>
-              </div>
-            </form>
-          </aside>
+      {/* Texto */}
+      <div className="relative z-10 flex flex-col justify-center h-full pl-6 sm:pl-14 pr-6 text-white max-w-[720px]">
+        {active.title && (
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold leading-tight drop-shadow-md">
+            {active.title}
+          </h2>
+        )}
+        {active.desc && (
+          <p className="mt-2 md:mt-3 text-base sm:text-lg opacity-95">
+            {active.desc}
+          </p>
+        )}
+        {active.cta && active.to && (
+          <div className="mt-4">
+            <Link
+              to={active.to}
+              className="inline-block font-semibold px-6 py-3 rounded-xl shadow-lg border-2 transition"
+              style={{
+                backgroundColor: "#ffffffE6",
+                color: brand.dark,
+                borderColor: brand.primary,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = brand.primary;
+                e.currentTarget.style.color = "#fff";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#ffffffE6";
+                e.currentTarget.style.color = brand.dark;
+              }}
+            >
+              {active.cta}
+            </Link>
+          </div>
+        )}
+      </div>
 
-          <main className="flex-1">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
-              <h2 className="text-xl font-semibold text-dark">Resultados</h2>
-              <div className="flex items-center gap-2">
-                <label htmlFor="sortBy" className="text-sm text-gray-700">
-                  Ordenar por:
-                </label>
-                <select
-                  id="sortBy"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="px-3 py-2 border border-gray-200 rounded focus:ring-2 focus:ring-primary text-sm"
-                >
-                  {SORT_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <label htmlFor="pageSize" className="ml-4 text-sm text-gray-700">
-                  Mostrar:
-                </label>
-                <select
-                  id="pageSize"
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                    setPage(0);
-                  }}
-                  className="px-2 py-1 border border-gray-200 rounded focus:ring-2 focus:ring-primary text-sm"
-                >
-                  <option value={8}>8</option>
-                  <option value={12}>12</option>
-                  <option value={24}>24</option>
-                  <option value={48}>48</option>
-                </select>
-              </div>
-            </div>
-            {loading ? (
-              <div
-                className="grid"
+      {/* Flechas */}
+      {len > 1 && (
+  < >
+    <button
+      onClick={prev}
+      aria-label="Anterior"
+      className="
+        group absolute top-1/2 -translate-y-1/2 left-3 sm:left-4
+        w-11 h-11 sm:w-12 sm:h-12 rounded-full
+        bg-white/100 hover:bg-white
+        shadow-lg transition focus:outline-none
+        flex items-center justify-center z-20
+      "
+      style={{ backdropFilter: "saturate(120%) blur(2px)" }}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        className="w-20 h-20 text-[#f8fafc] group-hover:text-[#6DB33F] transition"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="6.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+    </button>
+
+    <button
+      onClick={next}
+      aria-label="Siguiente"
+      className="
+        group absolute top-1/2 -translate-y-1/2 right-3 sm:right-4
+        w-11 h-11 sm:w-12 sm:h-12 rounded-full
+        bg-white/2 hover:bg-white
+        shadow-lg transition focus:outline-none
+        flex items-center justify-center z-20
+      "
+      style={{ backdropFilter: "saturate(120%) blur(2px)" }}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        className="w-20 h-20 text-[#f8fafc] group-hover:text-[#6DB33F] transition"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="6.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M9 6l6 6-6 6" />
+      </svg>
+    </button>
+  </>
+)}
+
+
+      {/* Dots */}
+      {len > 1 && (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+          {items.map((_, i) => {
+            const activeDot = i === idx;
+            return (
+              <button
+                key={i}
+                aria-label={`Ir al slide ${i + 1}`}
+                onClick={() => go(i)}
+                className="w-3 h-3 rounded-full transition"
                 style={{
-                  gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
-                  gap: "2rem 2.5rem",
+                  backgroundColor: activeDot ? brand.primary : "rgba(255,255,255,0.7)",
+                  outline: activeDot ? `2px solid ${brand.dark}` : "none",
                 }}
-              >
-                {Array.from({ length: pageSize }).map((_, i) => (
-                  <SkeletonCard key={i} />
-                ))}
-              </div>
-            ) : error ? (
-              <div className="text-red-500">{error}</div>
-            ) : productosFiltrados.length === 0 ? (
-              <div className="text-gray-500">
-                No se encontraron productos con esos filtros.
-              </div>
-            ) : (
-              <>
-                <div
-                  className="grid"
-                  style={{
-                    gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
-                    gap: "2rem 2.5rem",
-                  }}
-                >
-                  {productosFiltrados.map((p, i) => (
-                    <ProductCard
-                      key={p.id || i}
-                      id={p.id}
-                      name={p.nombre}
-                      brand={p.marca}
+              />
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+  // Skeleton para categoría (puede quedar igual que tenías)
+  function SkeletonCategoryCard() {
+    return (
+      <div className="animate-pulse bg-white rounded-xl shadow p-4 flex flex-col items-center border border-gray-100">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded-full mb-2" />
+        <div className="h-4 w-2/3 bg-gray-200 rounded mb-2" />
+      </div>
+    );
+  }
+
+  return (
+          <div className="w-full flex flex-col items-center">
+            {/* Carousel */}
+            <Carousel
+               items={banners}
+               autoPlayMs={6000}
+               showThumbs={true}
+               height={{ base: 220, sm: 320, md: 420 }}
+              brand={{ primary: "#6DB33F", dark: "#4C8C2B" }}/>
+
+      {/* Categorías */}
+      <div className="w-full max-w-[1400px] px-2 sm:px-6 mb-12">
+        <Link to="/categorias">
+          <h2 className="text-2xl sm:text-3xl font-semibold mb-6 text-dark hover:text-primary transition cursor-pointer">
+            Categorías populares
+          </h2>
+        </Link>
+        {loadingCategories ? (
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-x-6 gap-y-8">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <SkeletonCategoryCard key={i} />
+            ))}
+          </div>
+        ) : categoriesMapped.length === 0 ? (
+          <div className="text-gray-500">No hay categorías disponibles.</div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-x-6 gap-y-8">
+            {categoriesMapped
+              .slice(
+                catPage * categoriesPerPage,
+                (catPage + 1) * categoriesPerPage
+              )
+              .map((cat) => (
+                <CategoryCard key={cat.name} {...cat} />
+              ))}
+          </div>
+        )}
+        {categoriesMapped.length > categoriesPerPage && (
+          <div className="flex justify-center mt-4 gap-2">
+            <button
+              className="px-3 py-1 rounded bg-accent text-primary font-semibold disabled:opacity-50"
+              onClick={() => setCatPage((p) => Math.max(0, p - 1))}
+              disabled={catPage === 0}
+            >
+              ←
+            </button>
+            <span className="text-sm text-gray-600">
+              {catPage + 1} /{" "}
+              {Math.ceil(categoriesMapped.length / categoriesPerPage)}
+            </span>
+            <button
+              className="px-3 py-1 rounded bg-accent text-primary font-semibold disabled:opacity-50"
+              onClick={() =>
+                setCatPage((p) =>
+                  Math.min(
+                    Math.ceil(categoriesMapped.length / categoriesPerPage) - 1,
+                    p + 1
+                  )
+                )
+              }
+              disabled={
+                catPage >=
+                Math.ceil(categoriesMapped.length / categoriesPerPage) - 1
+              }
+            >
+              →
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Promociones destacadas */}
+      <div className="w-full max-w-[1400px] px-2 sm:px-6 mb-12">
+        <h2 className="text-2xl sm:text-3xl font-semibold mb-6 text-dark">
+          Promociones destacadas
+        </h2>
+        {loadingProductos ? null : promosMapped.length === 0 ? (
+          <div className="text-gray-500">No hay productos en promoción.</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
+            {promosMapped.slice(0, 10).map((prod) => (
+              <ProductCardWithFallback key={prod.id} {...prod} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Productos destacados */}
+      <div className="w-full max-w-[1400px] px-2 sm:px-6 mb-16">
+        <h2 className="text-2xl sm:text-3xl font-semibold mb-6 text-dark">
+          Productos destacados
+        </h2>
+        <div className="relative flex flex-col items-center w-full">
+          {loadingProductos ? null : <>{/* grillas y sliders de productos*/}</>}
+        </div>
+      </div>
+
+      {/* Desktop: masonry-like grid */}
+      {loadingProductos ? null : (
+        <>
+          <div className="hidden sm:flex justify-center w-full">
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-12 gap-y-14 auto-rows-[1fr] px-2 max-w-[2000px] w-full justify-items-center">
+              {productosDestacados
+                .slice(
+                  prodPage * productsPerPage,
+                  (prodPage + 1) * productsPerPage
+                )
+                .map((prod) => (
+                  <div
+                    key={prod.id || prod.nombre}
+                    className="flex h-full min-h-0 justify-center"
+                  >
+                    <ProductCardWithFallback
+                      id={prod.id}
+                      name={prod.nombre}
+                      brand={prod.marca}
                       img={
                         (Array.isArray(p.imagenes) && p.imagenes[0]?.imagen) ||
                         (Array.isArray(p.imagenes) &&
