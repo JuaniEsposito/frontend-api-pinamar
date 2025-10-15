@@ -118,12 +118,8 @@ export default function Navbar() {
                 src={logoMarket}
                 alt="Logo Spring Market"
                 style={{
-                  width: 44,
-                  height: 44,
-                  objectFit: "contain",
-                  display: "block",
-                  margin: "auto",
-                  transform: "scale(1.25)",
+                  width: 60,
+                  height: 55
                 }}
                 draggable={false}
               />
