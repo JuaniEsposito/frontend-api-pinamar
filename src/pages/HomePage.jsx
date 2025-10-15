@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import ProductCard from "../components/ProductCard";
 import bannerFoto2 from "../assets/harinas-carrusel-2.jpg";
 import bannerFoto1 from "../assets/verduras-carrusel-1.jpg";
-import bannerFoto3 from "../assets/logo-carrusel-3.png";
+import bannerFoto0 from "../assets/productos-carrusel-0.png";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCarrito, patchCarrito } from "../redux/cartSlice";
 import Carousel from "../components/Carousel"; // Se importa el componente externo
@@ -228,7 +228,7 @@ export default function HomePage() {
   // Define los banners que se pasarán al carrusel
   useEffect(() => {
     setBanners([
-      { img: bannerFoto3 },
+      { img: bannerFoto0 },
       { img: bannerFoto1 },
       { img: bannerFoto2 },
     ]);
@@ -379,115 +379,16 @@ export default function HomePage() {
           Nuestros Productos
         </h1>
         <div className="flex flex-col md:flex-row gap-8">
-          <aside className="w-full md:w-72 flex-shrink-0 mb-4 md:mb-0">
-            <form className="bg-white rounded-xl shadow p-6 flex flex-col gap-4 sticky top-28">
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Buscar
-                </label>
-                <input
-                  type="text"
-                  value={query || ""}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Nombre, marca, etc."
-                  className="w-full px-3 py-2 border border-gray-200 rounded focus:ring-2 focus:ring-primary"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Marca
-                </label>
-                <div className="flex flex-col gap-1 max-h-32 overflow-y-auto">
-                  {marcasDisponibles.length === 0 ? (
-                    <span className="text-xs text-gray-400">
-                      No hay marcas
-                    </span>
-                  ) : (
-                    marcasDisponibles.map((m) => (
-                      <label
-                        key={m}
-                        className="flex items-center gap-2 text-sm"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={marcas.includes(m)}
-                          onChange={() => handleMarcaChange(m)}
-                          className="rounded border-gray-300 text-primary focus:ring-primary"
-                        />
-                        {m}
-                      </label>
-                    ))
-                  )}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Categoría
-                </label>
-                <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
-                  {categoriasApi.map((c) => (
-                    <label
-                      key={c.id}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={categorias.includes(String(c.id))}
-                        onChange={() =>
-                          handleCategoriaChange(String(c.id))
-                        }
-                        className="rounded border-gray-300 text-primary focus:ring-primary"
-                      />
-                      {c.nombre}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div>
-                
-                
-              </div>
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <label className="block text-sm font-medium mb-1">
-                    Precio mínimo
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={precioMin}
-                    onChange={(e) => setPrecioMin(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-sm font-medium mb-1">
-                    Precio máximo
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={precioMax}
-                    onChange={(e) => setPrecioMax(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-              </div>
-              
-            </form>
-          </aside>
-
           <main className="flex-1">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
               <h2 className="text-xl font-semibold text-dark">
-                Resultados
-              </h2>
-              <div className="flex items-center gap-2">
+                Resultados  </h2>
+               <div className="flex items-center gap-2">
                 <label
                   htmlFor="sortBy"
                   className="text-sm text-gray-700"
                 >
-                  Ordenar por:
+                 Ordenar por:
                 </label>
                 <select
                   id="sortBy"
@@ -577,7 +478,7 @@ export default function HomePage() {
                       added={addedId === p.id}
                       units={unitsMap[p.id] || 0}
                     />
-                  ))}
+                  ))} 
                 </div>
                 {totalPages > 1 && (
                   <div className="flex justify-center items-center gap-2 mt-8">
@@ -617,5 +518,6 @@ export default function HomePage() {
         </div>
       </div>
     </>
-  );
+     
+);
 }
