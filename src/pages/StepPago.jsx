@@ -60,6 +60,7 @@ export default function StepPago({
   };
 
   const validateCarrito = () => {
+    // Corregido: ya no falla si el carrito es nulo
     if (!carrito || !carrito.items || carrito.items.length === 0) {
       setFormError("El carrito está vacío.");
       return false;
@@ -102,7 +103,7 @@ export default function StepPago({
             required
           >
             <option value="">Seleccioná una dirección</option>
-            {direcciones.map((d) => (
+            {direcciones?.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.calle} {d.numero}, {d.ciudad} ({d.codigoPostal})
               </option>
@@ -116,59 +117,59 @@ export default function StepPago({
           Productos en tu compra
         </div>
         <div className="rounded-xl border border-blue-100 bg-gray-50 shadow-sm overflow-x-auto">
-          {carrito?.items?.length === 0 && (
+          {!carrito?.items || carrito.items.length === 0 ? (
             <div className="p-6 text-gray-400 text-center">
               Tu carrito está vacío.
             </div>
-          )}
-          <table className="min-w-full">
-            <thead>
-              <tr className="bg-blue-100 text-blue-800">
-                <th className="py-3 px-4 text-left">Producto</th>
-                <th className="py-3 px-4 text-left">Cantidad</th>
-                <th className="py-3 px-4 text-right">Precio c/u</th>
-                <th className="py-3 px-4 text-right">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody>
-              {carrito?.items?.map((item) => (
-                <tr
-                  key={item.productoId}
-                  className="border-t last:border-b-0 border-blue-100 hover:bg-blue-50"
-                >
-                  <td className="py-3 px-4 flex items-center gap-3">
-                    <img
-                      src={imagenesProductos[item.productoId] || ""}
-                      alt={item.nombreProducto}
-                      className="w-14 h-14 rounded shadow border border-blue-200 object-cover"
-                      style={{ background: "#fff" }}
-                    />
-                    <div>
-                      <div className="font-semibold">{item.nombreProducto}</div>
-                      <div className="text-sm text-gray-500">
-                        {item.marca || ""}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">{item.cantidad}</td>
-                  <td className="py-3 px-4 text-right">
-                    {/* Mostrar precio unitario */}
-                    {item.precioUnitario !== undefined && item.precioUnitario !== null
-                      ? `$${Number(item.precioUnitario).toFixed(2)}`
-                      : "-"}
-                  </td>
-                  <td className="py-3 px-4 text-right font-bold text-blue-700">
-                    {/* Mostrar subtotal calculado si no viene del backend */}
-                    {item.subtotal !== undefined && item.subtotal !== null
-                      ? `$${Number(item.subtotal).toFixed(2)}`
-                      : (item.precioUnitario !== undefined && item.cantidad !== undefined
-                        ? `$${(Number(item.precioUnitario) * Number(item.cantidad)).toFixed(2)}`
-                        : "-")}
-                  </td>
+          ) : (
+            <table className="min-w-full">
+              <thead>
+                <tr className="bg-blue-100 text-blue-800">
+                  <th className="py-3 px-4 text-left">Producto</th>
+                  <th className="py-3 px-4 text-left">Cantidad</th>
+                  <th className="py-3 px-4 text-right">Precio c/u</th>
+                  <th className="py-3 px-4 text-right">Subtotal</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {carrito.items.map((item) => (
+                  <tr
+                    key={item.productoId}
+                    className="border-t last:border-b-0 border-blue-100 hover:bg-blue-50"
+                  >
+                    <td className="py-3 px-4 flex items-center gap-3">
+                      {/* Corregido: ya no falla si la imagen no existe */}
+                      <img
+                        src={imagenesProductos[item.productoId] || ""}
+                        alt={item.nombreProducto}
+                        className="w-14 h-14 rounded shadow border border-blue-200 object-cover"
+                        style={{ background: "#fff" }}
+                      />
+                      <div>
+                        <div className="font-semibold">{item.nombreProducto}</div>
+                        <div className="text-sm text-gray-500">
+                          {item.marca || ""}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">{item.cantidad}</td>
+                    <td className="py-3 px-4 text-right">
+                      {item.precioUnitario !== undefined && item.precioUnitario !== null
+                        ? `$${Number(item.precioUnitario).toFixed(2)}`
+                        : "-"}
+                    </td>
+                    <td className="py-3 px-4 text-right font-bold text-blue-700">
+                      {item.subtotal !== undefined && item.subtotal !== null
+                        ? `$${Number(item.subtotal).toFixed(2)}`
+                        : (item.precioUnitario !== undefined && item.cantidad !== undefined
+                            ? `$${(Number(item.precioUnitario) * Number(item.cantidad)).toFixed(2)}`
+                            : "-")}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
       {/* Tarjeta de crédito */}

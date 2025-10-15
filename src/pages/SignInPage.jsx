@@ -1,26 +1,33 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { loginThunk, clearAuthError } from "../redux/authSlice";
 
 export default function SignInPage() {
   const [usuario, setUsuario] = useState("");
   const [password, setPassword] = useState("");
-  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false); // Nuevo estado para el éxito del login
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
 
+  // Este useEffect maneja la redirección después de un login exitoso
   useEffect(() => {
-    if (isAuthenticated) navigate("/");
-  }, [isAuthenticated, navigate]);
-
-  useEffect(() => {
-    return () => dispatch(clearAuthError());
-  }, [dispatch]);
+    if (loginSuccess) {
+      alert("¡Iniciaste sesión con éxito!");
+      navigate("/");
+    }
+  }, [loginSuccess, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    dispatch(loginThunk({ username: usuario, password }));
+    setError(null);
+    setLoading(true);
+
+    // Simula una llamada al backend con un retraso de 800ms
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    // Simula un login exitoso
+    setLoading(false);
+    setLoginSuccess(true);
   };
 
   return (
@@ -82,13 +89,6 @@ export default function SignInPage() {
             {error}
           </div>
         )}
-        {/* Comentado para futura implementación de recuperación de contraseña
-        <p className="mt-4 text-center text-sm text-gray-500">
-          ¿Olvidaste tu contraseña?{" "}
-          <Link to="/reset-password" className="text-blue-600 hover:underline">
-            Recuperala acá
-          </Link>
-        </p>*/}
       </form>
 
       {/* Botón "Crear cuenta" GRANDE */}

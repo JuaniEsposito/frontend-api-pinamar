@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { registerThunk, clearAuthError } from "../redux/authSlice";
 
 export default function SignUpPage() {
   const [username, setUsername] = useState("");
@@ -9,33 +7,23 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
-  const dispatch = useDispatch();
-  const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (isAuthenticated) navigate("/");
-    return () => dispatch(clearAuthError());
-  }, [isAuthenticated, navigate, dispatch]);
-
   const handleRegister = async (e) => {
     e.preventDefault();
-    dispatch(
-      registerThunk({
-        username,
-        email,
-        password,
-        nombre,
-        apellido,
-        rol: "user",
-      })
-    )
-      .unwrap()
-      .then(() => {
-        alert("Cuenta creada con éxito. Ahora podés iniciar sesión.");
-        navigate("/signin");
-      });
+    setError(null);
+    setLoading(true);
+
+    // Simula una llamada al backend con un retraso
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    // Simula un registro exitoso y redirige al login
+    alert("¡Cuenta creada con éxito! Ahora podés iniciar sesión.");
+    navigate("/signin");
+    setLoading(false);
   };
 
   return (
@@ -98,7 +86,6 @@ export default function SignUpPage() {
         required
       />
 
-
       <input
         type="text"
         placeholder="Email"
@@ -107,8 +94,16 @@ export default function SignUpPage() {
         className="w-full border p-2 mb-4 rounded"
         required
       />
-      
-      
+
+      <input
+        type="text"
+        placeholder="Usuario"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        className="w-full border p-2 mb-4 rounded"
+        required
+      />
+
       <button
         type="submit"
         className="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700"
