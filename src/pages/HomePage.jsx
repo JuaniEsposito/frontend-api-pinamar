@@ -1,12 +1,18 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import ProductCard from "../components/ProductCard";
-import bannerFoto2 from "../assets/harinas-carrusel-2.jpg";
-import bannerFoto1 from "../assets/verduras-carrusel-1.jpg";
-import bannerFoto3 from "../assets/logo-carrusel-3.png";
+import bannerFoto1 from "../assets/banner1.webp";
+import bannerFoto2 from "../assets/banner2.jpg";
+import bannerFoto3 from "../assets/banner3.jpg";
+import bannerFoto4 from "../assets/banner4.jpg";
+import bannerFoto5 from "../assets/banner5.jpg";
+import bannerFoto6 from "../assets/banner6.jpg";
+import bannerFoto7 from "../assets/banner7.jpg";
+
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCarrito, patchCarrito } from "../redux/cartSlice";
 import Carousel from "../components/Carousel"; // Se importa el componente externo
+import { img } from "framer-motion/client";
 
 const SORT_OPTIONS = [
   { value: "relevancia", label: "Relevancia" },
@@ -228,9 +234,14 @@ export default function HomePage() {
   // Define los banners que se pasarán al carrusel
   useEffect(() => {
     setBanners([
-      { img: bannerFoto3 },
       { img: bannerFoto1 },
       { img: bannerFoto2 },
+      { img: bannerFoto3},
+      { img: bannerFoto4 },
+      { img: bannerFoto5 },
+      { img: bannerFoto6 },
+      { img: bannerFoto7 },
+
     ]);
   }, []);
 

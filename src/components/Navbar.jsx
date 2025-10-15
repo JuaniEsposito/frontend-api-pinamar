@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { fetchCategorias } from "../redux/categoriesSlice";
 import { logoutThunk } from "../redux/authSlice";
 import { fetchCarrito, resetCarrito } from "../redux/cartSlice";
-import springmarketTransparente from "../assets/springmarketTransparente.png";
+import logoMarket from "../assets/logo.png";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -115,7 +115,7 @@ export default function Navbar() {
           >
             <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary shadow-lg text-white text-3xl">
               <img
-                src={springmarketTransparente}
+                src={logoMarket}
                 alt="Logo Spring Market"
                 style={{
                   width: 44,
