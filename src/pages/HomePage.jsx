@@ -205,9 +205,7 @@ export default function HomePage() {
   const [marcasDisponibles, setMarcasDisponibles] = useState([]);
   const [precioMin, setPrecioMin] = useState("");
   const [precioMax, setPrecioMax] = useState("");
-  const [promo, setPromo] = useState(false);
   const [categorias, setCategorias] = useState([]);
-  const [subcategorias, setSubcategorias] = useState([]);
   const [sortBy, setSortBy] = useState("relevancia");
   const [quickView, setQuickView] = useState(null);
   const [productos, setProductos] = useState([]);
@@ -264,8 +262,6 @@ export default function HomePage() {
         if (marcas.length > 0) params.push(`marca=${marcas.join(",")}`);
         if (categorias.length > 0)
           params.push(`categoriaId=${categorias[0]}`);
-        if (subcategorias.length > 0)
-          params.push(`subcategoriaId=${subcategorias.join(",")}`);
         if (precioMin) params.push(`precioMin=${precioMin}`);
         if (precioMax) params.push(`precioMax=${precioMax}`);
         params.push(`page=${page}`);
@@ -310,8 +306,6 @@ export default function HomePage() {
     query,
     marcas,
     categorias,
-    subcategorias,
-    promo,
     precioMin,
     precioMax,
     page,
@@ -331,7 +325,6 @@ export default function HomePage() {
 
   const productosFiltrados = [...productos]
     .filter((p) => Number(p.stock) > 0)
-    .filter((p) => !promo || Number(p.descuento) > 0)
     .sort((a, b) => {
       if (sortBy === "precio-asc") return a.precio - b.precio;
       if (sortBy === "precio-desc") return b.precio - a.precio;
@@ -356,20 +349,10 @@ export default function HomePage() {
         ? categorias.filter((c) => c !== catId)
         : [...categorias, catId]
     );
-    setSubcategorias((subs) =>
-      subs.filter((sub) =>
-        subcategoriasDisponibles.map((s) => s.id).includes(sub)
-      )
-    );
+   
   }
 
-  function handleSubcategoriaChange(subId) {
-    setSubcategorias((subcategorias) =>
-      subcategorias.includes(subId)
-        ? subcategorias.filter((s) => s !== subId)
-        : [...subcategorias, subId]
-    );
-  }
+  
 
   async function handleAddToCart(id, cantidad) {
     try {
@@ -462,31 +445,7 @@ export default function HomePage() {
               </div>
               <div>
                 
-                <div className="flex flex-col gap-1 max-h-32 overflow-y-auto">
-                  {subcategoriasDisponibles.length === 0 && (
-                    <span className="text-xs text-gray-400">
-                      Seleccioná una categoría
-                    </span>
-                  )}
-                  {subcategoriasDisponibles.map((sub) => (
-                    <label
-                      key={sub.id}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={subcategorias.includes(
-                          String(sub.id)
-                        )}
-                        onChange={() =>
-                          handleSubcategoriaChange(String(sub.id))
-                        }
-                        className="rounded border-gray-300 text-primary focus:ring-primary"
-                      />
-                      {sub.nombre}
-                    </label>
-                  ))}
-                </div>
+                
               </div>
               <div className="flex gap-2">
                 <div className="flex-1">
@@ -514,16 +473,7 @@ export default function HomePage() {
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <input
-                  id="promo"
-                  type="checkbox"
-                  checked={promo}
-                  onChange={(e) => setPromo(e.target.checked)}
-                  className="rounded border-gray-300 text-primary focus:ring-primary"
-                />
-                
-              </div>
+              
             </form>
           </aside>
 
