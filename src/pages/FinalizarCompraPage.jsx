@@ -1,72 +1,66 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../auth/AuthProvider";
-//import StepEntrega from "./StepEntrega";
-import StepPago from "./StepPago";
-//import StepComprobante from "./StepComprobante";
+import { useNavigate, Link } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
-import { useSelector, useDispatch } from "react-redux";
-import { fetchCarrito } from "../redux/cartSlice";
-import { fetchDirecciones } from "../redux/direccionesSlice";
-import { crearOrden, clearOrdenMsg } from "../redux/ordenesSlice";
-import { fetchProductoById } from "../redux/productosSlice";
+import StepPago from "./StepPago";
+import StepEntrega from "./StepEntrega";
+
+
+// --- DATOS MOCK/PRUEBA (Simulan la API) ---
+const MOCK_CARRITO_INICIAL = {
+  total: 5750.0,
+  items: [
+    {
+      productoId: 1,
+      nombreProducto: "Huevos de Campo",
+      cantidad: 4,
+      precioUnitario: 1200.0,
+      subtotal: 4800.0,
+    },
+    {
+      productoId: 2,
+      nombreProducto: "Leche Entera La Serenísima",
+      cantidad: 1,
+      precioUnitario: 950.0,
+      subtotal: 950.0,
+    },
+  ],
+};
+
+const MOCK_DIRECCIONES_INICIAL = [
+  {
+    id: 1,
+    calle: "Av. Corrientes",
+    numero: 1234,
+    pisoDepto: "Piso 5, Depto. C",
+    ciudad: "CABA",
+    provincia: "Buenos Aires",
+    codigoPostal: "1001",
+  },
+];
+// ---------------------------------------------
+
 
 export default function FinalizarCompraPage() {
-  const dispatch = useDispatch();
-  const carrito = useSelector((state) => state.cart.carrito);
-  const token = useSelector((state) => state.auth.token);
-  const direcciones = useSelector((state) => state.direcciones.direcciones);
+  const navigate = useNavigate();
+  // Reemplazo del estado de Redux por datos de prueba
+  const [carrito, setCarrito] = useState(MOCK_CARRITO_INICIAL);
+  const [direcciones, setDirecciones] = useState(MOCK_DIRECCIONES_INICIAL);
 
   // Estados principales del flujo de compra
-  const [direccionId, setDireccionId] = useState(""); // Dirección seleccionada para envío
-  const [envio, setEnvio] = useState(false); // true si se elige envío a domicilio
+  const [direccionId, setDireccionId] = useState(1); // ID de la dirección hardcodeada
+  const [envio, setEnvio] = useState(true); // Siempre envío a domicilio
   const [card, setCard] = useState({
     number: "",
     name: "",
     expiry: "",
     cvv: "",
   });
-  //const [loading, setLoading] = useState(false); // Carga/espera al pagar
-  //const [msg, setMsg] = useState(""); // Mensaje de éxito
-  //const [error, setError] = useState(""); // Mensaje de error
-  //const [orden, setOrden] = useState(null); // Orden generada al finalizar compra
-  const [imagenesProductos, setImagenesProductos] = useState({}); // Imagen de cada producto del carrito
-  const [step, setStep] = useState(1); // Step actual del flujo (1: entrega, 2: pago, 3: comprobante)
-  //const [cancelTimeout, setCancelTimeout] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [step, setStep] = useState(1); // Inicia en el paso 1
 
-  console.log("TOKEN:", token);
-  // Carga las direcciones
-  useEffect(() => {
-    if (token) dispatch(fetchDirecciones(token));
-  }, [token, dispatch]);
 
-  // Carga el carrito
-  useEffect(() => {
-    if (token) dispatch(fetchCarrito(token));
-  }, [token, dispatch]);
-
-  // Por cada producto del carrito, obtiene la imagen (si no la tiene ya)
-  useEffect(() => {
-    if (!carrito || !carrito.items) return;
-
-    carrito.items.forEach((item) => {
-      if (!imagenesProductos[item.productoId]) {
-        dispatch(fetchProductoById(item.productoId))
-          .unwrap()
-          .then((data) => {
-            if (data && data.imagenes && data.imagenes.length > 0) {
-              setImagenesProductos((prev) => ({
-                ...prev,
-                [item.productoId]: data.imagenes[0],
-              }));
-            }
-          })
-          .catch(() => {});
-      }
-    });
-    // eslint-disable-next-line
-  }, [carrito, dispatch]);
-
-  // Calcula el total final de la compra (sumando $2000 si hay envío).
+  // Calcula el total final de la compra
   const calcularTotal = () => {
     if (!carrito || !Array.isArray(carrito.items) || carrito.items.length === 0)
       return 0;
@@ -88,11 +82,11 @@ export default function FinalizarCompraPage() {
         return sum;
       }, 0);
     }
-    return envio ? total + 2000 : total;
+    return total + 2000;
   };
 
-  // Maneja la selección de método de entrega. Si elige envío y tiene direcciones, avanza al paso 2.
-  /*const handleSeleccionMetodo = (tipo) => {
+  // Maneja la selección de método de entrega.
+  const handleSeleccionMetodo = (tipo) => {
     if (tipo === "retiro") {
       setEnvio(false);
       setDireccionId("");
@@ -101,98 +95,54 @@ export default function FinalizarCompraPage() {
       setEnvio(true);
       if (direcciones.length > 0) setStep(2);
     }
-  };*/
+  };
 
-  // Realiza el pago
-  /*const handlePagar = async (e) => {
+
+  // Simula el pago de forma local para la presentación
+  const handlePagar = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    setMsg("");
-    const timeout = setTimeout(async () => {
-      try {
-        const ordenGenerada = await dispatch(
-          crearOrden({ token, direccionId: envio ? direccionId : undefined })
-        ).unwrap();
 
-        let direccionElegida = null;
-        if (envio && direccionId && Array.isArray(direcciones)) {
-          direccionElegida = direcciones.find(
-            (d) => String(d.id) === String(direccionId)
-          );
-        }
-        setOrden({
-          ...ordenGenerada,
-          direccion:
-            envio && direccionElegida
-              ? `${direccionElegida.calle} ${direccionElegida.numero}${
-                  direccionElegida.pisoDepto
-                    ? " Piso/Depto: " + direccionElegida.pisoDepto
-                    : ""
-                }, ${direccionElegida.ciudad}, ${direccionElegida.provincia} (${
-                  direccionElegida.codigoPostal
-                })`
-              : ordenGenerada.direccion || "Retiro en local",
-        });
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        setMsg("¡Compra realizada con éxito!");
-        setStep(3);
-        await dispatch(fetchCarrito(token));
-      } catch (e) {
-        setError(e.message || "Error en el pago");
-      } finally {
-        setLoading(false);
-        setCancelTimeout(null);
-      }
-    }, 2500);
-    setCancelTimeout(timeout);
-  };*/
-
-  // Permite cancelar el pago si está "procesando".
-  /*const cancelarPago = () => {
-    clearTimeout(cancelTimeout);
     setLoading(false);
-    setCancelTimeout(null);
-  };*/
+    alert("¡Pago realizado con éxito!");
+    navigate("/");
+  };
 
-  // Renderiza cada step según el estado actual
+
   return (
     <div className="max-w-3xl mx-auto mt-12 p-6 bg-white rounded-2xl shadow-lg">
-      {step !== 3 && (
-        <h2 className="text-3xl font-extrabold mb-8 text-center text-blue-700 tracking-tight">
-          Finalizar compra
-        </h2>
-      )}
+      <h2 className="text-3xl font-extrabold mb-8 text-center text-green-700 tracking-tight">
+        Finalizar compra
+      </h2>
       <AnimatePresence mode="wait">
-        {/* Paso 1: Selección de método de entrega */}
-        {/*step === 1 && (
-          <StepEntrega
-            envio={envio}
-            direcciones={direcciones}
-            handleSeleccionMetodo={handleSeleccionMetodo}
-          />
-        )*/}
-        {/* Paso 2: Resumen y pago */}
-        {/*step === 2 && (
+        {step === 1 && (
+            <StepEntrega
+                key="step-entrega"
+                envio={envio}
+                direcciones={direcciones}
+                handleSeleccionMetodo={handleSeleccionMetodo}
+            />
+        )}
+        {step === 2 && (
           <StepPago
-            envio={envio}
-            direcciones={direcciones}
+            key="step-pago"
+            envio={true} // Asume que siempre es envío a domicilio
+            direcciones={direcciones} // Pasa la dirección hardcodeada
             direccionId={direccionId}
             setDireccionId={setDireccionId}
             carrito={carrito}
-            imagenesProductos={imagenesProductos}
             card={card}
             setCard={setCard}
             calcularTotal={calcularTotal}
             handlePagar={handlePagar}
             loading={loading}
             error={error}
-            cancelarPago={cancelarPago}
             setStep={setStep}
           />
-        )*/}
-        {/* Paso 3: Comprobante */}
-
+        )}
       </AnimatePresence>
     </div>
   );
