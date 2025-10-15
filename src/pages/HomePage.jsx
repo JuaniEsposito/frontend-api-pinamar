@@ -1,13 +1,14 @@
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";   // ✅ única línea para hooks
 import ProductCard from "../components/ProductCard";
-import promoBannerImg from "../assets/dino-fanta.jpeg";
-import promoBannerImg2 from "../assets/banner3.jpg";
-import promoBannerImg4 from "../assets/banner4.webp";
+import bannerFoto2 from "../assets/harinas-carrusel-2.jpg";
+import bannerFoto1 from "../assets/verduras-carrusel-1.jpg";
+import bannerFoto3 from "../assets/logo-carrusel-3.png";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProductos } from "../redux/productosSlice";
 import { fetchCategorias } from "../redux/categoriesSlice";
 import { patchCarrito, fetchCarrito } from "../redux/cartSlice";
+
 
 const FALLBACK_IMG = "https://cdn-icons-png.flaticon.com/512/1046/1046857.png";
 
@@ -209,14 +210,14 @@ export default function HomePage() {
   useEffect(() => {
     setBanners([
       {
-        img: promoBannerImg,
+        img: bannerFoto3,
         // title: "¡Super Ofertas de la Semana!",
         // desc: 'Encontra descuentos exclusivos en cientos de productos filtrando por "En promoción".',
         // cta: "Explorar promociones",
         // to: "/buscar",
       },
-      { img: promoBannerImg2 },
-      { img: promoBannerImg4 },
+      { img: bannerFoto1 },
+      { img: bannerFoto2 },
     ]);
   }, []);
 
@@ -343,85 +344,234 @@ export default function HomePage() {
     );
   }
   // -------------------------------------------------------------------
-
+function classNames(...xs) {
+  return xs.filter(Boolean).join(" ");
+}
   // Carrusel de banners
-  function Carousel({ banners }) {
-    const [idx, setIdx] = useState(0);
-    const [imgSrc, setImgSrc] = useState(banners[0]?.img || FALLBACK_IMG);
+ 
+   // Carrusel de banners (fix: usa useRef + classNames definido arriba)
+function Carousel({
+  items = [],           // [{ img, title?, desc?, cta?, to? }]
+  autoPlayMs = 6000,
+  showThumbs = true,
+  height = { base: 220, sm: 320, md: 420 }, // alto responsivo
+  brand = { primary: "#6DB33F", dark: "#4C8C2B" }, // Spring Boot green
+}) {
+  const [idx, setIdx] = useState(0);
+  const [prevIdx, setPrevIdx] = useState(0);
+  const [hover, setHover] = useState(false);
+  const timerRef = useRef(null);
+  const touchStartX = useRef(null);
 
-    useEffect(() => {
-      setImgSrc(banners[idx]?.img || FALLBACK_IMG);
-    }, [idx, banners]);
+  const len = items.length || 0;
+  if (len === 0) return null;
 
-    const next = () => setIdx((idx + 1) % banners.length);
-    const prev = () => setIdx((idx - 1 + banners.length) % banners.length);
+  const go = (n) => {
+    setPrevIdx(idx);
+    setIdx(((n % len) + len) % len);
+  };
+  const next = () => go(idx + 1);
+  const prev = () => go(idx - 1);
 
-    useEffect(() => {
-      const timer = setInterval(next, 6000);
-      return () => clearInterval(timer);
-    }, [idx, banners]);
+  useEffect(() => {
+    if (hover || len < 2) return;
+    timerRef.current = setInterval(next, autoPlayMs);
+    return () => clearInterval(timerRef.current);
+  }, [hover, idx, len, autoPlayMs]);
 
-    const { title, desc, cta, to } = banners[idx] || {};
-    return (
-      <div className="relative w-full h-[220px] sm:h-[320px] md:h-[400px] rounded-2xl overflow-hidden shadow-lg mb-10">
+  useEffect(() => {
+    const pre = new Image();
+    pre.loading = "eager";
+    pre.src = items[(idx + 1) % len]?.img || "";
+  }, [idx, len, items]);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "ArrowRight") next();
+      if (e.key === "ArrowLeft") prev();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const onTouchStart = (e) => (touchStartX.current = e.touches[0].clientX);
+  const onTouchEnd = (e) => {
+    if (touchStartX.current == null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(delta) > 40) (delta < 0 ? next() : prev());
+    touchStartX.current = null;
+  };
+
+  // OJO con Tailwind: las clases con valores dinámicos no se generan.
+  // Por eso, además de className, seteamos height por style inline:
+  const hStyle = {
+    height: `${height.base}px`,
+  };
+
+  const active = items[idx];
+
+  return (
+    <div
+      className={classNames("relative w-full rounded-2xl overflow-hidden shadow-xl",
+        "sm:[height:unset] md:[height:unset]" // evitamos clases dinámicas
+      )}
+      style={hStyle}
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="Promociones"
+      aria-live="polite"
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
+      {/* Imagen anterior para efecto slide */}
+      <div className="absolute inset-0">
+        {items[prevIdx] && prevIdx !== idx && (
+          <img
+            key={`prev-${prevIdx}`}
+            src={items[prevIdx].img}
+            alt={items[prevIdx].title || "Anterior"}
+            className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 translate-x-0"
+            style={{ transform: "translateX(-8%)", filter: "brightness(0.95)" }}
+            draggable={false}
+          />
+        )}
+        {/* Imagen activa */}
         <img
-          src={imgSrc}
-          alt={title}
-          onError={() => setImgSrc(FALLBACK_IMG)}
-          className="absolute inset-0 w-full h-full object-cover object-center"
+          key={`active-${idx}`}
+          src={active.img}
+          alt={active.title || "Banner"}
+          className="absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-500"
+          style={{ opacity: 1 }}
+          draggable={false}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/80 via-primary/60 to-transparent" />
+        {/* Overlay verde */}
+        <div
+          className="
+          pointer-events-none absolute inset-0 bg-gradient-to-r
+          from-[#6DB33F]/28   /* antes ~0.88 -> ahora 0.28 */
+          via-[#6DB33F]/14    /* antes ~0.66 -> ahora 0.14 */
+          to-transparent" />
+      </div>
 
-        {/* Botones de navegación: afuera del bloque de texto */}
-        <button
-          onClick={prev}
-          className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-primary rounded-full w-9 h-9 flex items-center justify-center shadow transition z-20"
-          style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.07)" }}
-        >
-          <span className="text-2xl">&#8592;</span>
-        </button>
-        <button
-          onClick={next}
-          className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-primary rounded-full w-9 h-9 flex items-center justify-center shadow transition z-20"
-          style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.07)" }}
-        >
-          <span className="text-2xl">&#8594;</span>
-        </button>
-
-        {/* El contenido textual del banner */}
-        <div className="relative z-10 flex flex-col justify-center h-full pl-6 sm:pl-16 text-white max-w-[600px]">
-          <h2 className="text-2xl sm:text-4xl font-bold mb-2 drop-shadow">
-            {title}
+      {/* Texto */}
+      <div className="relative z-10 flex flex-col justify-center h-full pl-6 sm:pl-14 pr-6 text-white max-w-[720px]">
+        {active.title && (
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-extrabold leading-tight drop-shadow-md">
+            {active.title}
           </h2>
-          <p className="mb-4 text-base sm:text-lg">{desc}</p>
-          {to && cta && (
+        )}
+        {active.desc && (
+          <p className="mt-2 md:mt-3 text-base sm:text-lg opacity-95">
+            {active.desc}
+          </p>
+        )}
+        {active.cta && active.to && (
+          <div className="mt-4">
             <Link
-              to={to}
-              className="inline-block font-semibold px-6 py-3 rounded-lg shadow-lg bg-white/90 text-primary border-2 border-primary hover:bg-primary hover:text-white hover:border-white transition text-lg"
+              to={active.to}
+              className="inline-block font-semibold px-6 py-3 rounded-xl shadow-lg border-2 transition"
               style={{
-                boxShadow: "0 4px 24px 0 rgba(0,0,0,0.10)",
-                fontWeight: 700,
-                letterSpacing: "0.02em",
+                backgroundColor: "#ffffffE6",
+                color: brand.dark,
+                borderColor: brand.primary,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = brand.primary;
+                e.currentTarget.style.color = "#fff";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#ffffffE6";
+                e.currentTarget.style.color = brand.dark;
               }}
             >
-              {cta}
+              {active.cta}
             </Link>
-          )}
-        </div>
-        {/* Puntos de navegación */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-          {banners.map((_, i) => (
-            <span
-              key={i}
-              className={`block w-3 h-3 rounded-full ${
-                i === idx ? "bg-accent" : "bg-white/60"
-              }`}
-            ></span>
-          ))}
-        </div>
+          </div>
+        )}
       </div>
-    );
-  }
+
+      {/* Flechas */}
+      {len > 1 && (
+  < >
+    <button
+      onClick={prev}
+      aria-label="Anterior"
+      className="
+        group absolute top-1/2 -translate-y-1/2 left-3 sm:left-4
+        w-11 h-11 sm:w-12 sm:h-12 rounded-full
+        bg-white/100 hover:bg-white
+        shadow-lg transition focus:outline-none
+        flex items-center justify-center z-20
+      "
+      style={{ backdropFilter: "saturate(120%) blur(2px)" }}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        className="w-20 h-20 text-[#f8fafc] group-hover:text-[#6DB33F] transition"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="6.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+    </button>
+
+    <button
+      onClick={next}
+      aria-label="Siguiente"
+      className="
+        group absolute top-1/2 -translate-y-1/2 right-3 sm:right-4
+        w-11 h-11 sm:w-12 sm:h-12 rounded-full
+        bg-white/2 hover:bg-white
+        shadow-lg transition focus:outline-none
+        flex items-center justify-center z-20
+      "
+      style={{ backdropFilter: "saturate(120%) blur(2px)" }}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        className="w-20 h-20 text-[#f8fafc] group-hover:text-[#6DB33F] transition"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="6.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M9 6l6 6-6 6" />
+      </svg>
+    </button>
+  </>
+)}
+
+
+      {/* Dots */}
+      {len > 1 && (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+          {items.map((_, i) => {
+            const activeDot = i === idx;
+            return (
+              <button
+                key={i}
+                aria-label={`Ir al slide ${i + 1}`}
+                onClick={() => go(i)}
+                className="w-3 h-3 rounded-full transition"
+                style={{
+                  backgroundColor: activeDot ? brand.primary : "rgba(255,255,255,0.7)",
+                  outline: activeDot ? `2px solid ${brand.dark}` : "none",
+                }}
+              />
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 
   // Skeleton para categoría (puede quedar igual que tenías)
   function SkeletonCategoryCard() {
@@ -434,11 +584,14 @@ export default function HomePage() {
   }
 
   return (
-    <div className="w-full flex flex-col items-center">
-      {/* Carousel */}
-      <div className="w-full max-w-[1400px] px-2 sm:px-6">
-        {banners.length > 0 && <Carousel banners={banners} />}
-      </div>
+          <div className="w-full flex flex-col items-center">
+            {/* Carousel */}
+            <Carousel
+               items={banners}
+               autoPlayMs={6000}
+               showThumbs={true}
+               height={{ base: 220, sm: 320, md: 420 }}
+              brand={{ primary: "#6DB33F", dark: "#4C8C2B" }}/>
 
       {/* Categorías */}
       <div className="w-full max-w-[1400px] px-2 sm:px-6 mb-12">
