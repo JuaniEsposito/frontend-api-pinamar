@@ -74,30 +74,6 @@ export default function SignUpPage() {
 
       <input
         type="text"
-        placeholder="Usuario"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        className="w-full border p-2 mb-4 rounded"
-        required
-      />
-      <input
-        type="email"
-        placeholder="Correo"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="w-full border p-2 mb-4 rounded"
-        required
-      />
-      <input
-        type="password"
-        placeholder="Contraseña"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="w-full border p-2 mb-4 rounded"
-        required
-      />
-      <input
-        type="text"
         placeholder="Nombre"
         value={nombre}
         onChange={(e) => setNombre(e.target.value)}
@@ -112,6 +88,27 @@ export default function SignUpPage() {
         className="w-full border p-2 mb-4 rounded"
         required
       />
+
+      <input
+        type="password"
+        placeholder="Contraseña"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        className="w-full border p-2 mb-4 rounded"
+        required
+      />
+
+
+      <input
+        type="text"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        className="w-full border p-2 mb-4 rounded"
+        required
+      />
+      
+      
       <button
         type="submit"
         className="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700"
