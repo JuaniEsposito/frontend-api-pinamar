@@ -10,10 +10,10 @@ import SignUpPage from "./pages/SignUpPage";
 import CartPage from "./pages/CartPage";
 import AdminPanelProductPage from "./pages/AdminPanelProductPage";
 import BuscarPage from "./pages/BuscarPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
+//import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ProtectedRoute from "./pages/ProtectedRoute";
 import ProfilePage from "./pages/ProfilePage";
-import ResetPasswordPageLog from "./pages/ResetPasswordPageLog";
+//import ResetPasswordPageLog from "./pages/ResetPasswordPageLog";
 import ProductEditPage from "./pages/ProductEditPage";
 import CategoryEditPage from "./pages/CategoryEditPage";
 import AdminPanelCategoriesPage from "./pages/AdminPanelCategoriesPage";
@@ -22,8 +22,8 @@ import ProductDetailPage from "./pages/ProductDetailPage";
 import MisPedidosPage from "./pages/MisPedidosPage";
 import PedidoDetallePage from "./pages/PedidoDetallePage";
 import FinalizarCompraPage from "./pages/FinalizarCompraPage";
-import StepComprobante from "./pages/StepComprobante";
-import StepEntrega from "./pages/StepEntrega";
+//import StepComprobante from "./pages/StepComprobante";
+//import StepEntrega from "./pages/StepEntrega";
 import StepPago from "./pages/StepPago";
 import MisDireccionesPage from "./pages/MisDireccionesPage";
 import Footer from "./components/Footer";
@@ -43,7 +43,6 @@ function App() {
           {/* La ruta de promociones fue eliminada */}
           <Route path="/signin" element={<SignInPage />} />
           <Route path="/signup" element={<SignUpPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Rutas protegidas */}
           <Route path="/producto/id/:id" element={<ProductDetailPage />} />
@@ -51,13 +50,8 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/carrito" element={<CartPage />} />
             <Route path="/perfil" element={<ProfilePage />} />
-            <Route
-              path="/cambiar-contrasena"
-              element={<ResetPasswordPageLog />}
-            />
+
             <Route path="/finalizar-compra" element={<FinalizarCompraPage />} />
-            <Route path="/step-comprobante" element={<StepComprobante />} />
-            <Route path="/step-entrega" element={<StepEntrega />} />
             <Route path="/step-pago" element={<StepPago />} />
 
             {/* Rutas de edición de productos y categorías */}
@@ -85,10 +79,7 @@ function App() {
             </Route>
             <Route path="/mis-pedidos" element={<MisPedidosPage />} />
             <Route path="/mis-pedidos/:id" element={<PedidoDetallePage />} />
-            <Route
-              path="/cambiar-contrasena"
-              element={<ResetPasswordPageLog />}
-            />
+
             <Route
               path="/mis-direcciones"
               element={<MisDireccionesPage />}

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
-import StepEntrega from "./StepEntrega";
+//import StepEntrega from "./StepEntrega";
 import StepPago from "./StepPago";
-import StepComprobante from "./StepComprobante";
+//import StepComprobante from "./StepComprobante";
 import { AnimatePresence } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCarrito } from "../redux/cartSlice";
@@ -192,9 +192,7 @@ export default function FinalizarCompraPage() {
           />
         )*/}
         {/* Paso 3: Comprobante */}
-        {step === 3 && orden && orden.items && Array.isArray(orden.items) && (
-          <StepComprobante orden={orden} envio={envio} />
-        )}
+
       </AnimatePresence>
     </div>
   );
