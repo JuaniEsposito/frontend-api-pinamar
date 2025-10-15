@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTrash, FaPlus, FaMinus, FaShoppingCart } from "react-icons/fa";
-import dinoPensativo from "../assets/dino_pensativo.png";
+import carritoVacio from "../assets/carritovacio.png";
 // ELIMINADAS: useSelector, useDispatch, y todos los imports de Redux/Slices
 
 // --- DATOS MOCK/PRUEBA (Simulan la API) ---
@@ -53,7 +53,7 @@ function CarritoVacio() {
         className="mb-4"
       >
         <img
-          src={dinoPensativo}
+          src={carritoVacio}
           alt="Carrito vacío Rex"
           width={230}
           height={200}
