@@ -394,8 +394,7 @@ export default function HomePage() {
         <div className="flex flex-col md:flex-row gap-8">
           <main className="flex-1">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
-              <h2 className="text-xl font-semibold text-dark">
-                Resultados  </h2>
+
                <div className="flex items-center gap-2">
                 <label
                   htmlFor="sortBy"
