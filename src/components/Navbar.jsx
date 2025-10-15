@@ -113,7 +113,7 @@ export default function Navbar() {
             to="/"
             className="flex items-center gap-3 font-extrabold text-2xl tracking-tight text-primary hover:opacity-90 transition-opacity select-none"
           >
-            <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary shadow-lg text-white text-3xl">
+            <span>
               <img
                 src={logoMarket}
                 alt="Logo Spring Market"
