@@ -82,12 +82,13 @@ export default function SignInPage() {
             {error}
           </div>
         )}
+        {/* Comentado para futura implementación de recuperación de contraseña
         <p className="mt-4 text-center text-sm text-gray-500">
           ¿Olvidaste tu contraseña?{" "}
           <Link to="/reset-password" className="text-blue-600 hover:underline">
             Recuperala acá
           </Link>
-        </p>
+        </p>*/}
       </form>
 
       {/* Botón "Crear cuenta" GRANDE */}
