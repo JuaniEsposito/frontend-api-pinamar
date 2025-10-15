@@ -17,7 +17,6 @@ export default function CategoryAdminListCard({
         )}
       </div>
       <div>
-        <span className="font-semibold">Subcategorías: </span>
         {categoria.subcategorias && categoria.subcategorias.length > 0 ? (
           <ul className="list-disc ml-6">
             {categoria.subcategorias.map((sub) => (

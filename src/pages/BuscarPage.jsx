@@ -314,13 +314,7 @@ export default function BuscarPage() {
     setQuery(searchParam);
   }, [searchParam]);
 
-  // Subcategorías disponibles según categorías seleccionadas (de la API)
-  const subcategoriasDisponibles = categoriasApi
-    .filter((cat) => categorias.includes(String(cat.id)))
-    .flatMap((cat) => cat.subcategorias || [])
-    .map((sub) => ({ id: String(sub.id), nombre: sub.nombre }))
-    .filter((v, i, arr) => arr.findIndex((x) => x.id === v.id) === i);
-
+  
   // Solo productos con stock > 0 y, si promo está activo, descuento > 0
   const productosFiltrados = [...productos]
     .filter((p) => Number(p.stock) > 0)
@@ -448,9 +442,7 @@ export default function BuscarPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Subcategoría
-              </label>
+              
               <div className="flex flex-col gap-1 max-h-32 overflow-y-auto">
                 {subcategoriasDisponibles.length === 0 && (
                   <span className="text-xs text-gray-400">
@@ -507,9 +499,7 @@ export default function BuscarPage() {
                 onChange={(e) => setPromo(e.target.checked)}
                 className="rounded border-gray-300 text-primary focus:ring-primary"
               />
-              <label htmlFor="promo" className="text-sm font-medium">
-                Solo en promoción
-              </label>
+              
             </div>
           </form>
         </aside>

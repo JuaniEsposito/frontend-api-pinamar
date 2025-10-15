@@ -3,57 +3,45 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-// Estas son las imágenes que usabas, asegúrate de que las rutas sean correctas
-import promoBannerImg from "../assets/dino-fanta.jpeg";
-import promoBannerImg2 from "../assets/banner3.jpg";
-import promoBannerImg4 from "../assets/banner4.webp";
-
 const FALLBACK_IMG = "https://cdn-icons-png.flaticon.com/512/1046/1046857.png";
 
-export default function Carousel() {
-  const [banners, setBanners] = useState([]);
+export default function Carousel({ items = [] }) { // Acepta 'items' como prop
   const [idx, setIdx] = useState(0);
   const [imgSrc, setImgSrc] = useState(null);
 
-  // Inicializa los banners
-  useEffect(() => {
-    setBanners([
-      { img: promoBannerImg },
-      { img: promoBannerImg2 },
-      { img: promoBannerImg4 },
-    ]);
-  }, []);
+  // Ya no se definen los banners aquí, se reciben de HomePage.jsx
 
-  // Actualiza la imagen cuando cambia el índice
+  // Actualiza la imagen cuando cambia el índice o los items
   useEffect(() => {
-    if (banners.length > 0) {
-      setImgSrc(banners[idx]?.img || FALLBACK_IMG);
+    if (items.length > 0) {
+      setImgSrc(items[idx]?.img || FALLBACK_IMG);
     }
-  }, [idx, banners]);
+  }, [idx, items]);
 
   const next = () => {
-    if (banners.length > 0) {
-      setIdx((currentIdx) => (currentIdx + 1) % banners.length);
+    if (items.length > 0) {
+      setIdx((currentIdx) => (currentIdx + 1) % items.length);
     }
   };
 
   const prev = () => {
-    if (banners.length > 0) {
-      setIdx((currentIdx) => (currentIdx - 1 + banners.length) % banners.length);
+    if (items.length > 0) {
+      setIdx((currentIdx) => (currentIdx - 1 + items.length) % items.length);
     }
   };
 
   // Rotación automática
   useEffect(() => {
+    if (items.length < 2) return; // No rotar si hay 0 o 1 item
     const timer = setInterval(next, 6000);
     return () => clearInterval(timer);
-  }, [banners]); // Depende de banners para que inicie cuando se carguen
+  }, [items, idx]); // Se reinicia si cambia el índice o los items
 
-  if (banners.length === 0) {
+  if (items.length === 0) {
     return null; // No renderizar nada si no hay banners
   }
 
-  const { title, desc, cta, to } = banners[idx] || {};
+  const { title, desc, cta, to } = items[idx] || {};
 
   return (
     <div className="w-full max-w-[1400px] px-2 sm:px-6 mx-auto">
@@ -70,6 +58,7 @@ export default function Carousel() {
                 onClick={prev}
                 className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-primary rounded-full w-9 h-9 flex items-center justify-center shadow transition z-20"
                 style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.07)" }}
+                aria-label="Anterior"
             >
                 <span className="text-2xl">&#8592;</span>
             </button>
@@ -77,6 +66,7 @@ export default function Carousel() {
                 onClick={next}
                 className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-primary rounded-full w-9 h-9 flex items-center justify-center shadow transition z-20"
                 style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.07)" }}
+                aria-label="Siguiente"
             >
                 <span className="text-2xl">&#8594;</span>
             </button>
@@ -100,13 +90,14 @@ export default function Carousel() {
             </div>
 
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-                {banners.map((_, i) => (
+                {items.map((_, i) => (
                 <span
                     key={i}
                     className={`block w-3 h-3 rounded-full cursor-pointer ${
                     i === idx ? "bg-accent" : "bg-white/60"
                     }`}
                     onClick={() => setIdx(i)}
+                    aria-label={`Ir al slide ${i + 1}`}
                 ></span>
                 ))}
             </div>
