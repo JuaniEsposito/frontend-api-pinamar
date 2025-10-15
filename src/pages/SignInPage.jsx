@@ -1,21 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../auth/AuthProvider"; // Importa tu hook useAuth
 
 export default function SignInPage() {
   const [usuario, setUsuario] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [loginSuccess, setLoginSuccess] = useState(false); // Nuevo estado para el éxito del login
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-
-  // Este useEffect maneja la redirección después de un login exitoso
-  useEffect(() => {
-    if (loginSuccess) {
-      alert("¡Iniciaste sesión con éxito!");
-      navigate("/");
-    }
-  }, [loginSuccess, navigate]);
+  const { login } = useAuth(); // Obtén la función login del contexto
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -25,16 +18,29 @@ export default function SignInPage() {
     // Simula una llamada al backend con un retraso de 800ms
     await new Promise((resolve) => setTimeout(resolve, 800));
 
-    // Simula un login exitoso
+    // Llama a la función login con datos falsos (simulando un JWT y un objeto usuario)
+    login({
+      jwt: "este-es-un-token-falso-para-la-demo",
+      usuario: {
+        id: 1,
+        nombre: usuario || "Usuario Demo",
+        apellido: "De Prueba",
+        email: `${usuario || "usuario"}@correo.com`,
+        username: usuario || "usuariodemo",
+        fecha_registro: new Date().toISOString(),
+        rol: "USER", // Puedes cambiarlo a "ADMIN" para probar la lógica del Navbar
+      },
+    });
+
     setLoading(false);
-    setLoginSuccess(true);
+    navigate("/"); // Redirige al inicio
   };
 
   return (
     <div
       className="max-w-md mx-auto relative overflow-hidden z-10 bg-white p-8 rounded-lg shadow-md
-        before:w-24 before:h-24 before:absolute before:bg-blue-100 before:rounded-full before:-z-10 before:blur-2xl
-        after:w-32 after:h-32 after:absolute after:bg-blue-200 after:rounded-full after:-z-10 after:blur-xl after:top-24 after:-right-12"
+      before:w-24 before:h-24 before:absolute before:bg-blue-100 before:rounded-full before:-z-10 before:blur-2xl
+      after:w-32 after:h-32 after:absolute after:bg-blue-200 after:rounded-full after:-z-10 after:blur-xl after:top-24 after:-right-12"
     >
       {/* Link volver atrás */}
       <button
