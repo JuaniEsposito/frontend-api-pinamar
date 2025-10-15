@@ -317,11 +317,11 @@ export default function HomePage() {
     setQuery(searchParam);
   }, [searchParam]);
 
-  const subcategoriasDisponibles = categoriasApi
+  /*const subcategoriasDisponibles = categoriasApi
     .filter((cat) => categorias.includes(String(cat.id)))
     .flatMap((cat) => cat.subcategorias || [])
     .map((sub) => ({ id: String(sub.id), nombre: sub.nombre }))
-    .filter((v, i, arr) => arr.findIndex((x) => x.id === v.id) === i);
+    .filter((v, i, arr) => arr.findIndex((x) => x.id === v.id) === i);*/
 
   const productosFiltrados = [...productos]
     .filter((p) => Number(p.stock) > 0)
@@ -355,10 +355,10 @@ export default function HomePage() {
   
 
   async function handleAddToCart(id, cantidad) {
-    try {
+
       await dispatch(patchCarrito({ token, productoId: id, cantidad }));
       await dispatch(fetchCarrito(token));
-    } catch {}
+    
   }
 
   const [addedId, setAddedId] = useState(null);

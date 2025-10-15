@@ -11,7 +11,7 @@ import CartPage from "./pages/CartPage";
 import AdminPanelProductPage from "./pages/AdminPanelProductPage";
 import BuscarPage from "./pages/BuscarPage";
 //import ResetPasswordPage from "./pages/ResetPasswordPage";
-import ProtectedRoute from "./pages/ProtectedRoute";
+//import ProtectedRoute from "./pages/ProtectedRoute";
 import ProfilePage from "./pages/ProfilePage";
 //import ResetPasswordPageLog from "./pages/ResetPasswordPageLog";
 import ProductEditPage from "./pages/ProductEditPage";
@@ -47,7 +47,6 @@ function App() {
           {/* Rutas protegidas */}
           <Route path="/producto/id/:id" element={<ProductDetailPage />} />
           <Route path="/producto/:slug" element={<ProductDetailPage />} />
-          <Route element={<ProtectedRoute />}>
             <Route path="/carrito" element={<CartPage />} />
             <Route path="/perfil" element={<ProfilePage />} />
 
@@ -84,7 +83,6 @@ function App() {
               path="/mis-direcciones"
               element={<MisDireccionesPage />}
             />
-          </Route>
 
           {/* Ruta catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />

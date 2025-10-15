@@ -3,14 +3,44 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTrash, FaPlus, FaMinus, FaShoppingCart } from "react-icons/fa";
 import dinoPensativo from "../assets/dino_pensativo.png";
-import { useSelector, useDispatch } from "react-redux";
-import {
-  fetchCarrito,
-  patchCarrito,
-  deleteCarrito,
-  deleteAllCarrito,
-} from "../redux/cartSlice";
-import { fetchProductos } from "../redux/productosSlice";
+// ELIMINADAS: useSelector, useDispatch, y todos los imports de Redux/Slices
+
+// --- DATOS MOCK/PRUEBA (Simulan la API) ---
+const MOCK_CARRITO_INICIAL = {
+  // Simulación de la estructura del carrito que vendría del backend
+  total: 4500.0,
+  items: [
+    {
+      productoId: 101,
+      nombreProducto: "Tomates",
+      cantidad: 2,
+      precioUnitario: 200.0,
+      subtotal: 400.0,
+    },
+    {
+      productoId: 102,
+      nombreProducto: "Bife",
+      cantidad: 5,
+      precioUnitario: 1000.0,
+      subtotal: 5000.0,
+    },
+  ],
+};
+
+const MOCK_PRODUCTOS_INICIAL = [
+  // Simulación de la lista de productos (para obtener la imagen)
+  {
+    id: 101,
+    imagenes: ["https://picsum.photos/id/11/200/200"],
+    nombre: "Laptop Gaming X1",
+  },
+  {
+    id: 102,
+    imagenes: ["https://picsum.photos/id/12/200/200"],
+    nombre: "Mouse Óptico Z",
+  },
+];
+// ---------------------------------------------
 
 // Muestra un mensaje y la imagen del dino cuando el carrito está vacío
 function CarritoVacio() {
@@ -59,30 +89,42 @@ function CarritoVacio() {
 }
 
 export default function CartPage() {
-  const carrito = useSelector((state) => state.cart.carrito);
-  const loading = useSelector((state) => state.cart.loading);
-  const error = useSelector((state) => state.cart.error);
-  const token = useSelector((state) => state.auth.token);
-  const productos = useSelector((state) => state.productos.productos);
-  const dispatch = useDispatch();
+  // Reemplazo de useSelector por useState
+  const [carrito, setCarrito] = useState(null); // Usaremos 'null' para simular la carga inicial
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [productos, setProductos] = useState([]);
   const [imagenesProductos, setImagenesProductos] = useState({});
   const navigate = useNavigate();
 
-  // Carga el carrito al montar
-  useEffect(() => {
-    if (token) dispatch(fetchCarrito(token));
-    // eslint-disable-next-line
-  }, [token, dispatch]);
+  // --- Lógica de cálculo de totales ---
+  const calcularTotalCarrito = (currentItems) => {
+    return currentItems.reduce((sum, item) => {
+      const subtotal = Number(item.precioUnitario) * Number(item.cantidad);
+      return sum + subtotal;
+    }, 0);
+  };
 
-  // Si productos NO está cargado, traelo al entrar
+  // --- Simulación de Carga de Datos (Reemplazo de fetchCarrito/fetchProductos) ---
   useEffect(() => {
-    if (!productos || productos.length === 0) {
-      dispatch(fetchProductos());
-    }
-    // eslint-disable-next-line
-  }, [dispatch, productos]);
+    // Simula una llamada a la API con un retraso
+    setLoading(true);
+    setError(null);
+    
+    // Simula la carga de productos y carrito
+    setTimeout(() => {
+      // **Asignamos los datos MOCK al estado local**
+      setProductos(MOCK_PRODUCTOS_INICIAL); 
+      setCarrito({
+        ...MOCK_CARRITO_INICIAL,
+        // Recalcular total si el mock no lo trae, o usar el del mock
+        total: calcularTotalCarrito(MOCK_CARRITO_INICIAL.items) 
+      });
+      setLoading(false);
+    }, 1000); // 1 segundo de simulación de carga
+  }, []); // Se ejecuta solo al montar el componente
 
-  // Mapea imágenes desde productos en Redux
+  // --- Mapea imágenes (Esta lógica se mantiene igual, pero usa el estado local) ---
   useEffect(() => {
     if (!carrito || !carrito.items) return;
 
@@ -99,45 +141,69 @@ export default function CartPage() {
     setImagenesProductos(imagenesMap);
   }, [carrito, productos]);
 
+  // --- Lógica de Modificación del Carrito (Reemplazo de patch/deleteCarrito) ---
+
+  const actualizarCarritoLocal = (newItems) => {
+    const newTotal = calcularTotalCarrito(newItems);
+    setCarrito({
+        ...carrito,
+        items: newItems,
+        total: newTotal
+    });
+  };
+  
+  // Cambia la cantidad de un producto en el carrito (+/- 1)
+  const handleChangeCantidad = (productoId, change) => {
+    const newItems = carrito.items.map((item) => {
+      if (item.productoId === productoId) {
+        const nuevaCantidad = item.cantidad + change;
+        // La lógica de eliminación está separada en handleDecrement/handleEliminar
+        if (nuevaCantidad < 1) return item; 
+        
+        return {
+          ...item,
+          cantidad: nuevaCantidad,
+        };
+      }
+      return item;
+    });
+
+    actualizarCarritoLocal(newItems);
+  };
+  
   // Disminuye cantidad o elimina si queda solo uno
-  const handleDecrement = async (item) => {
-    try {
-      await dispatch(deleteCarrito({ token, productoId: item.productoId }));
-      await dispatch(fetchCarrito(token));
-    } catch (e) {
-      // Manejo de error por redux
+  const handleDecrement = (item) => {
+    if (item.cantidad <= 1) {
+      handleEliminar(item.productoId);
+    } else {
+      handleChangeCantidad(item.productoId, -1);
     }
   };
 
-  // Cambia la cantidad de un producto en el carrito (+1)
-  const handleChangeCantidad = async (productoId, change) => {
-    try {
-      await dispatch(patchCarrito({ token, productoId, cantidad: change }));
-      await dispatch(fetchCarrito(token));
-    } catch (e) {
-      // Manejo de error por redux
-    }
-  };
 
-  // Elimina un producto del carrito
-  const handleEliminar = async (productoId) => {
-    const item = carrito.items.find((i) => i.productoId === productoId);
-    const cantidadAEliminar = item ? item.cantidad : 1;
-    try {
-      await dispatch(
-        deleteAllCarrito({ token, productoId, cantidad: cantidadAEliminar })
-      );
-      await dispatch(fetchCarrito(token));
-    } catch (e) {
-      // Manejo de error por redux
-    }
+  // Elimina un producto completamente del carrito
+  const handleEliminar = (productoId) => {
+    const newItems = carrito.items.filter(
+      (item) => item.productoId !== productoId
+    );
+    
+    // Simulación de espera de API (puedes quitarlo si es solo local)
+    setLoading(true);
+    setTimeout(() => {
+        actualizarCarritoLocal(newItems);
+        setLoading(false);
+    }, 300); 
   };
+  
+  // --- Funciones de navegación (Se mantienen igual) ---
 
   // Va a la página de pago
   const irAPago = () => {
     navigate("/finalizar-compra");
   };
 
+  // --- Renderizado ---
+  
   // Carga inicial y errores
   if (loading)
     return <div className="mt-10 text-center">Cargando carrito...</div>;
@@ -221,24 +287,13 @@ export default function CartPage() {
                 <div className="flex flex-col items-end gap-2 min-w-[120px]">
                   <div className="text-sm text-gray-500">Subtotal</div>
                   <div className="font-bold text-lg text-green-700">
-                    {item.subtotal !== undefined && item.subtotal !== null
-                      ? `$${Number(item.subtotal).toFixed(2)}`
-                      : item.precioUnitario !== undefined &&
-                        item.cantidad !== undefined
-                      ? `$${(
-                          Number(item.precioUnitario) * Number(item.cantidad)
-                        ).toFixed(2)}`
-                      : "-"}
+                    {/* Se usa el cálculo del subtotal en base a cantidad * precio unitario */}
+                    {`$${(Number(item.precioUnitario) * Number(item.cantidad)).toFixed(2)}`}
                   </div>
                   <div className="text-xs text-gray-400 font-normal">
-                    {item.precioUnitario !== undefined &&
-                    item.cantidad !== undefined
-                      ? `Sin IVA: $${Math.round(
-                          (Number(item.precioUnitario) *
-                            Number(item.cantidad)) /
-                            1.21
-                        )}`
-                      : ""}
+                    {`Sin IVA: $${Math.round(
+                      (Number(item.precioUnitario) * Number(item.cantidad)) / 1.21
+                    )}`}
                   </div>
                 </div>
                 {/* Eliminar producto */}
@@ -259,68 +314,13 @@ export default function CartPage() {
                 Total:
               </span>
               <span className="font-bold text-2xl text-green-700">
-                {carrito.total !== undefined &&
-                carrito.total !== null &&
-                !isNaN(Number(carrito.total))
-                  ? `$${Number(carrito.total).toFixed(2)}`
-                  : (() => {
-                      const total = carrito.items.reduce((sum, item) => {
-                        if (
-                          item.subtotal !== undefined &&
-                          item.subtotal !== null &&
-                          !isNaN(Number(item.subtotal))
-                        ) {
-                          return sum + Number(item.subtotal);
-                        }
-                        if (
-                          item.precioUnitario !== undefined &&
-                          item.cantidad !== undefined
-                        ) {
-                          return (
-                            sum +
-                            Number(item.precioUnitario) * Number(item.cantidad)
-                          );
-                        }
-                        return sum;
-                      }, 0);
-                      return `$${total.toFixed(2)}`;
-                    })()}
+                {`$${Number(carrito.total).toFixed(2)}`}
               </span>
             </div>
             <div className="flex gap-4 items-center text-[14px] text-gray-500">
               <span>Sin IVA (21%):</span>
               <span>
-                {(() => {
-                  let total = 0;
-                  if (
-                    carrito.total !== undefined &&
-                    carrito.total !== null &&
-                    !isNaN(Number(carrito.total))
-                  ) {
-                    total = Number(carrito.total);
-                  } else {
-                    total = carrito.items.reduce((sum, item) => {
-                      if (
-                        item.subtotal !== undefined &&
-                        item.subtotal !== null &&
-                        !isNaN(Number(item.subtotal))
-                      ) {
-                        return sum + Number(item.subtotal);
-                      }
-                      if (
-                        item.precioUnitario !== undefined &&
-                        item.cantidad !== undefined
-                      ) {
-                        return (
-                          sum +
-                          Number(item.precioUnitario) * Number(item.cantidad)
-                        );
-                      }
-                      return sum;
-                    }, 0);
-                  }
-                  return `$${Math.round(total / 1.21)}`;
-                })()}
+                {`$${Math.round(Number(carrito.total) / 1.21)}`}
               </span>
             </div>
           </div>
@@ -344,32 +344,7 @@ export default function CartPage() {
           <div className="flex justify-between text-gray-700 text-base mb-1">
             <span>Total</span>
             <span className="font-bold text-green-700">
-              {carrito.total !== undefined &&
-              carrito.total !== null &&
-              !isNaN(Number(carrito.total))
-                ? `$${Number(carrito.total).toFixed(2)}`
-                : (() => {
-                    const total = carrito.items.reduce((sum, item) => {
-                      if (
-                        item.subtotal !== undefined &&
-                        item.subtotal !== null &&
-                        !isNaN(Number(item.subtotal))
-                      ) {
-                        return sum + Number(item.subtotal);
-                      }
-                      if (
-                        item.precioUnitario !== undefined &&
-                        item.cantidad !== undefined
-                      ) {
-                        return (
-                          sum +
-                          Number(item.precioUnitario) * Number(item.cantidad)
-                        );
-                      }
-                      return sum;
-                    }, 0);
-                    return `$${total.toFixed(2)}`;
-                  })()}
+              {`$${Number(carrito.total).toFixed(2)}`}
             </span>
           </div>
           {/* Ir a pagar */}

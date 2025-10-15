@@ -25,13 +25,13 @@ export default function FinalizarCompraPage() {
     expiry: "",
     cvv: "",
   });
-  const [loading, setLoading] = useState(false); // Carga/espera al pagar
-  const [msg, setMsg] = useState(""); // Mensaje de éxito
-  const [error, setError] = useState(""); // Mensaje de error
-  const [orden, setOrden] = useState(null); // Orden generada al finalizar compra
+  //const [loading, setLoading] = useState(false); // Carga/espera al pagar
+  //const [msg, setMsg] = useState(""); // Mensaje de éxito
+  //const [error, setError] = useState(""); // Mensaje de error
+  //const [orden, setOrden] = useState(null); // Orden generada al finalizar compra
   const [imagenesProductos, setImagenesProductos] = useState({}); // Imagen de cada producto del carrito
   const [step, setStep] = useState(1); // Step actual del flujo (1: entrega, 2: pago, 3: comprobante)
-  const [cancelTimeout, setCancelTimeout] = useState(null);
+  //const [cancelTimeout, setCancelTimeout] = useState(null);
 
   console.log("TOKEN:", token);
   // Carga las direcciones
