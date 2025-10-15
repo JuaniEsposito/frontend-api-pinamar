@@ -4,8 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { fetchCategorias } from "../redux/categoriesSlice";
 import { logoutThunk } from "../redux/authSlice";
 import { fetchCarrito, resetCarrito } from "../redux/cartSlice";
-import DolarCotizacion from "../components/DolarCotizacion";
-import dinoLogo from "../assets/dino_logo.png";
+import springmarketTransparente from "../assets/springmarketTransparente.png";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -103,15 +102,7 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Barra superior con el dólar */}
-      <div className="w-full bg-green-50 py-1 px-4 border-b border-green-200">
-        <div className="max-w-[1600px] mx-auto flex justify-between items-center">
-          <DolarCotizacion compact />
-          <div className="text-xs text-gray-500">
-            Actualizado: {new Date().toLocaleTimeString("es-AR")}
-          </div>
-        </div>
-      </div>
+      
       <header className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-xl shadow-lg border-b border-gray-100">
         <nav
           className="max-w-[1600px] mx-auto flex items-center justify-between px-6 sm:px-14 h-[76px] gap-2"
@@ -124,8 +115,8 @@ export default function Navbar() {
           >
             <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary shadow-lg text-white text-3xl">
               <img
-                src={dinoLogo}
-                alt="Logo Dino"
+                src={springmarketTransparente}
+                alt="Logo Spring Market"
                 style={{
                   width: 44,
                   height: 44,
@@ -141,7 +132,7 @@ export default function Navbar() {
               className="hidden sm:inline font-black text-dark tracking-tight text-2xl"
               style={{ letterSpacing: "-0.03em" }}
             >
-              Supermercado G4
+              Spring Market
             </span>
           </Link>
 
