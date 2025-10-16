@@ -182,28 +182,36 @@ export function AuthProvider({ children }) {
   };
 
   // --- FUNCIÓN DE FINALIZAR COMPRA ---
-  const checkout = () => {
+  const checkout = ({ totalFinal, descuento, totalOriginal, direccionSeleccionada }) => {
     if (!isAuthenticated || cart.length === 0) return null;
+
+    // ✅ VERIFICACIÓN DE SEGURIDAD
+    // Si no hay dirección, usa un texto predeterminado en lugar de crashear.
+    const direccionDeEntrega = direccionSeleccionada 
+      ? `${direccionSeleccionada.calle} ${direccionSeleccionada.numero}, ${direccionSeleccionada.ciudad}`
+      : "Retiro en el local";
 
     const newOrder = {
       id: orders.length + 1,
-      date: new Date().toISOString().split('T')[0],
+      fechaCreacion: new Date().toISOString(),
+      estado: 'COMPLETADO',
       items: cart.map(item => ({
+        id: item.id,
         nombreProducto: item.name,
         cantidad: item.quantity,
         precioUnitario: item.price,
         subtotal: item.price * item.quantity,
-        id: item.id
+        imageUrl: item.imageUrl,
       })),
-      total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-      status: 'COMPLETADO',
+      total: totalFinal,
+      totalOriginal: totalOriginal,
+      descuento: descuento,
       userId: usuario.id,
-      direccion: "Dirección de envío mock",
-      metodoPago: "Tarjeta de Crédito (Mock)"
+      direccion: direccionDeEntrega, // ✅ USA LA VARIABLE SEGURA
+      metodoPago: "Tarjeta de Crédito"
     };
     
     setOrders(prevOrders => [...prevOrders, newOrder]);
-    clearCart();
     
     // Descontar stock (simulación)
     setProducts(prevProducts => {
@@ -216,6 +224,8 @@ export function AuthProvider({ children }) {
       });
     });
 
+    clearCart();
+    
     return newOrder;
   };
   

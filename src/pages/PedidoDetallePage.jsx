@@ -4,102 +4,91 @@ import { FaCheckCircle } from 'react-icons/fa';
 export default function PedidoDetallePage() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const pedido = state?.orden;
-
-  if (!pedido) {
+  
+  // Si no hay estado o no hay orden en el estado, redirige de forma segura
+  if (!state?.orden) {
     return <Navigate to="/mis-pedidos" replace />;
   }
 
+  const pedido = state.orden;
   const productos = pedido.items || [];
-  const fecha = new Date(pedido.fechaCreacion).toLocaleDateString("es-AR");
+  const fecha = new Date(pedido.fechaCreacion).toLocaleDateString("es-AR", {
+    year: 'numeric', month: 'long', day: 'numeric'
+  });
   const total = typeof pedido.total === "number" ? pedido.total.toFixed(2) : "0.00";
 
   return (
-    <div className="max-w-2xl mx-auto mt-10">
+    <div className="max-w-3xl mx-auto mt-10 p-4">
       <div className="text-center mb-8">
         <FaCheckCircle className="text-green-500 text-6xl mx-auto mb-4" />
         <h1 className="text-3xl font-bold text-gray-800">¡Compra realizada con éxito!</h1>
-        <p className="text-gray-500">Acá tenés el resumen de tu pedido.</p>
+        <p className="text-gray-600">Gracias por tu compra. Acá tenés el resumen de tu pedido.</p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-lg p-8">
+      <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
         <div id="pedido-detalle-pdf">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold text-primary">
-              Detalle del Pedido #{pedido.id}
-            </h1>
-          </div>
-          <div className="mb-4 text-sm text-muted">
-            Fecha: {fecha} <br />
-            Estado: <span className="font-semibold">{pedido.estado}</span>
-          </div>
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-2 text-dark">
-              Productos comprados
+          <div className="flex justify-between items-center mb-4 pb-4 border-b">
+            <h2 className="text-2xl font-bold text-gray-800">
+              Pedido #{String(pedido.id).padStart(6, '0')}
             </h2>
-            
-            {/* --- TABLA DE PRODUCTOS (AHORA SÍ ESTÁ COMPLETA) --- */}
-            <table className="w-full text-sm mb-2">
+            <span className="text-sm font-medium bg-green-100 text-green-800 px-3 py-1 rounded-full">
+              {pedido.estado}
+            </span>
+          </div>
+          <div className="mb-6 text-sm text-gray-500">
+            <strong>Fecha:</strong> {fecha} <br />
+            <strong>Dirección de entrega:</strong> <span className="font-semibold text-gray-700">{pedido.direccion}</span> <br />
+            <strong>Método de pago:</strong> <span className="font-semibold text-gray-700">{pedido.metodoPago}</span>
+          </div>
+
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-3 text-gray-700">Productos comprados</h3>
+            <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-muted border-b">
-                  <th className="py-1">Producto</th>
-                  <th className="py-1">Cantidad</th>
-                  <th className="py-1 text-right">Precio unitario</th>
-                  <th className="py-1 text-right">Subtotal</th>
+                <tr className="text-left text-gray-500 border-b">
+                  <th className="py-2 font-medium">Producto</th>
+                  <th className="py-2 font-medium text-center">Cantidad</th>
+                  <th className="py-2 font-medium text-right">Subtotal</th>
                 </tr>
               </thead>
               <tbody>
-                {productos.map((prod, i) => (
-                  <tr key={i} className="border-b last:border-b-0">
-                    <td className="py-2">{prod.nombreProducto}</td>
-                    <td className="py-2">{prod.cantidad}</td>
-                    <td className="py-2 text-right">${Number(prod.precioUnitario).toFixed(2)}</td>
-                    <td className="py-2 text-right font-semibold">${Number(prod.subtotal).toFixed(2)}</td>
+                {/* TU LÓGICA AQUÍ YA ES CORRECTA */}
+                {productos.map((prod, index) => (
+                  <tr key={prod.id || index} className="border-b last:border-b-0">
+                    <td className="py-3">{prod.nombreProducto}</td>
+                    <td className="py-3 text-center">{prod.cantidad}</td>
+                    <td className="py-3 text-right font-semibold">${Number(prod.subtotal).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-
-            {/* --- TOTALES Y DESCUENTO --- */}
-            <div className="text-right mt-4 space-y-2">
-              {pedido.descuento > 0 && (
-                <>
-                  <div className="text-gray-600 text-lg">
-                    <span>Subtotal: </span>
-                    <span>${pedido.totalOriginal.toFixed(2)}</span>
-                  </div>
-                  <div className="text-green-600 text-lg">
-                    <span>Descuento: </span>
-                    <span>-${pedido.descuento.toFixed(2)}</span>
-                  </div>
-                </>
-              )}
-              <div className="font-bold text-xl text-primary">
-                Total: ${total}
-              </div>
-            </div>
-            
           </div>
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold mb-2 text-dark">
-              Forma de entrega y pago
-            </h2>
-            <div className="text-sm text-muted mb-1">
-              Método de pago:{" "}
-              <span className="font-semibold">{pedido.metodoPago}</span>
-            </div>
-            <div className="text-sm text-muted mb-1">
-              Dirección de entrega:{" "}
-              <span className="font-semibold">{pedido.direccion}</span>
+
+          <div className="text-right mt-6 pt-4 border-t space-y-2">
+            {pedido.descuento > 0 && (
+              <>
+                <div className="text-gray-600">
+                  <span>Subtotal: </span>
+                  <span className="font-medium">${pedido.totalOriginal.toFixed(2)}</span>
+                </div>
+                <div className="text-green-600">
+                  <span>Descuento: </span>
+                  <span className="font-medium">-${pedido.descuento.toFixed(2)}</span>
+                </div>
+              </>
+            )}
+            <div className="font-bold text-xl text-gray-800">
+              Total pagado: ${total}
             </div>
           </div>
         </div>
-        <div className="flex justify-between mt-6">
-          <Link to="/mis-pedidos" className="text-primary hover:underline text-sm">
+        
+        <div className="flex justify-between items-center mt-8">
+          <Link to="/mis-pedidos" className="text-green-600 hover:underline text-sm font-medium">
             ← Ver todos mis pedidos
           </Link>
           <button
-            className="bg-primary hover:bg-secondary text-white px-4 py-2 rounded font-semibold text-sm shadow transition"
+            className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg font-semibold text-sm shadow transition"
             onClick={() => navigate("/")}
           >
             Ir al inicio
