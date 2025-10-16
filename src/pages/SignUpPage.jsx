@@ -39,10 +39,15 @@ export default function SignUpPage() {
       fecha_registro: new Date().toISOString(),
     };
 
-    login({
-      jwt: "token-falso-generado-en-registro",
-      usuario: nuevoUsuario,
-    });
+    /*login({
+      jwt: "token-falso-generado-en-registro",
+      role: nuevoUsuario.rol, 
+    });*/
+
+  login({
+    jwt: "token-falso-generado-en-registro",
+    userData: nuevoUsuario, // Pasa el objeto completo
+  });
     
     alert("¡Usuario registrado con éxito! Sesión iniciada. ¡Bienvenido!");
 

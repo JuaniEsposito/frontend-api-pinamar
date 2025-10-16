@@ -78,7 +78,7 @@ export function AuthProvider({ children }) {
   // --- FUNCIONES DE AUTENTICACIÓN ---
   // Ahora la función login solo necesita el rol (simula la validación JWT)
   // Nota: userRole debe ser 'ADMIN' o 'USER' (o null/undefined)
-  const login = ({ jwt, role }) => { 
+  /*const login = ({ jwt, role }) => { 
     const mockUser = {
       id: role === 'ADMIN' ? 99 : 1,
       username: role === 'ADMIN' ? 'admin_mock' : 'user_mock',
@@ -86,7 +86,11 @@ export function AuthProvider({ children }) {
     };
     setToken(jwt || "MOCK_TOKEN"); // Token de prueba
     setUsuario(mockUser);
-  };
+  };*/
+  const login = ({ jwt, userData }) => { 
+  setToken(jwt || "MOCK_TOKEN"); // Token de prueba
+  setUsuario(userData); // Guarda directamente el objeto de usuario que viene del formulario
+};
 
    // --- FUNCIÓN NUEVA ---
   // Recibe los nuevos datos y actualiza el estado del usuario
@@ -224,6 +228,7 @@ export function AuthProvider({ children }) {
     isAdmin, 
     login,
     logout,
+    updateUser,
     // E-commerce Data
     products,
     cart,
@@ -241,14 +246,9 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider
       // Agregamos updateUser al valor del contexto
-      value={{ token, usuario, isAuthenticated, login, logout, updateUser }}
+      value={contextValue}
     >
       {children}
     </AuthContext.Provider>
   );
-}
-
-
-export function useAuth() {
-  return useContext(AuthContext);
 }
