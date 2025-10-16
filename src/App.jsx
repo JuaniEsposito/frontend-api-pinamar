@@ -4,16 +4,12 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import CategoriesPage from "./pages/CategoriesPage";
-// PromotionsPage ya no se importa
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
 import CartPage from "./pages/CartPage";
 import AdminPanelProductPage from "./pages/AdminPanelProductPage";
 import BuscarPage from "./pages/BuscarPage";
-//import ResetPasswordPage from "./pages/ResetPasswordPage";
-//import ProtectedRoute from "./pages/ProtectedRoute";
 import ProfilePage from "./pages/ProfilePage";
-//import ResetPasswordPageLog from "./pages/ResetPasswordPageLog";
 import ProductEditPage from "./pages/ProductEditPage";
 import CategoryEditPage from "./pages/CategoryEditPage";
 import AdminPanelCategoriesPage from "./pages/AdminPanelCategoriesPage";
@@ -22,12 +18,10 @@ import ProductDetailPage from "./pages/ProductDetailPage";
 import MisPedidosPage from "./pages/MisPedidosPage";
 import PedidoDetallePage from "./pages/PedidoDetallePage";
 import FinalizarCompraPage from "./pages/FinalizarCompraPage";
-//import StepComprobante from "./pages/StepComprobante";
-//import StepEntrega from "./pages/StepEntrega";
 import StepPago from "./pages/StepPago";
 import MisDireccionesPage from "./pages/MisDireccionesPage";
+import DashboardPage from "./pages/DashboardPage"; // <-- 1. IMPORTAMOS LA NUEVA PÁGINA
 import Footer from "./components/Footer";
-
 import "./App.css";
 
 function App() {
@@ -40,49 +34,48 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/buscar" element={<BuscarPage />} />
           <Route path="/categorias" element={<CategoriesPage />} />
-          {/* La ruta de promociones fue eliminada */}
           <Route path="/signin" element={<SignInPage />} />
           <Route path="/signup" element={<SignUpPage />} />
 
-          {/* Rutas protegidas */}
+          {/* Rutas de productos */}
           <Route path="/producto/id/:id" element={<ProductDetailPage />} />
           <Route path="/producto/:slug" element={<ProductDetailPage />} />
-            <Route path="/carrito" element={<CartPage />} />
-            <Route path="/perfil" element={<ProfilePage />} />
+          
+          {/* Rutas de usuario */}
+          <Route path="/carrito" element={<CartPage />} />
+          <Route path="/perfil" element={<ProfilePage />} />
+          <Route path="/mis-pedidos" element={<MisPedidosPage />} />
+          <Route path="/mis-pedidos/:id" element={<PedidoDetallePage />} />
+          <Route path="/mis-direcciones" element={<MisDireccionesPage />} />
+          <Route path="/mis-dashboards" element={<DashboardPage />} /> {/* <-- 2. AÑADIMOS LA NUEVA RUTA */}
 
-            <Route path="/finalizar-compra" element={<FinalizarCompraPage />} />
-            <Route path="/step-pago" element={<StepPago />} />
+          {/* Rutas de compra */}
+          <Route path="/finalizar-compra" element={<FinalizarCompraPage />} />
+          <Route path="/step-pago" element={<StepPago />} />
 
-            {/* Rutas de edición de productos y categorías */}
-            <Route
-              path="/editar-producto/:id"
-              element={<ProductEditPage modo="editar" />}
-            />
-            <Route
-              path="/crear-producto"
-              element={<ProductEditPage modo="crear" />}
-            />
-            <Route
-              path="/editar-categoria/:id"
-              element={<CategoryEditPage modo="editar" />}
-            />
-            <Route
-              path="/crear-categoria"
-              element={<CategoryEditPage modo="crear" />}
-            />
+          {/* Rutas de edición (Admin) */}
+          <Route
+            path="/editar-producto/:id"
+            element={<ProductEditPage modo="editar" />}
+          />
+          <Route
+            path="/crear-producto"
+            element={<ProductEditPage modo="crear" />}
+          />
+          <Route
+            path="/editar-categoria/:id"
+            element={<CategoryEditPage modo="editar" />}
+          />
+          <Route
+            path="/crear-categoria"
+            element={<CategoryEditPage modo="crear" />}
+          />
 
-            {/* Rutas de admin con layout */}
-            <Route path="/admin" element={<AdminPage />}>
-              <Route path="productos" element={<AdminPanelProductPage />} />
-              <Route path="categorias" element={<AdminPanelCategoriesPage />} />
-            </Route>
-            <Route path="/mis-pedidos" element={<MisPedidosPage />} />
-            <Route path="/mis-pedidos/:id" element={<PedidoDetallePage />} />
-
-            <Route
-              path="/mis-direcciones"
-              element={<MisDireccionesPage />}
-            />
+          {/* Rutas de admin con layout */}
+          <Route path="/admin" element={<AdminPage />}>
+            <Route path="productos" element={<AdminPanelProductPage />} />
+            <Route path="categorias" element={<AdminPanelCategoriesPage />} />
+          </Route>
 
           {/* Ruta catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />

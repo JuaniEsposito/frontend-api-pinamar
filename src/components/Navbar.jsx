@@ -1,10 +1,6 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef, useMemo } from "react";
-// import { useSelector, useDispatch } from "react-redux";                  // <--- CAMBIO 1 (Comentado)
-// import { fetchCategorias } from "../redux/categoriesSlice";               // <--- CAMBIO 1 (Comentado)
-// import { logoutThunk } from "../redux/authSlice";                         // <--- CAMBIO 1 (Comentado)
-// import { fetchCarrito, resetCarrito } from "../redux/cartSlice";          // <--- CAMBIO 1 (Comentado)
-import { useAuth } from "../auth/AuthProvider"; // <--- CAMBIO 1 (Añadido)
+import { useAuth } from "../auth/AuthProvider";
 import logoMarket from "../assets/logo.png";
 
 export default function Navbar() {
@@ -17,19 +13,8 @@ export default function Navbar() {
   const userDropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  // --- CAMBIO 2 (Reemplazo de hooks de Redux) ---
-  /*
-  const usuario = useSelector((state) => state.auth.usuario);
-  const token = useSelector((state) => state.auth.token);
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-  const carrito = useSelector((state) => state.cart.carrito);
-  const loading = useSelector((state) => state.cart.loading);
-  const categoriasState = useSelector((state) => state.categorias);
-  const categoriasRedux = categoriasState?.categorias || [];
-  const dispatch = useDispatch();
-  */
   const { isAuthenticated, usuario, logout } = useAuth();
-  const token = null; // Simulado para que los useEffect no se disparen
+  const token = null;
   const carrito = { items: [], total: 0 };
   const loading = false;
   const categoriasRedux = [];
@@ -37,7 +22,6 @@ export default function Navbar() {
     (sum, item) => sum + (item.cantidad || 0),
     0
   );
-  // --- FIN DEL CAMBIO 2 ---
 
   function handleSearchSubmit(e) {
     e.preventDefault();
@@ -62,20 +46,6 @@ export default function Navbar() {
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [userDropdown]);
-
-  // --- CAMBIO 3 (Comentario de useEffects con dispatch) ---
-  /*
-  useEffect(() => {
-    dispatch(fetchCategorias());
-  }, []);
-
-  useEffect(() => {
-    if (token && isAuthenticated) {
-      dispatch(fetchCarrito(token));
-    }
-  }, [token, isAuthenticated, dispatch]);
-  */
-  // --- FIN DEL CAMBIO 3 ---
 
   const categoriesDropdown = useMemo(() => {
     const cats = Array.isArray(categoriasRedux)
@@ -115,13 +85,17 @@ export default function Navbar() {
             to="/"
             className="flex items-center gap-3 font-extrabold text-2xl tracking-tight text-primary hover:opacity-90 transition-opacity select-none"
           >
-            <span>
+            <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary shadow-lg text-white text-3xl">
               <img
                 src={logoMarket}
                 alt="Logo Spring Market"
                 style={{
-                  width: 60,
-                  height: 55
+                  width: 44,
+                  height: 44,
+                  objectFit: "contain",
+                  display: "block",
+                  margin: "auto",
+                  transform: "scale(1.25)",
                 }}
                 draggable={false}
               />
@@ -227,7 +201,6 @@ export default function Navbar() {
 
           {/* User Actions + Mobile Search */}
           <div className="flex items-center gap-2 sm:gap-4">
-            {/* Mobile Search Icon */}
             <button
               className="md:hidden p-2 rounded-full hover:bg-accent/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               onClick={() => setShowMobileSearch(true)}
@@ -285,74 +258,6 @@ export default function Navbar() {
                   </span>
                 )}
               </button>
-              {/* Hover: muestra productos del carrito */}
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-200">
-                <div className="p-4">
-                  <div className="font-bold mb-2 text-primary">Carrito</div>
-                  {loading ? (
-                    <div className="text-gray-400 text-sm">Cargando...</div>
-                  ) : carrito?.items?.length === 0 ? (
-                    <div className="text-gray-400 text-sm">
-                      Tu carrito está vacío.
-                    </div>
-                  ) : (
-                    <>
-                      <ul className="divide-y divide-gray-100 max-h-60 overflow-y-auto">
-                        {carrito.items.slice(0, 5).map((item) => (
-                          <li
-                            key={item.productoId}
-                            className="py-2 flex items-center gap-2"
-                          >
-                            <div className="flex-1">
-                              <div className="font-semibold text-sm">
-                                {item.nombreProducto}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                x{item.cantidad}
-                              </div>
-                              <div className="text-xs text-gray-700">
-                                {/* Precio unitario */}
-                              </div>
-                              <div className="text-[10px] text-gray-400">
-                                {/* Precio sin impuestos nacionales */}
-                              </div>
-                            </div>
-                            <div className="text-sm font-bold text-primary text-right min-w-[60px]">
-                              {/* Subtotal por producto */}
-                              <div className="text-[10px] text-gray-400 font-normal">
-                                {/* Subtotal sin IVA */}
-                              </div>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                      {/* Total del carrito */}
-                      <div className="mt-3 flex flex-col gap-1 border-t pt-3">
-                        <div className="flex justify-between items-center">
-                          <span className="font-semibold text-gray-700">
-                            Total:
-                          </span>
-                          <span className="font-bold text-lg text-green-700">
-                            {/* ... */}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-[12px] text-gray-500">
-                          <span>Sin IVA (21%):</span>
-                          <span>{/* ... */}</span>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                  <div className="mt-3 text-right">
-                    <Link
-                      to="/carrito"
-                      className="text-primary font-semibold hover:underline text-sm"
-                    >
-                      Ver carrito →
-                    </Link>
-                  </div>
-                </div>
-              </div>
             </div>
             {isAuthenticated ? (
               <div
@@ -404,7 +309,21 @@ export default function Navbar() {
                     >
                       Mis direcciones
                     </Link>
-
+                    <Link
+                      to="/mis-pedidos"
+                      className="block px-4 py-2 text-dark hover:bg-accent/40 hover:text-primary rounded transition"
+                      onClick={() => setUserDropdown(false)}
+                    >
+                      Mis Pedidos
+                    </Link>
+                    {/* --- AQUÍ SE AGREGA EL NUEVO ENLACE --- */}
+                    <Link
+                      to="/mis-dashboards"
+                      className="block px-4 py-2 text-dark hover:bg-accent/40 hover:text-primary rounded transition"
+                      onClick={() => setUserDropdown(false)}
+                    >
+                      Mis Paneles
+                    </Link>
                     {usuario?.rol === "ADMIN" && (
                       <Link
                         to="/admin"
@@ -414,27 +333,16 @@ export default function Navbar() {
                         Admin
                       </Link>
                     )}
-                    <Link
-                      to="/mis-pedidos"
-                      className="block px-4 py-2 text-dark hover:bg-accent/40 hover:text-primary rounded transition"
-                      onClick={() => setUserDropdown(false)}
-                    >
-                      Mis Pedidos
-                    </Link>
-
-                    {/* --- CAMBIO 4 (Botón de Logout) --- */}
                     <button
                       onClick={() => {
                         setUserDropdown(false);
-                        logout(); // Primero se cierra la sesión
-                        alert("¡Sesión cerrada, hasta luego!"); // Después se muestra el cartel
+                        logout();
+                        alert("¡Sesión cerrada, hasta luego!");
                       }}
                       className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 hover:text-red-700 rounded transition font-semibold"
-                      >
+                    >
                       Cerrar sesión
-                    </button> 
-                    {/* --- FIN DEL CAMBIO 4 --- */}
-
+                    </button>
                   </div>
                 )}
               </div>
@@ -446,7 +354,6 @@ export default function Navbar() {
                 Ingresar
               </NavLink>
             )}
-            {/* Mobile menu button */}
             <button
               className="md:hidden ml-2 p-2 rounded-full hover:bg-accent/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               onClick={() => setOpen(!open)}
@@ -549,7 +456,6 @@ export default function Navbar() {
             </svg>
           </button>
           <div className="flex flex-col gap-2 px-8 mt-4">
-            {/* Mobile Dropdowns */}
             {navLinks.map((link) => (
               <div key={link.label} className="flex flex-col">
                 <button
