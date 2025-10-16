@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useCallback } from "react"; // 1. Cambiamos useMemo por useCallback
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { useAuth } from "../auth/AuthProvider";
@@ -21,13 +21,13 @@ export default function FinalizarCompraPage() {
   const [error, setError] = useState("");
   const [step, setStep] = useState(2);
 
- const calcularTotal = useMemo(() => {
-  if (!cart) return 0;
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  return envio ? subtotal + 2000 : subtotal;
-}, [cart, envio]);
+  // 2. Definimos calcularTotal como una función memoizada con useCallback
+  const calcularTotal = useCallback(() => {
+    if (!cart) return 0;
+    const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    return envio ? subtotal + 2000 : subtotal;
+  }, [cart, envio]);
 
-  // ✅ ESTA FUNCIÓN RECIBE LOS TOTALES DESDE StepPago
   const handlePagar = async (e, { totalFinal, totalOriginal, descuento }) => {
     e.preventDefault();
     setLoading(true);
@@ -68,7 +68,7 @@ export default function FinalizarCompraPage() {
           <StepPago
             key="step-pago"
             cart={cart}
-            ccalcularTotal={calcularTotal}
+            calcularTotal={calcularTotal}
             handlePagar={handlePagar}
             
             direcciones={direcciones}
