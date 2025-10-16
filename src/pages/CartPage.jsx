@@ -251,7 +251,6 @@ export default function CartPage() {
                     <span className="font-semibold">{item.cantidad}</span>
                   </div>
                 </div>
-                {/* Controles de cantidad */}
                 <div className="flex items-center gap-1">
                   <button
                     className="p-2 bg-blue-200 rounded-full hover:bg-blue-300 transition"
@@ -275,14 +274,7 @@ export default function CartPage() {
                       ? `$${Number(item.precioUnitario).toFixed(2)}`
                       : "-"}
                   </div>
-                  <div className="text-xs text-gray-400">
-                    {item.precioUnitario !== undefined &&
-                    item.precioUnitario !== null
-                      ? `Sin IVA: $${Math.round(
-                          Number(item.precioUnitario) / 1.21
-                        )}`
-                      : ""}
-                  </div>
+                  
                 </div>
                 <div className="flex flex-col items-end gap-2 min-w-[120px]">
                   <div className="text-sm text-gray-500">Subtotal</div>
@@ -290,11 +282,7 @@ export default function CartPage() {
                     {/* Se usa el cálculo del subtotal en base a cantidad * precio unitario */}
                     {`$${(Number(item.precioUnitario) * Number(item.cantidad)).toFixed(2)}`}
                   </div>
-                  <div className="text-xs text-gray-400 font-normal">
-                    {`Sin IVA: $${Math.round(
-                      (Number(item.precioUnitario) * Number(item.cantidad)) / 1.21
-                    )}`}
-                  </div>
+                  
                 </div>
                 {/* Eliminar producto */}
                 <button
@@ -317,12 +305,7 @@ export default function CartPage() {
                 {`$${Number(carrito.total).toFixed(2)}`}
               </span>
             </div>
-            <div className="flex gap-4 items-center text-[14px] text-gray-500">
-              <span>Sin IVA (21%):</span>
-              <span>
-                {`$${Math.round(Number(carrito.total) / 1.21)}`}
-              </span>
-            </div>
+            
           </div>
         </div>
       </div>
