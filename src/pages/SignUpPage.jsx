@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../auth/AuthProvider";
 
 export default function SignUpPage() {
   const [username, setUsername] = useState("");
@@ -11,18 +12,42 @@ export default function SignUpPage() {
   const [error, setError] = useState(null);
 
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleRegister = async (e) => {
     e.preventDefault();
+
+    // --- NUEVA VALIDACIÓN DE EMAIL ---
+    if (!email.includes("@")) {
+      alert("Por favor, ingresá un correo electrónico válido.");
+      return; // Detiene la ejecución si el email no es válido
+    }
+    // --- FIN DE LA VALIDACIÓN ---
+
     setError(null);
     setLoading(true);
 
-    // Simula una llamada al backend con un retraso
     await new Promise((resolve) => setTimeout(resolve, 800));
 
-    // Simula un registro exitoso y redirige al login
-    alert("¡Cuenta creada con éxito! Ahora podés iniciar sesión.");
-    navigate("/signin");
+    const nuevoUsuario = {
+      id: Date.now(),
+      nombre: nombre,
+      apellido: apellido,
+      email: email,
+      username: username,
+      rol: "USER",
+      fecha_registro: new Date().toISOString(),
+    };
+
+    login({
+      jwt: "token-falso-generado-en-registro",
+      usuario: nuevoUsuario,
+    });
+    
+    alert("¡Usuario registrado con éxito! Sesión iniciada. ¡Bienvenido!");
+
+    navigate("/");
+
     setLoading(false);
   };
 
@@ -31,7 +56,6 @@ export default function SignUpPage() {
       onSubmit={handleRegister}
       className="max-w-md mx-auto mt-20 p-6 bg-white shadow rounded relative"
     >
-      {/* Link a login arriba */}
       <button
         onClick={() => navigate("/signin")}
         className="absolute left-4 top-4 p-2 rounded-full text-blue-500 hover:bg-blue-100 transition"
@@ -76,7 +100,6 @@ export default function SignUpPage() {
         className="w-full border p-2 mb-4 rounded"
         required
       />
-
       <input
         type="password"
         placeholder="Contraseña"
@@ -85,16 +108,14 @@ export default function SignUpPage() {
         className="w-full border p-2 mb-4 rounded"
         required
       />
-
       <input
-        type="text"
+        type="text" // Cambiado a 'text' para permitir la validación manual
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         className="w-full border p-2 mb-4 rounded"
         required
       />
-
       <input
         type="text"
         placeholder="Usuario"
@@ -103,7 +124,6 @@ export default function SignUpPage() {
         className="w-full border p-2 mb-4 rounded"
         required
       />
-
       <button
         type="submit"
         className="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700"

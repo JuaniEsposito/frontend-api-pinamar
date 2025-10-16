@@ -1,35 +1,43 @@
+// src/auth/AuthProvider.jsx
+
 import { createContext, useContext, useState } from "react";
 
 const AuthContext = createContext();
 
-// Este componente envuelve toda la app y comparte el estado de autenticación
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(null); // Guarda el JWT
+  const [token, setToken] = useState(null);
+  const [usuario, setUsuario] = useState(null);
 
-  const [usuario, setUsuario] = useState(null); // Guarda el usuario autenticado
-
-  // Funciones para iniciar sesion
   const login = ({ jwt, usuario }) => {
-    setToken(jwt); // Guarda el token JWT
-    setUsuario(usuario); // Guarda el usuario autenticado
+    setToken(jwt);
+    setUsuario(usuario);
   };
 
-  // Función para cerrar sesion
   const logout = () => {
     setToken(null);
-    setUsuario(null); // Limpia el usuario al cerrar sesión
+    setUsuario(null);
   };
 
-  const isAuthenticated = !!token; // Verifica si hay un token
+  // --- FUNCIÓN NUEVA ---
+  // Recibe los nuevos datos y actualiza el estado del usuario
+  const updateUser = (nuevosDatos) => {
+    setUsuario((usuarioActual) => ({
+      ...usuarioActual, // Mantiene los datos que no se cambian (como id, username, etc.)
+      ...nuevosDatos,  // Sobreescribe los datos que sí se cambiaron (nombre, apellido, email)
+    }));
+  };
+
+  const isAuthenticated = !!token;
   return (
     <AuthContext.Provider
-      value={{ token, usuario, isAuthenticated, login, logout }}
+      // Agregamos updateUser al valor del contexto
+      value={{ token, usuario, isAuthenticated, login, logout, updateUser }}
     >
       {children}
     </AuthContext.Provider>
   );
 }
-// Hook para acceder al contexto de autenticación
+
 export function useAuth() {
   return useContext(AuthContext);
 }

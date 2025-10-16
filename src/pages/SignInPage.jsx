@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../auth/AuthProvider"; // Importa tu hook useAuth
+import { useAuth } from "../auth/AuthProvider";
 
 export default function SignInPage() {
   const [usuario, setUsuario] = useState("");
@@ -8,32 +8,37 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const { login } = useAuth(); // Obtén la función login del contexto
+  const { login } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    // Simula una llamada al backend con un retraso de 800ms
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
-    // Llama a la función login con datos falsos (simulando un JWT y un objeto usuario)
-    login({
-      jwt: "este-es-un-token-falso-para-la-demo",
-      usuario: {
-        id: 1,
-        nombre: usuario || "Usuario Demo",
-        apellido: "De Prueba",
-        email: `${usuario || "usuario"}@correo.com`,
-        username: usuario || "usuariodemo",
-        fecha_registro: new Date().toISOString(),
-        rol: "USER", // Puedes cambiarlo a "ADMIN" para probar la lógica del Navbar
-      },
-    });
+      login({
+        jwt: "este-es-un-token-falso-para-la-demo",
+        usuario: {
+          id: 1,
+          nombre: usuario || "Usuario Demo",
+          apellido: usuario || "Demo", // Usamos 'usuario' porque no hay campo 'apellido' en el login
+          email: `${usuario || "usuario"}@correo.com`,
+          username: usuario || "usuariodemo",
+          fecha_registro: new Date().toISOString(),
+          rol: "USER",
+        },
+      });
+      
+      navigate("/");
 
-    setLoading(false);
-    navigate("/"); // Redirige al inicio
+    } catch (err) {
+      console.error("Error durante el login:", err);
+      setError("Ocurrió un error inesperado al iniciar sesión.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -42,7 +47,6 @@ export default function SignInPage() {
       before:w-24 before:h-24 before:absolute before:bg-blue-100 before:rounded-full before:-z-10 before:blur-2xl
       after:w-32 after:h-32 after:absolute after:bg-blue-200 after:rounded-full after:-z-10 after:blur-xl after:top-24 after:-right-12"
     >
-      {/* Link volver atrás */}
       <button
         onClick={() => navigate(-1)}
         className="absolute left-4 top-4 p-2 rounded-full text-blue-500 hover:bg-blue-100 transition"
@@ -97,7 +101,6 @@ export default function SignInPage() {
         )}
       </form>
 
-      {/* Botón "Crear cuenta" GRANDE */}
       <div className="flex flex-col mt-6">
         <span className="text-center text-gray-500 mb-2">
           ¿No tenés cuenta?
