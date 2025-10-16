@@ -26,7 +26,7 @@ export default function StepEntrega({
             <span className="text-xs text-gray-200">(sin costo)</span>
           </button>
           <button
-            className={`px-6 py-3 bg-blue-600 text-white rounded-full font-bold text-lg shadow-md hover:bg-blue-700 transition ${
+            className={`px-6 py-3 bg-[#6DB33F]-600 text-white rounded-full font-bold text-lg shadow-md hover:bg-[#6DB33F]-700 transition ${
               direcciones.length === 0 ? "opacity-60 cursor-not-allowed" : ""
             }`}
             disabled={direcciones.length === 0}

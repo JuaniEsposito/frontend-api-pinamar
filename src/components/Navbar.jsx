@@ -258,6 +258,74 @@ export default function Navbar() {
                   </span>
                 )}
               </button>
+              {/* Hover: muestra productos del carrito */}
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity duration-200">
+                <div className="p-4">
+                  <div className="font-bold mb-2 text-primary">Carrito</div>
+                  {loading ? (
+                    <div className="text-gray-400 text-sm">Cargando...</div>
+                  ) : carrito?.items?.length === 0 ? (
+                    <div className="text-gray-400 text-sm">
+                      Tu carrito está vacío.
+                    </div>
+                  ) : (
+                    <>
+                      <ul className="divide-y divide-gray-100 max-h-60 overflow-y-auto">
+                        {carrito.items.slice(0, 5).map((item) => (
+                          <li
+                            key={item.productoId}
+                            className="py-2 flex items-center gap-2"
+                          >
+                            <div className="flex-1">
+                              <div className="font-semibold text-sm">
+                                {item.nombreProducto}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                x{item.cantidad}
+                              </div>
+                              <div className="text-xs text-gray-700">
+                                {/* Precio unitario */}
+                              </div>
+                              <div className="text-[10px] text-gray-400">
+                                {/* Precio sin impuestos nacionales */}
+                              </div>
+                            </div>
+                            <div className="text-sm font-bold text-[#6DB33F] text-right min-w-[60px]">
+                              {/* Subtotal por producto */}
+                              <div className="text-[10px] text-gray-400 font-normal">
+                                {/* Subtotal sin IVA */}
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                      {/* Total del carrito */}
+                      <div className="mt-3 flex flex-col gap-1 border-t pt-3">
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold text-gray-700">
+                            Total:
+                          </span>
+                          <span className="font-bold text-lg text-green-700">
+                            {/* ... */}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center text-[12px] text-gray-500">
+                          <span>Sin IVA (21%):</span>
+                          <span>{/* ... */}</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  <div className="mt-3 text-right">
+                    <Link
+                      to="/carrito"
+                      className="text-primary font-semibold hover:underline text-sm"
+                    >
+                      Ver carrito →
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </div>
             {isAuthenticated ? (
               <div
@@ -349,13 +417,13 @@ export default function Navbar() {
             ) : (
               <NavLink
                 to="/signin"
-                className="hidden sm:inline px-4 py-2 rounded-full font-semibold bg-primary text-white hover:bg-secondary transition-all duration-200 shadow"
+                className="bg-primary hover:bg-[#ffff] text-white font-semibold px-5 py-2 rounded-r-md transition border-2"
               >
                 Ingresar
               </NavLink>
             )}
             <button
-              className="md:hidden ml-2 p-2 rounded-full hover:bg-accent/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="md:hidden ml-2 p-2 rounded-full hover:bg-ccent/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               onClick={() => setOpen(!open)}
               aria-label={open ? "Cerrar menú" : "Abrir menú"}
             >

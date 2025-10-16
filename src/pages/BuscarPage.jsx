@@ -177,7 +177,7 @@ function ProductQuickView({ product, onClose, onAddToCart }) {
               </>
             )}
             {units > 0 && (
-              <span className="absolute right-3 bottom-2 bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-bold pointer-events-none">
+              <span className="absolute right-3 bottom-2 bg-[#6DB33F]-100 text-[#6DB33F]-700 text-xs px-2 py-0.5 rounded-full font-bold pointer-events-none">
                 x{units}
               </span>
             )}

@@ -7,12 +7,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: "#2563eb",      // Azul vibrante
-        secondary: "#22c55e",    // Verde lima
-        accent: "#fde047",       // Amarillo cálido
+        primary: "#6DB33F;",      // Azul vibrante
+        secondary: "#4C8C2B",    // Verde lima
+        accent: "#A8E6A3",       // Amarillo cálido
         background: "#f8fafc",   // Gris muy claro
         dark: "#1e293b",         // Gris oscuro
-        muted: "#64748b",        // Gris medio
+        muted: "#64748b",  
+
       },
     },
   },

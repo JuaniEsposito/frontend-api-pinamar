@@ -227,7 +227,7 @@ export default function ProductEditPage({ modo = "editar" }) {
           <div className="flex absolute left-3 space-x-2">
             <span className="h-3.5 w-3.5 bg-[#ff605c] rounded-full transition-all hover:scale-125 hover:bg-[#ff3b36]"></span>
             <span className="h-3.5 w-3.5 bg-[#ffbd44] rounded-full transition-all hover:scale-125 hover:bg-[#ffaa33]"></span>
-            <span className="h-3.5 w-3.5 bg-[#2563eb] rounded-full transition-all hover:scale-125 hover:bg-[#1d4ed8]"></span>
+            <span className="h-3.5 w-3.5 bg-[#6DB33F] rounded-full transition-all hover:scale-125 hover:bg-[#1d4ed8]"></span>
           </div>
 
           <div className="flex-1 text-center text-white font-semibold text-lg relative animate-pulse">
@@ -235,14 +235,14 @@ export default function ProductEditPage({ modo = "editar" }) {
           </div>
 
           <div className="absolute w-full bottom-0 left-0 bg-[#333333] h-1 rounded-t-xl">
-            <div className="w-[30%] bg-[#2563eb] h-full animate-progressBar"></div>
+            <div className="w-[30%] bg-[#6DB33F] h-full animate-progressBar"></div>
           </div>
         </div>
 
         <div className="flex bg-[#121212] p-8 justify-center items-center h-[450px]">
           <div className="text-center space-y-6">
-            <div className="w-24 h-24 border-4 border-t-[#2563eb] border-gray-700 rounded-full animate-spin mx-auto"></div>
-            <div className="text-[#2563eb] font-semibold text-4xl opacity-90 animate-fadeIn">
+            <div className="w-24 h-24 border-4 border-t-[#6DB33F] border-gray-700 rounded-full animate-spin mx-auto"></div>
+            <div className="text-[#6DB33F] font-semibold text-4xl opacity-90 animate-fadeIn">
               Ya casi esta listo...
             </div>
             <div class="text-[#9e9e9e] text-sm opacity-80 animate-fadeIn">

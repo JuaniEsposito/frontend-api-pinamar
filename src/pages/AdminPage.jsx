@@ -20,12 +20,11 @@ import { fetchProductos } from "../redux/productosSlice";
 import { fetchUsuarios } from "../redux/usuarioSlice";
 
 const colores = [
-  "#8884d8",
-  "#2563eb",
-  "#ef4444",
-  "#82ca9d",
-  "#ffc658",
-  "#ff7300",
+ " #6DB33F",
+"#4C8C2B",
+"#A8E6A3",
+"#1e293b",    
+ "#f8fafc",
 ];
 
 // Utilidad para agrupar ventas por día usando fechaCreacion
@@ -275,7 +274,7 @@ export default function AdminPage() {
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Cajita de ventas totales */}
           <div className="col-span-1 md:col-span-2 flex gap-6 mb-4">
-            <div className="flex-1 bg-white rounded-xl shadow p-6 flex flex-col items-center justify-center border border-blue-100 min-h-[110px]">
+            <div className="flex-1 bg-white rounded-xl shadow p-6 flex flex-col items-center justify-center border border-[#6DB33F]-100 min-h-[110px]">
               <div className="text-lg font-semibold text-gray-700 mb-1">
                 Órdenes totales
               </div>

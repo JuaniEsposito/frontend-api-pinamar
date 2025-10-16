@@ -55,9 +55,9 @@ export default function ProfilePage() {
     <div
       className="min-h-screen flex items-center justify-center"
       style={{
-        background: `conic-gradient(at 50% 25%, #0000 75%, #47d3ff 0),
-          conic-gradient(at 50% 25%, #0000 75%, #47d3ff 0) 60px 60px,
-          repeating-linear-gradient(135deg, #adafff 0 12.5%, #474bff 0 25%)`,
+        background: `conic-gradient(at 50% 25%, #0000 75%, #6DB33F 0),
+          conic-gradient(at 50% 25%, #0000 75%, #secondary 0) 60px 60px,
+          repeating-linear-gradient(135deg, secondary 0 12.5%, #6DB33F 0 25%)`,
         backgroundSize: "calc(4 * 60px) calc(4 * 60px)",
       }}
     >
@@ -112,7 +112,7 @@ export default function ProfilePage() {
               </span>
             </div>
             <button
-              className="bg-green-600 text-white py-2 px-6 rounded font-semibold mt-2 hover:bg-green-700 transition"
+              className="bg-[#6DB33F]-600 text-white py-2 px-6 rounded font-semibold mt-2 hover:bg-green-700 transition"
               onClick={() => setIsEditing(true)}
             >
               Editar perfil

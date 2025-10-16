@@ -44,12 +44,12 @@ export default function SignInPage() {
   return (
     <div
       className="max-w-md mx-auto relative overflow-hidden z-10 bg-white p-8 rounded-lg shadow-md
-      before:w-24 before:h-24 before:absolute before:bg-blue-100 before:rounded-full before:-z-10 before:blur-2xl
-      after:w-32 after:h-32 after:absolute after:bg-blue-200 after:rounded-full after:-z-10 after:blur-xl after:top-24 after:-right-12"
+      before:w-24 before:h-24 before:absolute before:bg-[#6DB33F]-100 before:rounded-full before:-z-10 before:blur-2xl
+      after:w-32 after:h-32 after:absolute after:bg-[#6DB33F]-200 after:rounded-full after:-z-10 after:blur-xl after:top-24 after:-right-12"
     >
       <button
         onClick={() => navigate(-1)}
-        className="absolute left-4 top-4 p-2 rounded-full text-blue-500 hover:bg-blue-100 transition"
+        className="absolute left-4 top-4 p-2 rounded-full text-[#6DB33F]-500 hover:bg-[#6DB33F]-100 transition"
         title="Volver"
         type="button"
       >
@@ -67,7 +67,7 @@ export default function SignInPage() {
           />
         </svg>
       </button>
-      <h2 className="text-2xl font-bold text-blue-700 mb-6 text-center">
+      <h2 className="text-2xl font-bold text-[#6DB33F]-700 mb-6 text-center">
         Iniciar sesión
       </h2>
       <form className="form" onSubmit={handleLogin}>
@@ -76,7 +76,7 @@ export default function SignInPage() {
           placeholder="Usuario"
           value={usuario}
           onChange={(e) => setUsuario(e.target.value)}
-          className="input mt-1 p-2 w-full bg-gray-100 border border-blue-300 rounded-md text-blue-900 mb-4 focus:ring-2 focus:ring-blue-500"
+          className="input mt-1 p-2 w-full bg-gray-100 border border-[#6DB33F]-300 rounded-md text-[#6DB33F]-900 mb-4 focus:ring-2 focus:ring-[#6DB33F]-500"
           required
         />
         <input
@@ -84,12 +84,12 @@ export default function SignInPage() {
           placeholder="Contraseña"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="input mt-1 p-2 w-full bg-gray-100 border border-blue-300 rounded-md text-blue-900 mb-4 focus:ring-2 focus:ring-blue-500"
+          className="input mt-1 p-2 w-full bg-gray-100 border border-[#6DB33F]-300 rounded-md text-[#6DB33F]-900 mb-4 focus:ring-2 focus:ring-[#6DB33F]-500"
           required
         />
         <button
           type="submit"
-          className="login-button bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 font-bold rounded-md w-full transition mt-2"
+          className="login-button bg-[#6DB33F]-600 hover:bg-[#6DB33F]-700 text-white px-4 py-2 font-bold rounded-md w-full transition mt-2"
           disabled={loading}
         >
           {loading ? "Ingresando..." : "Iniciar sesión"}
@@ -107,7 +107,7 @@ export default function SignInPage() {
         </span>
         <Link
           to="/signup"
-          className="w-full bg-white border border-blue-500 text-blue-700 font-bold py-2 rounded-md text-center hover:bg-blue-50 transition"
+          className="w-full bg-white border border-[#6DB33F]-500 text-[#6DB33F]-700 font-bold py-2 rounded-md text-center hover:bg-[#6DB33F]-50 transition"
         >
           Crear cuenta
         </Link>

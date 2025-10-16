@@ -1,14 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-
-// ❌ ELIMINADAS: import ProductCard from "../components/ProductCard"; 
-// ❌ ELIMINADAS: import Carousel from "../components/Carousel"; 
-// ❌ ELIMINADAS: import { useAuth } from "../auth/AuthProvider"; 
-
-import bannerFoto1 from "../assets/banner1.webp";
+import ProductCard from "../components/ProductCard";
+import bannerFoto1 from "../assets/banner1.png";
 import bannerFoto2 from "../assets/banner2.jpg";
 import bannerFoto3 from "../assets/banner3.jpg";
-import bannerFoto4 from "../assets/banner4.jpg";
+import bannerFoto4 from "../assets/banner4.png";
 import bannerFoto5 from "../assets/banner5.jpg";
 import bannerFoto6 from "../assets/banner6.jpg";
 import bannerFoto7 from "../assets/banner7.jpg";
@@ -132,9 +128,44 @@ function ProductQuickView({ product, onClose, onAddToCart }) {
             <label htmlFor="qty" className="text-sm text-gray-700">Cantidad:</label>
             <input id="qty" type="number" min={1} max={stock} value={qty} onChange={(e) => setQty(Math.max(1, Math.min(stock, Number(e.target.value))))} className="w-16 px-2 py-1 border border-gray-200 rounded text-center focus:ring-2 focus:ring-primary"/>
           </div>
-          <button className={`bg-primary text-white font-semibold px-6 py-3 rounded-lg shadow transition text-base w-full flex items-center justify-center gap-2 relative ${added ? "bg-green-600" : "hover:bg-secondary"} ${loading ? "opacity-70 cursor-not-allowed" : ""}`} onClick={handleAdd} disabled={loading}>
-            {added ? (<span className="inline-flex items-center gap-1"><svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>¡Agregado!</span>) : loading ? ("Agregando...") : (<><span>Agregar al carrito</span><span className="font-bold">×{qty}</span></>)}
-            {units > 0 && (<span className="absolute right-3 bottom-2 bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-bold pointer-events-none">x{units}</span>)}
+          <button
+            className={`bg-primary text-white font-semibold px-6 py-3 rounded-lg shadow transition text-base w-full flex items-center justify-center gap-2 relative
+              ${added ? "bg-green-600" : "hover:bg-secondary"}
+              ${loading ? "opacity-70 cursor-not-allowed" : ""}
+            `}
+            onClick={handleAdd}
+            disabled={loading}
+          >
+            {added ? (
+              <span className="inline-flex items-center gap-1">
+                <svg
+                  className="w-4 h-4 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                ¡Agregado!
+              </span>
+            ) : loading ? (
+              "Agregando..."
+            ) : (
+              <>
+                <span>Agregar al carrito</span>
+                <span className="font-bold">×{qty}</span>
+              </>
+            )}
+            {units > 0 && (
+              <span className="absolute right-3 bottom-2 bg-[#6DB33F]-100 text-[#6DB33F]-700 text-xs px-2 py-0.5 rounded-full font-bold pointer-events-none">
+                x{units}
+              </span>
+            )}
           </button>
         </div>
       </div>

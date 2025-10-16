@@ -36,7 +36,7 @@ export default function AdminPanelCategoriesPage() {
       <div className="flex items-center justify-between mb-4">
         <h2>Panel de categorías</h2>
         <button
-          className="bg-primary text-white px-4 py-2 rounded font-semibold hover:bg-blue-700 transition"
+          className="bg-primary text-white px-4 py-2 rounded font-semibold hover:bg-[#6DB33F]-700 transition"
           onClick={handleCreate}
         >
           Crear categoría

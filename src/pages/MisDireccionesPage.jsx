@@ -56,8 +56,8 @@ export default function MisDireccionesPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-green-700">Mis Direcciones</h1>
         <button
-          onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 rounded-lg font-semibold text-white bg-green-600 hover:bg-green-700 transition-colors"
+          className="bg-primary text-white px-4 py-2 rounded font-semibold hover:bg-[#6DB33F]-700 transition mt-4"
+          onClick={() => alert("Funcionalidad no disponible en la demo")}
         >
           {showForm ? "Cancelar" : "Agregar nueva dirección"}
         </button>
