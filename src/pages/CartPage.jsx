@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTrash, FaPlus, FaMinus, FaShoppingCart } from "react-icons/fa";
 import carritoVacio from "../assets/carritovacio.png";
+
 // ELIMINADAS: useSelector, useDispatch, y todos los imports de Redux/Slices
 
 // --- DATOS MOCK/PRUEBA (Simulan la API) ---

@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useAuth } from "../auth/AuthProvider";
 
 // ❌ ELIMINADAS: import ProductCard from "../components/ProductCard"; 
 // ❌ ELIMINADAS: import Carousel from "../components/Carousel"; 
@@ -37,16 +38,14 @@ function SkeletonCard() {
   );
 }
 
-// ⚠️ ESTA FUNCIÓN ESTABA CAUSANDO EL ERROR DE DUPLICIDAD 
 function ProductCard({ id, name, brand, img, price, weight, offer, bestSeller, onQuickView, onAddToCart, added, units }) {
-  // Simula la obtención de datos completos para el QuickView
   const productData = MOCK_PRODUCTS.find(p => p.id === id);
 
   const handleQuickView = () => onQuickView({
     id, name, brand, price, stock: productData.stock, description: productData.description, imageUrl: img, descuento: offer ? parseFloat(offer) : 0
   });
 
-  const handleAdd = () => MOCK_ADD_TO_CART(productData, 1); // Llama a la función mock
+  const handleAdd = () => onAddToCart(productData, 1);
 
   return (
     <div className="bg-white rounded-xl shadow hover:shadow-lg transition p-4 flex flex-col justify-between border border-gray-100 hover:border-primary">
@@ -206,6 +205,8 @@ const MOCK_ADD_TO_CART = (product, quantity) => { console.log(`[MOCK] Agregado: 
 
 
 export default function HomePage() {
+
+  const { addProductToCart, cart } = useAuth();
   // --- MOCK Y DATOS ---
   // Obtenemos los productos del mock integrado
   const products = MOCK_PRODUCTS; 
@@ -238,7 +239,15 @@ export default function HomePage() {
   
   // Estado para la animación de agregar al carrito
   const [addedId, setAddedId] = useState(null);
-  const [unitsMap] = useState({}); 
+  const unitsMap = useMemo(() => {
+    const map = {};
+    if (cart) {
+        for (const item of cart) {
+            map[item.id] = item.quantity;
+        }
+    }
+    return map;
+  }, [cart]); 
 
 
   // --- LÓGICA PRINCIPAL (Filtro y Paginación LOCAL) ---
@@ -304,12 +313,12 @@ export default function HomePage() {
   
   // --- MANEJO DEL CARRITO ---
   const handleAddToCartWithAnim = (product, cantidad) => {
-    // LLAMA A LA FUNCIÓN MOCK INTEGRADA EN ESTE ARCHIVO:
-    MOCK_ADD_TO_CART(product, cantidad); 
+    
+    addProductToCart(product, cantidad);
     
     // Lógica de animación
     // Usamos el ID de producto de la estructura mock
-    setUnitsMap((prev) => ({ ...prev, [product.id]: (prev[product.id] || 0) + cantidad }));
+    //setUnitsMap((prev) => ({ ...prev, [product.id]: (prev[product.id] || 0) + cantidad }));
     setAddedId(product.id);
     setTimeout(() => setAddedId(null), 1200);
   };
