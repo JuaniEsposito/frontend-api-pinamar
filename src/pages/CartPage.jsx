@@ -1,13 +1,10 @@
-import { useEffect, useState, useMemo } from "react"; // Se añade useMemo
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTrash, FaPlus, FaMinus, FaShoppingCart } from "react-icons/fa";
 import carritoVacio from "../assets/carritovacio.png";
-import { useAuth } from "../auth/AuthProvider"; // Se usa el contexto global
+import { useAuth } from "../auth/AuthProvider";
 
-// ❌ ELIMINADOS: Todos los MOCKS (MOCK_CARRITO_INICIAL, MOCK_PRODUCTOS_INICIAL)
-
-// Componente para mostrar cuando el carrito está vacío (sin cambios)
 function CarritoVacio() {
   return (
     <div className="flex flex-col items-center justify-center mt-16 mb-16">
@@ -29,7 +26,7 @@ function CarritoVacio() {
       <motion.h2
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="text-2xl font-bold text-green-700 mb-2" // Corregido: sintaxis de color
+        className="text-2xl font-bold text-green-700 mb-2"
       >
         ¡Tu carrito está vacío!
       </motion.h2>
@@ -37,7 +34,7 @@ function CarritoVacio() {
         Agregá productos y viví la mejor experiencia de compra :)
       </motion.p>
       <Link
-        to="/" // Enlace al Home para buscar productos
+        to="/"
         className="inline-block px-6 py-3 rounded-full font-bold bg-green-600 hover:bg-green-700 shadow-lg transition-all text-lg text-white"
       >
         Buscar productos
@@ -47,27 +44,22 @@ function CarritoVacio() {
 }
 
 export default function CartPage() {
-  // ✅ 1. OBTENER DATOS Y FUNCIONES REALES DEL CONTEXTO GLOBAL
-  const { cart, updateCartItemQuantity, removeProductFromCart } = useAuth();
-  
+  const { cart, updateCartItemQuantity, removeProductFromCart, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Simula un pequeño retraso de carga, se activa si el carrito cambia
   useEffect(() => {
     setLoading(true);
     const timer = setTimeout(() => setLoading(false), 300);
     return () => clearTimeout(timer);
   }, [cart]);
 
-  // ✅ 2. CALCULAR EL TOTAL DE FORMA DINÁMICA CON useMemo
-  // Se recalcula solo cuando el 'cart' cambia, es más eficiente.
   const totalCarrito = useMemo(() => {
     if (!cart) return 0;
     return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   }, [cart]);
 
-  // ✅ 3. FUNCIONES QUE LLAMAN AL CONTEXTO
   const handleIncrement = (item) => {
     updateCartItemQuantity(item.id, 1);
   };
@@ -81,25 +73,24 @@ export default function CartPage() {
   };
 
   const irAPago = () => {
-    navigate("/finalizar-compra");
+    if (isAuthenticated) {
+      navigate("/finalizar-compra");
+    } else {
+      alert("Necesitás iniciar sesión para continuar con la compra.");
+      navigate("/signin", { state: { from: location } });
+    }
   };
 
-  // ❌ ELIMINADAS: Todas las funciones locales que manejaban un estado falso
-  // (actualizarCarritoLocal, handleChangeCantidad, etc.)
-
-  // --- RENDERIZADO ---
   if (loading) {
     return <div className="mt-10 text-center text-xl">Cargando carrito...</div>;
   }
   
-  // ✅ Usa el 'cart' real para verificar si está vacío
   if (!cart || cart.length === 0) {
     return <CarritoVacio />;
   }
 
   return (
     <div className="max-w-5xl mx-auto mt-12 p-4 flex flex-col md:flex-row gap-8">
-      {/* Lista de productos */}
       <div className="flex-1">
         <h1 className="text-3xl font-extrabold mb-6 text-green-800 flex items-center gap-2">
           <FaShoppingCart className="inline mr-2" />
@@ -109,30 +100,27 @@ export default function CartPage() {
           <AnimatePresence>
             {cart.map((item) => (
               <motion.div
-                key={item.id} // ✅ Usa item.id
+                key={item.id}
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -60 }}
                 className="flex flex-col sm:flex-row items-center gap-4 px-6 py-5 border-b last:border-b-0 hover:bg-gray-50 transition"
               >
-                {/* Imagen producto */}
                 <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border">
                   <img
-                    src={item.imageUrl || ""} // ✅ Usa item.imageUrl
-                    alt={item.name} // ✅ Usa item.name
+                    src={item.imageUrl || ""}
+                    alt={item.name}
                     className="w-full h-full object-contain"
                   />
                 </div>
-                {/* Info principal */}
                 <div className="flex-1 w-full sm:w-auto text-center sm:text-left">
                   <div className="font-bold text-lg text-gray-800">
-                    {item.name} {/* ✅ Usa item.name */}
+                    {item.name}
                   </div>
                   <div className="text-gray-500 text-sm">
-                    Cantidad: <span className="font-semibold">{item.quantity}</span> {/* ✅ Usa item.quantity */}
+                    Cantidad: <span className="font-semibold">{item.quantity}</span>
                   </div>
                 </div>
-                {/* Controles de cantidad */}
                 <div className="flex items-center gap-2">
                   <button className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 transition" onClick={() => handleDecrement(item)}>
                     <FaMinus size={14} />
@@ -141,19 +129,17 @@ export default function CartPage() {
                     <FaPlus size={14} />
                   </button>
                 </div>
-                {/* Precio y Subtotal */}
                 <div className="flex flex-col items-end gap-1 min-w-[120px]">
                   <div className="font-bold text-lg text-green-700">
-                    {`$${(item.price * item.quantity).toFixed(2)}`} {/* ✅ Calcula subtotal */}
+                    {`$${(item.price * item.quantity).toFixed(2)}`}
                   </div>
                   <div className="text-sm text-gray-500">
-                    {`$${item.price.toFixed(2)} c/u`} {/* ✅ Muestra precio unitario */}
+                    {`$${item.price.toFixed(2)} c/u`}
                   </div>
                 </div>
-                {/* Eliminar producto */}
                 <button
                   className="p-2 text-red-500 hover:bg-red-100 rounded-full transition"
-                  onClick={() => handleEliminar(item.id)} // ✅ Llama a la función correcta
+                  onClick={() => handleEliminar(item.id)}
                   title="Eliminar producto"
                 >
                   <FaTrash />
@@ -164,7 +150,6 @@ export default function CartPage() {
         </div>
       </div>
 
-      {/* Resumen del pedido y botón de pago */}
       <aside className="md:w-80 w-full">
         <motion.div
           className="bg-white rounded-xl shadow border border-gray-200 p-6 sticky top-24"
@@ -174,12 +159,12 @@ export default function CartPage() {
           <h2 className="text-xl font-bold mb-4 text-green-800">Resumen</h2>
           <div className="flex justify-between text-gray-700 text-base mb-2">
             <span>Subtotal</span>
-            <span>{`$${totalCarrito.toFixed(2)}`}</span> {/* ✅ Usa el total calculado */}
+            <span>{`$${totalCarrito.toFixed(2)}`}</span>
           </div>
           <div className="border-t pt-4 mt-4">
             <div className="flex justify-between text-gray-900 font-bold text-xl mb-1">
               <span>Total</span>
-              <span>{`$${totalCarrito.toFixed(2)}`}</span> {/* ✅ Usa el total calculado */}
+              <span>{`$${totalCarrito.toFixed(2)}`}</span>
             </div>
           </div>
           <button
