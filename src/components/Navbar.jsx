@@ -85,13 +85,13 @@ export default function Navbar() {
             to="/"
             className="flex items-center gap-3 font-extrabold text-2xl tracking-tight text-primary hover:opacity-90 transition-opacity select-none"
           >
-            <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary shadow-lg text-white text-3xl">
+            <span className="">
               <img
                 src={logoMarket}
                 alt="Logo Spring Market"
                 style={{
-                  width: 44,
-                  height: 44,
+                  width: 55,
+                  height: 55,
                   objectFit: "contain",
                   display: "block",
                   margin: "auto",
@@ -349,7 +349,7 @@ export default function Navbar() {
             ) : (
               <NavLink
                 to="/signin"
-                className="hidden sm:inline px-4 py-2 rounded-full font-semibold bg-primary text-white hover:bg-secondary transition-all duration-200 shadow"
+                className="bg-primary hover:bg-[#ffff] text-white font-semibold px-5 py-2 rounded-r-md transition border-2"
               >
                 Ingresar
               </NavLink>
@@ -437,7 +437,7 @@ export default function Navbar() {
           aria-label="Menú principal"
         >
           <button
-            className="self-end m-4 p-2 rounded-full hover:bg-accent/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="bg-primary hover:bg-[#ffff] text-white font-semibold px-5 py-2 rounded-r-md transition border-2"
             onClick={() => setOpen(false)}
             aria-label="Cerrar menú"
           >
