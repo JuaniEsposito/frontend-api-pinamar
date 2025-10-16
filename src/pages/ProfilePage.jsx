@@ -23,14 +23,14 @@ export default function ProfilePage() {
     <div
       className="min-h-screen flex items-center justify-center"
       style={{
-        background: `conic-gradient(at 50% 25%, #0000 75%, #47d3ff 0),
-          conic-gradient(at 50% 25%, #0000 75%, #47d3ff 0) 60px 60px,
-          repeating-linear-gradient(135deg, #adafff 0 12.5%, #474bff 0 25%)`,
+        background: `conic-gradient(at 50% 25%, #0000 75%, #6DB33F 0),
+          conic-gradient(at 50% 25%, #0000 75%, #secondary 0) 60px 60px,
+          repeating-linear-gradient(135deg, secondary 0 12.5%, #6DB33F 0 25%)`,
         backgroundSize: "calc(4 * 60px) calc(4 * 60px)",
       }}
     >
       <div className="max-w-md w-full p-8 bg-white bg-opacity-95 rounded-xl shadow-lg z-10 backdrop-blur-[2px]">
-        <h2 className="text-2xl font-bold mb-6 text-blue-700">Mi Perfil (Simulado)</h2>
+        <h2 className="text-2xl font-bold mb-6 text-[#6DB33F]-700">Mi Perfil (Simulado)</h2>
         <div>
           <div className="mb-4">
             <span className="block text-gray-600 font-semibold">
@@ -61,7 +61,7 @@ export default function ProfilePage() {
             </span>
           </div>
           <button
-            className="bg-blue-600 text-white py-2 px-6 rounded font-semibold mt-2 hover:bg-blue-700 transition"
+            className="bg-[#6DB33F]-600 text-white py-2 px-6 rounded font-semibold mt-2 hover:bg-[#6DB33F]-700 transition"
             onClick={() => alert("Funcionalidad de edición no disponible en la demo")}
           >
             Editar perfil

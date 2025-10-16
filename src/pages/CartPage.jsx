@@ -70,7 +70,7 @@ function CarritoVacio() {
       <motion.h2
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="text-2xl font-bold text-blue-700 mb-2"
+        className="text-2xl font-bold text-[#6DB33F]-700 mb-2"
       >
         ¡Tu carrito está vacío!
       </motion.h2>
@@ -79,7 +79,7 @@ function CarritoVacio() {
       </motion.p>
       <Link
         to="/buscar"
-        className="inline-block px-6 py-3 rounded-full font-bold bg-blue-600 hover:bg-blue-700 shadow-lg transition-all text-lg text-white"
+        className="inline-block px-6 py-3 rounded-full font-bold bg-[#6DB33F]-600 hover:bg-[#6DB33F]-700 shadow-lg transition-all text-lg text-white"
         style={{ color: "#fff" }}
       >
         Buscar productos
@@ -219,11 +219,11 @@ export default function CartPage() {
     <div className="max-w-5xl mx-auto mt-12 flex flex-col md:flex-row gap-8">
       {/* Lista de productos */}
       <div className="flex-1">
-        <h1 className="text-3xl font-extrabold mb-6 text-blue-700 flex items-center gap-2">
+        <h1 className="text-3xl font-extrabold mb-6 text-[#6DB33F]-700 flex items-center gap-2">
           <FaShoppingCart className="inline mr-2" />
           Mi Carrito
         </h1>
-        <div className="bg-white rounded-xl shadow border border-blue-200 overflow-hidden">
+        <div className="bg-white rounded-xl shadow border border-[#6DB33F]-200 overflow-hidden">
           <AnimatePresence>
             {carrito.items.map((item) => (
               <motion.div
@@ -231,10 +231,10 @@ export default function CartPage() {
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -60 }}
-                className="flex flex-col sm:flex-row items-center gap-4 px-6 py-5 border-b border-blue-100 last:border-b-0 hover:bg-blue-50 transition"
+                className="flex flex-col sm:flex-row items-center gap-4 px-6 py-5 border-b border-[#6DB33F]-100 last:border-b-0 hover:bg-[#6DB33F]-50 transition"
               >
                 {/* Imagen producto */}
-                <div className="w-20 h-20 bg-blue-100 rounded-lg flex items-center justify-center overflow-hidden border border-blue-200">
+                <div className="w-20 h-20 bg-[#6DB33F]-100 rounded-lg flex items-center justify-center overflow-hidden border border-[#6DB33F]-200">
                   <img
                     src={imagenesProductos[item.productoId] || ""}
                     alt={item.nombreProducto}
@@ -254,13 +254,13 @@ export default function CartPage() {
                 {/* Controles de cantidad */}
                 <div className="flex items-center gap-1">
                   <button
-                    className="p-2 bg-blue-200 rounded-full hover:bg-blue-300 transition"
+                    className="p-2 bg-[#6DB33F]-200 rounded-full hover:bg-[#6DB33F]-300 transition"
                     onClick={() => handleDecrement(item)}
                   >
                     <FaMinus size={14} />
                   </button>
                   <button
-                    className="p-2 bg-blue-200 rounded-full hover:bg-blue-300 transition"
+                    className="p-2 bg-[#6DB33F]-200 rounded-full hover:bg-[#6DB33F]-300 transition"
                     onClick={() => handleChangeCantidad(item.productoId, 1)}
                   >
                     <FaPlus size={14} />
@@ -269,7 +269,7 @@ export default function CartPage() {
                 {/* Precio unitario and subtotal */}
                 <div className="flex flex-col items-end gap-2 min-w-[120px]">
                   <div className="text-sm text-gray-500">Precio c/u</div>
-                  <div className="font-semibold text-base text-blue-700">
+                  <div className="font-semibold text-base text-[#6DB33F]700">
                     {item.precioUnitario !== undefined &&
                     item.precioUnitario !== null
                       ? `$${Number(item.precioUnitario).toFixed(2)}`
@@ -308,7 +308,7 @@ export default function CartPage() {
             ))}
           </AnimatePresence>
           {/* Total del carrito */}
-          <div className="flex flex-col gap-1 justify-end items-end px-6 py-4 border-t border-blue-100 bg-blue-50">
+          <div className="flex flex-col gap-1 justify-end items-end px-6 py-4 border-t border-[#6DB33F]-100 bg-green-50">
             <div className="flex gap-4 items-center">
               <span className="font-semibold text-gray-700 text-lg">
                 Total:
@@ -330,11 +330,11 @@ export default function CartPage() {
       {/* Resumen del pedido y botón de pago */}
       <aside className="md:w-80 w-full">
         <motion.div
-          className="bg-white rounded-xl shadow border border-blue-200 p-6 sticky top-24"
+          className="bg-white rounded-xl shadow border border-[#6DB33F]-200 p-6 sticky top-24"
           initial={{ opacity: 0, x: 60 }}
           animate={{ opacity: 1, x: 0 }}
         >
-          <h2 className="text-xl font-bold mb-3 text-blue-700">Resumen</h2>
+          <h2 className="text-xl font-bold mb-3 text-green-700">Resumen</h2>
           <div className="flex justify-between text-gray-700 text-base mb-1">
             <span>Cantidad de ítems</span>
             <span>
@@ -349,7 +349,7 @@ export default function CartPage() {
           </div>
           {/* Ir a pagar */}
           <button
-            className="mt-6 w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold py-3 rounded-lg hover:scale-105 hover:shadow-xl transition-all flex items-center justify-center gap-2"
+            className="mt-6 w-full bg-gradient-to-r from-[#6DB33F]-600 to-yellow-500 text-white font-bold py-3 rounded-lg hover:scale-105 hover:shadow-xl transition-all flex items-center justify-center gap-2"
             onClick={irAPago}
           >
             <FaShoppingCart />

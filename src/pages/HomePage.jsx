@@ -1,10 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import ProductCard from "../components/ProductCard";
-import bannerFoto1 from "../assets/banner1.webp";
+import bannerFoto1 from "../assets/banner1.png";
 import bannerFoto2 from "../assets/banner2.jpg";
 import bannerFoto3 from "../assets/banner3.jpg";
-import bannerFoto4 from "../assets/banner4.jpg";
+import bannerFoto4 from "../assets/banner4.png";
 import bannerFoto5 from "../assets/banner5.jpg";
 import bannerFoto6 from "../assets/banner6.jpg";
 import bannerFoto7 from "../assets/banner7.jpg";
@@ -186,7 +186,7 @@ function ProductQuickView({ product, onClose, onAddToCart }) {
               </>
             )}
             {units > 0 && (
-              <span className="absolute right-3 bottom-2 bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-bold pointer-events-none">
+              <span className="absolute right-3 bottom-2 bg-[#6DB33F]-100 text-[#6DB33F]-700 text-xs px-2 py-0.5 rounded-full font-bold pointer-events-none">
                 x{units}
               </span>
             )}

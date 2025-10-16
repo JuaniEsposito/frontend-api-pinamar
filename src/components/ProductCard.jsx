@@ -161,7 +161,7 @@ export default function ProductCard({
           </button>
         ) : (
           <div className="flex items-center justify-center w-full gap-2">
-            <span className="bg-blue-100 text-blue-700 text-base font-bold rounded-full px-3 py-1 select-none">
+            <span className="bg-[#6DB33F]-100 text-[#6DB33F]-700 text-base font-bold rounded-full px-3 py-1 select-none">
               {units}
             </span>
             <button

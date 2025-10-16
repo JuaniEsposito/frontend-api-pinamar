@@ -34,7 +34,7 @@ export default function SignUpPage() {
       {/* Link a login arriba */}
       <button
         onClick={() => navigate("/signin")}
-        className="absolute left-4 top-4 p-2 rounded-full text-blue-500 hover:bg-blue-100 transition"
+        className="absolute left-4 top-4 p-2 rounded-full text-[#6DB33F] hover:bg-[#6DB33F] transition"
         title="Volver"
         type="button"
       >
@@ -115,7 +115,7 @@ export default function SignUpPage() {
         ¿Ya tenés cuenta?{" "}
         <Link
           to="/signin"
-          className="text-primary hover:text-secondary font-semibold"
+          className="text-primary hover:text-[#6DB33F] font-semibold"
         >
           Iniciá sesión acá
         </Link>

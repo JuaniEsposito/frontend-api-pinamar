@@ -317,7 +317,7 @@ export default function Navbar() {
                                 {/* Precio sin impuestos nacionales */}
                               </div>
                             </div>
-                            <div className="text-sm font-bold text-primary text-right min-w-[60px]">
+                            <div className="text-sm font-bold text-[#6DB33F] text-right min-w-[60px]">
                               {/* Subtotal por producto */}
                               <div className="text-[10px] text-gray-400 font-normal">
                                 {/* Subtotal sin IVA */}
@@ -442,14 +442,14 @@ export default function Navbar() {
             ) : (
               <NavLink
                 to="/signin"
-                className="hidden sm:inline px-4 py-2 rounded-full font-semibold bg-primary text-white hover:bg-secondary transition-all duration-200 shadow"
+                className="bg-primary hover:bg-[#ffff] text-white font-semibold px-5 py-2 rounded-r-md transition border-2"
               >
                 Ingresar
               </NavLink>
             )}
             {/* Mobile menu button */}
             <button
-              className="md:hidden ml-2 p-2 rounded-full hover:bg-accent/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="md:hidden ml-2 p-2 rounded-full hover:bg-ccent/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               onClick={() => setOpen(!open)}
               aria-label={open ? "Cerrar menú" : "Abrir menú"}
             >

@@ -113,10 +113,10 @@ export default function StepPago({
       )}
       {/* Resumen de compra */}
       <div className="mb-8">
-        <div className="font-bold text-xl mb-2 text-blue-700">
+        <div className="font-bold text-xl mb-2 text-[#6DB33F]-700">
           Productos en tu compra
         </div>
-        <div className="rounded-xl border border-blue-100 bg-gray-50 shadow-sm overflow-x-auto">
+        <div className="rounded-xl border border-[#6DB33F]-100 bg-gray-50 shadow-sm overflow-x-auto">
           {!carrito?.items || carrito.items.length === 0 ? (
             <div className="p-6 text-gray-400 text-center">
               Tu carrito está vacío.
@@ -124,7 +124,7 @@ export default function StepPago({
           ) : (
             <table className="min-w-full">
               <thead>
-                <tr className="bg-blue-100 text-blue-800">
+                <tr className="bg-[#6DB33F]-100 text-[#6DB33F]-800">
                   <th className="py-3 px-4 text-left">Producto</th>
                   <th className="py-3 px-4 text-left">Cantidad</th>
                   <th className="py-3 px-4 text-right">Precio c/u</th>
@@ -135,13 +135,13 @@ export default function StepPago({
                 {carrito.items.map((item) => (
                   <tr
                     key={item.productoId}
-                    className="border-t last:border-b-0 border-blue-100 hover:bg-blue-50"
+                    className="border-t last:border-b-0 border-[#6DB33F]-100 hover:bg-[#6DB33F]-50"
                   >
                     <td className="py-3 px-4 flex items-center gap-3">
                       {/* Corregido: ya no falla si la imagen no existe */}
                       <img
                         src={imagenesProductos?.[item.productoId] || ""}  
-                        className="w-14 h-14 rounded shadow border border-blue-200 object-cover"
+                        className="w-14 h-14 rounded shadow border border-[#6DB33F]-200 object-cover"
                         style={{ background: "#fff" }}
                       />
                       <div>
@@ -157,7 +157,7 @@ export default function StepPago({
                         ? `$${Number(item.precioUnitario).toFixed(2)}`
                         : "-"}
                     </td>
-                    <td className="py-3 px-4 text-right font-bold text-blue-700">
+                    <td className="py-3 px-4 text-right font-bold text-[#6DB33F]-700">
                       {item.subtotal !== undefined && item.subtotal !== null
                         ? `$${Number(item.subtotal).toFixed(2)}`
                         : (item.precioUnitario !== undefined && item.cantidad !== undefined
@@ -186,7 +186,7 @@ export default function StepPago({
           <label className="text-sm font-medium text-gray-700 mb-1">
             Número de tarjeta{" "}
             {cardType && (
-              <span className="ml-2 text-xs text-blue-600">({cardType})</span>
+              <span className="ml-2 text-xs text-[#6DB33F]-600">({cardType})</span>
             )}
           </label>
           <input
@@ -323,7 +323,7 @@ export default function StepPago({
           </button>
           <button
             type="submit"
-            className="px-8 py-3 bg-blue-600 text-white rounded-lg font-bold text-lg hover:bg-blue-700 shadow-lg transition disabled:opacity-60"
+            className="px-8 py-3 bg-[#6DB33F]-600 text-white rounded-lg font-bold text-lg hover:bg-[#6DB33F]-700 shadow-lg transition disabled:opacity-60"
             disabled={loading || (envio && !direccionId)}
           >
             {loading ? "Procesando..." : "Pagar"}

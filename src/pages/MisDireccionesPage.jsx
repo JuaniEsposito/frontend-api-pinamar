@@ -7,7 +7,7 @@ export default function MisDireccionesPage() {
           Aquí podrás ver y administrar tus direcciones de envío.
         </p>
         <button
-          className="bg-primary text-white px-4 py-2 rounded font-semibold hover:bg-blue-700 transition mt-4"
+          className="bg-primary text-white px-4 py-2 rounded font-semibold hover:bg-[#6DB33F]-700 transition mt-4"
           onClick={() => alert("Funcionalidad no disponible en la demo")}
         >
           Agregar nueva dirección
