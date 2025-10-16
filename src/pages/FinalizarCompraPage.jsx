@@ -4,8 +4,7 @@ import { AnimatePresence } from "framer-motion";
 import StepPago from "./StepPago";
 import StepEntrega from "./StepEntrega";
 
-
-// --- DATOS MOCK/PRUEBA (Simulan la API) ---
+// --- DATOS MOCK/PRUEBA ---
 const MOCK_CARRITO_INICIAL = {
   total: 5750.0,
   items: [
@@ -36,19 +35,24 @@ const MOCK_DIRECCIONES_INICIAL = [
     provincia: "Buenos Aires",
     codigoPostal: "1001",
   },
+  {
+    id: 2,
+    calle: "Av. Santa Fe",
+    numero: 4321,
+    pisoDepto: "",
+    ciudad: "CABA",
+    provincia: "Buenos Aires",
+    codigoPostal: "1123",
+  },
 ];
-// ---------------------------------------------
-
 
 export default function FinalizarCompraPage() {
   const navigate = useNavigate();
-  // Reemplazo del estado de Redux por datos de prueba
   const [carrito, setCarrito] = useState(MOCK_CARRITO_INICIAL);
   const [direcciones, setDirecciones] = useState(MOCK_DIRECCIONES_INICIAL);
 
-  // Estados principales del flujo de compra
-  const [direccionId, setDireccionId] = useState(1); // ID de la dirección hardcodeada
-  const [envio, setEnvio] = useState(true); // Siempre envío a domicilio
+  const [direccionId, setDireccionId] = useState(1);
+  const [envio, setEnvio] = useState(true);
   const [card, setCard] = useState({
     number: "",
     name: "",
@@ -57,35 +61,16 @@ export default function FinalizarCompraPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [step, setStep] = useState(2); // Inicia en el paso 1
+  const [step, setStep] = useState(2);
 
-
-  // Calcula el total final de la compra
   const calcularTotal = () => {
     if (!carrito || !Array.isArray(carrito.items) || carrito.items.length === 0)
       return 0;
-    let total = 0;
-    if (typeof carrito.total === "number" && !isNaN(carrito.total)) {
-      total = carrito.total;
-    } else {
-      total = carrito.items.reduce((sum, item) => {
-        if (
-          item.subtotal !== undefined &&
-          item.subtotal !== null &&
-          !isNaN(Number(item.subtotal))
-        ) {
-          return sum + Number(item.subtotal);
-        }
-        if (item.precioUnitario !== undefined && item.cantidad !== undefined) {
-          return sum + Number(item.precioUnitario) * Number(item.cantidad);
-        }
-        return sum;
-      }, 0);
-    }
-    return total + 2000;
+    let total = carrito.items.reduce((sum, item) => sum + (Number(item.subtotal) || 0), 0);
+    // Agregamos el costo de envío solo si está activado
+    return envio ? total + 2000 : total;
   };
 
-  // Maneja la selección de método de entrega.
   const handleSeleccionMetodo = (tipo) => {
     if (tipo === "retiro") {
       setEnvio(false);
@@ -97,20 +82,37 @@ export default function FinalizarCompraPage() {
     }
   };
 
-
-  // Simula el pago de forma local para la presentación
-  const handlePagar = async (e) => {
+  // --- FUNCIÓN MODIFICADA ---
+  // Ahora recibe un objeto con los detalles del total desde StepPago
+  const handlePagar = async (e, { totalFinal, totalOriginal, descuento }) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    setLoading(false);
-    alert("¡Pago realizado con éxito!");
-    navigate("/");
-  };
+    // --- LÓGICA PARA EL CONTADOR DE PEDIDOS ---
+    let currentCount = parseInt(sessionStorage.getItem('orderCounter') || '0', 10);
+    currentCount++;
+    sessionStorage.setItem('orderCounter', currentCount);
+    const newOrderId = String(currentCount).padStart(6, '0');
 
+    const ordenConfirmada = {
+      id: newOrderId, // ID secuencial
+      items: carrito.items,
+      direccion: direcciones.find(d => d.id === parseInt(direccionId))?.calle,
+      total: totalFinal, // Total final con descuento
+      totalOriginal: totalOriginal, // Total antes del descuento
+      descuento: descuento, // Monto del descuento
+      fechaCreacion: new Date().toISOString(),
+      estado: 'Procesando',
+      metodoPago: 'Tarjeta de Crédito',
+    };
+
+    setLoading(false);
+
+    navigate(`/mis-pedidos/${ordenConfirmada.id}`, { state: { orden: ordenConfirmada } });
+  };
 
   return (
     <div className="max-w-3xl mx-auto mt-12 p-6 bg-white rounded-2xl shadow-lg">
@@ -129,8 +131,8 @@ export default function FinalizarCompraPage() {
         {step === 2 && (
           <StepPago
             key="step-pago"
-            envio={true} // Asume que siempre es envío a domicilio
-            direcciones={direcciones} // Pasa la dirección hardcodeada
+            envio={true}
+            direcciones={direcciones}
             direccionId={direccionId}
             setDireccionId={setDireccionId}
             carrito={carrito}
