@@ -1,3 +1,5 @@
+// src/auth/AuthProvider.jsx
+
 import { createContext, useContext, useState } from "react";
 
 // --- 1. DATOS INICIALES MOCK (PRODUCTOS SALUDABLES) ---
@@ -86,152 +88,32 @@ export function AuthProvider({ children }) {
     setUsuario(mockUser);
   };
 
+   // --- FUNCIÓN NUEVA ---
+  // Recibe los nuevos datos y actualiza el estado del usuario
+  const updateUser = (nuevosDatos) => {
+    setUsuario((usuarioActual) => ({
+      ...usuarioActual, // Mantiene los datos que no se cambian (como id, username, etc.)
+      ...nuevosDatos,  // Sobreescribe los datos que sí se cambiaron (nombre, apellido, email)
+    }));
+  };
+
   const logout = () => {
     setToken(null);
-    setUsuario(null);
-    setCart(INITIAL_CART);
+    setUsuario(null); // Limpia el usuario al cerrar sesión
   };
 
-  const isAuthenticated = !!token;
-  const isAdmin = usuario?.role === 'ADMIN';
-
-  // --- FUNCIONES DE GESTIÓN DEL CARRITO (USER) ---
-  const addProductToCart = (productToAdd, quantity = 1) => {
-    const productInStock = products.find(p => p.id === productToAdd.id);
-    if (!productInStock || productInStock.stock <= 0) return;
-    
-    setCart((prevCart) => {
-      const existingItem = prevCart.find(item => item.id === productToAdd.id);
-      
-      if (existingItem) {
-        const newQuantity = Math.min(existingItem.quantity + quantity, productInStock.stock);
-        
-        return prevCart.map(item =>
-          item.id === productToAdd.id
-            ? { ...item, quantity: newQuantity }
-            : item
-        );
-      } else {
-        const finalQuantity = Math.min(quantity, productInStock.stock);
-        return [...prevCart, { ...productToAdd, quantity: finalQuantity }];
-      }
-    });
-  };
-  
-  const updateCartItemQuantity = (productId, quantityChange) => {
-    const productInStock = products.find(p => p.id === productId);
-    
-    setCart((prevCart) => {
-      const newCart = prevCart.map(item => {
-        if (item.id === productId) {
-          const newQuantity = item.quantity + quantityChange;
-          
-          const stockLimit = productInStock ? productInStock.stock : item.quantity;
-          const finalQuantity = Math.min(newQuantity, stockLimit);
-          
-          return { ...item, quantity: Math.max(0, finalQuantity) };
-        }
-        return item;
-      }).filter(item => item.quantity > 0); 
-      
-      return newCart;
-    });
-  };
-  
-  const removeProductFromCart = (productId) => {
-    setCart(prevCart => prevCart.filter(item => item.id !== productId));
-  };
-  
-  const clearCart = () => setCart(INITIAL_CART);
-
-  // --- FUNCIONES DE ADMINISTRACIÓN (ADMIN) ---
-  const saveProduct = (productData) => {
-    if (!isAdmin) return;
-    
-    setProducts(prevProducts => {
-      if (productData.id) {
-        // Editar Producto existente
-        return prevProducts.map(p => p.id === productData.id ? productData : p);
-      } else {
-        // Crear Nuevo Producto
-        const maxId = prevProducts.reduce((max, p) => Math.max(max, p.id), 0);
-        return [...prevProducts, { ...productData, id: maxId + 1 }];
-      }
-    });
-  };
-
-  const deleteProduct = (productId) => {
-    if (!isAdmin) return;
-    setProducts(prevProducts => prevProducts.filter(p => p.id !== productId));
-    setCart(prevCart => prevCart.filter(item => item.id !== productId));
-  };
-
-  // --- FUNCIÓN DE FINALIZAR COMPRA ---
-  const checkout = () => {
-    if (!isAuthenticated || cart.length === 0) return null;
-
-    const newOrder = {
-      id: orders.length + 1,
-      date: new Date().toISOString().split('T')[0],
-      items: cart.map(item => ({
-        nombreProducto: item.name,
-        cantidad: item.quantity,
-        precioUnitario: item.price,
-        subtotal: item.price * item.quantity,
-        id: item.id
-      })),
-      total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-      status: 'COMPLETADO',
-      userId: usuario.id,
-      direccion: "Dirección de envío mock",
-      metodoPago: "Tarjeta de Crédito (Mock)"
-    };
-    
-    setOrders(prevOrders => [...prevOrders, newOrder]);
-    clearCart();
-    
-    // Descontar stock (simulación)
-    setProducts(prevProducts => {
-      return prevProducts.map(p => {
-        const purchasedItem = cart.find(item => item.id === p.id);
-        if (purchasedItem) {
-          return { ...p, stock: p.stock - purchasedItem.quantity };
-        }
-        return p;
-      });
-    });
-
-    return newOrder;
-  };
-  
-  // --- VALORES EXPUESTOS ---
-  const contextValue = {
-    // Auth
-    token,
-    usuario,
-    isAuthenticated,
-    isAdmin, 
-    login,
-    logout,
-    // E-commerce Data
-    products,
-    cart,
-    orders,
-    // E-commerce Actions
-    addProductToCart,
-    updateCartItemQuantity,
-    removeProductFromCart,
-    clearCart,
-    saveProduct, 
-    deleteProduct, 
-    checkout,
-  };
-
+  const isAuthenticated = !!token; // Verifica si hay un token
   return (
     <AuthContext.Provider
-      value={contextValue}
+      // Agregamos updateUser al valor del contexto
+      value={{ token, usuario, isAuthenticated, login, logout, updateUser }}
     >
       {children}
     </AuthContext.Provider>
   );
+}
+
+
+export function useAuth() {
+  return useContext(AuthContext);
 }
