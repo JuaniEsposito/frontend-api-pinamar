@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import ProductCard from "../components/ProductCard";
+//import ProductCard from "../components/ProductCard";
 import bannerFoto1 from "../assets/banner1.png";
 import bannerFoto2 from "../assets/banner2.jpg";
 import bannerFoto3 from "../assets/banner3.jpg";
