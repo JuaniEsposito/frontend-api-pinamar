@@ -1,132 +1,134 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios"; // 👈 Importamos Axios
 
+const API_URL = "http://localhost:8080/usuarios";
+
+// Helper para manejar errores de Axios y devolver un mensaje limpio
+const getAxiosErrorMessage = (error) => {
+  if (error.response && error.response.data) {
+    // Si el backend devuelve un mensaje, úsalo (ej: error.response.data.mensaje o .message)
+    return error.response.data.mensaje || error.response.data.message || error.message;
+  }
+  // Para errores de red o desconocidos
+  return error.message || "Error de red o desconocido.";
+};
+
+// -----------------------------------------------------------------
 // Login
+// -----------------------------------------------------------------
 export const loginThunk = createAsyncThunk(
   "auth/login",
   async ({ username, password }, { rejectWithValue }) => {
     try {
-      const res = await fetch("http://localhost:4040/usuarios/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-      if (!res.ok) {
-        const contentType = res.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-          const errorJson = await res.json();
-          throw new Error(errorJson.mensaje || "Credenciales inválidas.");
-        } else {
-          throw new Error(await res.text() || "Credenciales inválidas.");
-        }
-      }
-      const data = await res.json();
+      // Usamos axios.post
+      const response = await axios.post(`${API_URL}/login`, { username, password });
+      const data = response.data;
+      
       // Persistir en localStorage
       localStorage.setItem(
         "auth",
         JSON.stringify({ token: data.token, usuario: data.usuario })
       );
+      
       return { token: data.token, usuario: data.usuario };
     } catch (e) {
-      return rejectWithValue(e.message || "Error de autenticación.");
+      // Usamos el helper de error
+      return rejectWithValue(getAxiosErrorMessage(e) || "Error de autenticación.");
     }
   }
 );
 
+// -----------------------------------------------------------------
 // Logout (solo limpia el estado)
+// -----------------------------------------------------------------
 export const logoutThunk = createAsyncThunk("auth/logout", async () => {
   localStorage.removeItem("auth");
 });
 
+// -----------------------------------------------------------------
 // Registro de usuario
+// -----------------------------------------------------------------
 export const registerThunk = createAsyncThunk(
   "auth/register",
   async (userData, { rejectWithValue }) => {
     try {
-      const res = await fetch("http://localhost:4040/usuarios", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
-      });
-      if (!res.ok) {
-        const contentType = res.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-          const errorJson = await res.json();
-          throw new Error(errorJson.mensaje || "Error al registrar usuario.");
-        } else {
-          throw new Error(await res.text() || "Error al registrar usuario.");
-        }
-      }
-      return await res.json();
+      // Usamos axios.post
+      const response = await axios.post(API_URL, userData);
+      // Retorna la respuesta completa del nuevo usuario
+      return response.data; 
     } catch (e) {
-      return rejectWithValue(e.message || "Error al registrar usuario.");
+      // Usamos el helper de error
+      return rejectWithValue(getAxiosErrorMessage(e) || "Error al registrar usuario.");
     }
   }
 );
 
+// -----------------------------------------------------------------
 // Verificar email para reset password
+// -----------------------------------------------------------------
 export const verificarEmailThunk = createAsyncThunk(
   "auth/verificarEmail",
   async (email, { rejectWithValue }) => {
     try {
-      const res = await fetch(
-        `http://localhost:4040/usuarios/exists/email/${encodeURIComponent(email)}`
-      );
-      if (!res.ok) throw new Error("No se pudo verificar el correo.");
-      return await res.json();
+      // Usamos axios.get
+      const response = await axios.get(`${API_URL}/exists/email/${encodeURIComponent(email)}`);
+      return response.data;
     } catch (e) {
-      return rejectWithValue(e.message || "Error al verificar el correo.");
+      // Usamos el helper de error
+      return rejectWithValue(getAxiosErrorMessage(e) || "Error al verificar el correo.");
     }
   }
 );
 
+// -----------------------------------------------------------------
 // Cambiar contraseña (reset por email)
+// -----------------------------------------------------------------
 export const cambiarPasswordThunk = createAsyncThunk(
   "auth/cambiarPassword",
   async ({ email, nuevaContrasena }, { rejectWithValue }) => {
     try {
-      const res = await fetch(
-        `http://localhost:4040/usuarios/cambiar-password?email=${email}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nuevaContrasena }),
-        }
+      // Usamos axios.put
+      const response = await axios.put(
+        `${API_URL}/cambiar-password?email=${email}`,
+        { nuevaContrasena }
       );
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || "Error desconocido.");
-      }
-      return await res.text();
+      // Axios parsea la respuesta, si no es JSON, usa response.data.
+      return response.data; 
     } catch (e) {
-      return rejectWithValue(e.message || "Error al cambiar la contraseña.");
+      // Usamos el helper de error
+      return rejectWithValue(getAxiosErrorMessage(e) || "Error al cambiar la contraseña.");
     }
   }
 );
 
+// -----------------------------------------------------------------
 // Cambiar contraseña logueado
+// -----------------------------------------------------------------
 export const cambiarPasswordLogThunk = createAsyncThunk(
   "auth/cambiarPasswordLog",
   async ({ token, contrasenaActual, nuevaContrasena }, { rejectWithValue }) => {
     try {
-      const res = await fetch("http://localhost:4040/usuarios/password", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          contrasenaActual,
-          nuevaContrasena,
-        }),
-      });
-      const text = await res.text();
-      if (!res.ok) throw new Error(text || "Error al cambiar la contraseña.");
-      return text;
+      // Usamos axios.put
+      const response = await axios.put(`${API_URL}/password`, 
+        { contrasenaActual, nuevaContrasena },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      // Axios parsea la respuesta, si no es JSON, usa response.data.
+      return response.data;
     } catch (e) {
-      return rejectWithValue(e.message || "Error al cambiar la contraseña.");
+      // Usamos el helper de error
+      return rejectWithValue(getAxiosErrorMessage(e) || "Error al cambiar la contraseña.");
     }
   }
 );
+
+// -----------------------------------------------------------------
+// Estado Inicial y Slice (sin cambios en la lógica del slice)
+// -----------------------------------------------------------------
 
 const initialState = (() => {
   const persisted = localStorage.getItem("auth");
@@ -175,6 +177,7 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Login
       .addCase(loginThunk.pending, (state) => {
         state.loading = true;
         state.error = "";
@@ -193,6 +196,7 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.error = action.payload;
       })
+      // Logout
       .addCase(logoutThunk.fulfilled, (state) => {
         state.token = null;
         state.usuario = null;
