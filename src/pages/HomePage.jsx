@@ -191,15 +191,24 @@ function useQueryParam(name) {
 }
 
 // MOCK DE PRODUCTOS REQUERIDO PARA QUE EL HOME FUNCIONE SIN CONTEXTO
+import manzanaImg from "../assets/manzana.jpg";
+import lechugaImg from "../assets/lechuga.jpg";
+import aguaImg from "../assets/agua.jpg";
+import frutosSecosImg from "../assets/frutossecos.jpg";
+import tomateCherryImg from "../assets/tomatecherry.jpg";
+import jugoNaranjaImg from "../assets/jugonaranja.jpg";
+import panIntegralImg from "../assets/panintegral.jpg";
+import cervezaImg from "../assets/cerve.jpg";
+// MOCK DE PRODUCTOS REQUERIDO PARA QUE EL HOME FUNCIONE SIN CONTEXTO
 const MOCK_PRODUCTS = [
-  { id: 1, name: "Manzanas Frescas", price: 350.00, stock: 50, brand: "La Huerta", description: "Manzanas crujientes.", category: "Frutas", imageUrl: "https://placehold.co/100x100/FF5733/FFFFFF?text=Manzana", unidad_medida: "kg", descuento: 0, bestSeller: true },
-  { id: 2, name: "Lechuga Morada", price: 180.50, stock: 30, brand: "Tierra Viva", description: "Hojas frescas.", category: "Vegetales", imageUrl: "https://placehold.co/100x100/3CB371/FFFFFF?text=Lechuga", unidad_medida: "unidad", descuento: 15, bestSeller: false },
-  { id: 3, name: "Agua Mineral 1.5L", price: 120.00, stock: 100, brand: "Vida Pura", description: "Agua de manantial.", category: "Bebidas", imageUrl: "https://placehold.co/100x100/87CEFA/000000?text=Agua", unidad_medida: "litro", descuento: 0, bestSeller: false },
-  { id: 4, name: "Frutos Secos Mix", price: 950.00, stock: 20, brand: "NutriMix", description: "Almendras, nueces.", category: "Snacks", imageUrl: "https://placehold.co/100x100/A0BFFF/000000?text=Frutos+Secos", unidad_medida: "250g", descuento: 20, bestSeller: true },
-  { id: 5, name: "Tomates Cherry", price: 280.00, stock: 45, brand: "El Campo", description: "Tomates rojos y maduros.", category: "Vegetales", imageUrl: "https://placehold.co/100x100/DC143C/FFFFFF?text=Tomate", unidad_medida: "250g", descuento: 5, bestSeller: false },
-  { id: 6, name: "Jugo Naranja Orgánico", price: 300.00, stock: 60, brand: "Citrus Fresh", description: "100% exprimido.", category: "Bebidas", imageUrl: "https://placehold.co/100x100/FFA500/FFFFFF?text=Jugo", unidad_medida: "litro", descuento: 0, bestSeller: true },
-  { id: 7, name: "Pan Integral", price: 420.00, stock: 15, brand: "La Panera", description: "Rico en fibra.", category: "Panadería", imageUrl: "https://placehold.co/100x100/D2B48C/000000?text=Pan", unidad_medida: "unidad", descuento: 10, bestSeller: false },
-  { id: 8, name: "Zanahorias Baby", price: 150.00, stock: 40, brand: "Frescura Express", description: "Listas para consumir.", category: "Vegetales", imageUrl: "https://placehold.co/100x100/FF8C00/FFFFFF?text=Zanahoria", unidad_medida: "bolsa", descuento: 0, bestSeller: false },
+  { id: 1, name: "Manzanas Frescas", price: 350.00, stock: 50, brand: "La Huerta", description: "Manzanas crujientes.", category: "Frutas", imageUrl: manzanaImg, unidad_medida: "kg", descuento: 0, bestSeller: true },
+  { id: 2, name: "Lechuga Morada", price: 180.50, stock: 30, brand: "Tierra Viva", description: "Hojas frescas.", category: "Vegetales", imageUrl: lechugaImg, unidad_medida: "unidad", descuento: 15, bestSeller: false },
+  { id: 3, name: "Agua Mineral 1.5L", price: 120.00, stock: 100, brand: "Vida Pura", description: "Agua de manantial.", category: "Bebidas", imageUrl: aguaImg, unidad_medida: "litro", descuento: 0, bestSeller: false },
+  { id: 4, name: "Frutos Secos Mix", price: 950.00, stock: 20, brand: "NutriMix", description: "Almendras, nueces.", category: "Snacks", imageUrl: frutosSecosImg, unidad_medida: "250g", descuento: 20, bestSeller: true },
+  { id: 5, name: "Tomates Cherry", price: 280.00, stock: 45, brand: "El Campo", description: "Tomates rojos y maduros.", category: "Vegetales", imageUrl: tomateCherryImg, unidad_medida: "250g", descuento: 5, bestSeller: false },
+  { id: 6, name: "Jugo Naranja Orgánico", price: 300.00, stock: 60, brand: "Citrus Fresh", description: "100% exprimido.", category: "Bebidas", imageUrl: jugoNaranjaImg, unidad_medida: "litro", descuento: 0, bestSeller: true },
+  { id: 7, name: "Pan Integral", price: 420.00, stock: 15, brand: "La Panera", description: "Rico en fibra.", category: "Panadería", imageUrl: panIntegralImg, unidad_medida: "unidad", descuento: 10, bestSeller: false },
+  { id: 8, name: "Zanahorias Baby", price: 150.00, stock: 40, brand: "Frescura Express", description: "Listas para consumir.", category: "Vegetales", imageUrl: cervezaImg, unidad_medida: "bolsa", descuento: 0, bestSeller: false },
 ];
 // Función mock de carrito (simula la función del AuthProvider)
 const MOCK_ADD_TO_CART = (product, quantity) => { console.log(`[MOCK] Agregado: ${product.name} x${quantity}`); };
