@@ -1,105 +1,125 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { getToken } from "../utils/auth"; // Suponiendo que tienes una función para obtener el token
+import { getToken } from "../utils/auth";
+import api from "../api"; // ✅ Usamos la instancia de Axios configurada (apunta a :8080)
 
 // Thunk para OBTENER el carrito del usuario logueado
 export const fetchCarrito = createAsyncThunk(
-  "cart/fetchCarrito",
-  async (_, { rejectWithValue }) => {
-    const token = getToken();
-    if (!token) return rejectWithValue("No hay token");
+  "cart/fetchCarrito",
+  async (_, { rejectWithValue, getState }) => {
+    const token = getToken();
+    const userId = getState().auth.usuario?.id; // Obtenemos el ID del store
+    if (!token || !userId) return rejectWithValue("Usuario no autenticado");
 
-    const response = await fetch("http://localhost:4040/carritos/mi-carrito", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
+        // ✅ Endpoint corregido para usar el ID del usuario
+        const response = await api.get(`/carritos/usuario/${userId}`, { 
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
 
-    if (!response.ok) {
-      return rejectWithValue("No se pudo cargar el carrito");
-    }
-    const data = await response.json();
-    // Tu backend devuelve un CarritoResponse, que puede no tener `items`.
-    // Asegurémonos de que el estado siempre tenga una estructura consistente.
-    return {
-      items: data.items || [],
-      total: data.total || 0,
-    };
-  }
+        const data = response.data;
+        
+        return {
+            items: data.items || [],
+            total: data.total || 0,
+        };
+    } catch (error) {
+        return rejectWithValue(error.response?.data?.message || "No se pudo cargar el carrito");
+    }
+  }
 );
 
 // Thunk para AGREGAR un producto (o sumar cantidad)
 export const addProductToCart = createAsyncThunk(
-  "cart/addProductToCart",
-  async ({ productoId, cantidad }, { dispatch, rejectWithValue }) => {
-    const token = getToken();
-    if (!token) return rejectWithValue("No hay token");
+  "cart/addProductToCart",
+  async ({ productoId, cantidad }, { dispatch, rejectWithValue, getState }) => {
+    const token = getToken();
+    const userId = getState().auth.usuario?.id;
+    if (!token || !userId) return rejectWithValue("Debe iniciar sesión.");
 
-    await fetch(
-      `http://localhost:4040/carritos/mi-carrito/producto/${productoId}?cantidad=${cantidad}`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    // Después de agregar, volvemos a pedir el carrito completo para actualizar el estado
-    dispatch(fetchCarrito());
-  }
+    try {
+        // ✅ Endpoint corregido para usar el ID del usuario en la ruta
+        await api.patch(
+            `/carritos/usuario/${userId}/producto/${productoId}?cantidad=${cantidad}`,
+            {}, // Enviamos un objeto vacío para el body, evitando errores de Spring
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+    } catch (error) {
+        // Rechazamos con el mensaje de error del backend (Stock insuficiente, etc.)
+        const errorMessage = error.response?.data?.message || "Error al agregar al carrito.";
+        return rejectWithValue(errorMessage);
+    }
+    
+    dispatch(fetchCarrito());
+  }
 );
 
 // Thunk para ELIMINAR un producto (o restar cantidad)
 export const removeProductFromCart = createAsyncThunk(
-  "cart/removeProductFromCart",
-  async ({ productoId, cantidad }, { dispatch, rejectWithValue }) => {
-    const token = getToken();
-    if (!token) return rejectWithValue("No hay token");
+  "cart/removeProductFromCart",
+  async ({ productoId, cantidad }, { dispatch, rejectWithValue, getState }) => {
+    const token = getToken();
+    const userId = getState().auth.usuario?.id;
+    if (!token || !userId) return rejectWithValue("Debe iniciar sesión.");
 
-    await fetch(
-      `http://localhost:4040/carritos/mi-carrito/producto/${productoId}?cantidad=${cantidad}`,
-      {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    // Después de eliminar, volvemos a pedir el carrito completo para actualizar el estado
-    dispatch(fetchCarrito());
-  }
+    try {
+        // ✅ Endpoint corregido para usar el ID del usuario en la ruta
+        await api.delete(
+            `/carritos/usuario/${userId}/producto/${productoId}?cantidad=${cantidad}`,
+            { 
+                data: {}, // Necesario para DELETE en Axios cuando se envían headers/body
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+    } catch (error) {
+        return rejectWithValue("Error al eliminar del carrito.");
+    }
+
+    dispatch(fetchCarrito());
+  }
 );
 
 const cartSlice = createSlice({
-  name: "cart",
-  initialState: {
-    items: [],
-    total: 0,
-    status: "idle", // 'idle' | 'loading' | 'succeeded' | 'failed'
-    error: null,
-  },
-  reducers: {
-    resetCarrito(state) {
-      state.items = [];
-      state.total = 0;
-      state.status = "idle";
-      state.error = null;
-    },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(fetchCarrito.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(fetchCarrito.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.items = action.payload.items;
-        state.total = action.payload.total;
-      })
-      .addCase(fetchCarrito.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload;
-      });
-  },
+  name: "cart",
+  initialState: {
+    items: [],
+    total: 0,
+    status: "idle", 
+    error: null,
+  },
+  reducers: {
+    resetCarrito(state) {
+      state.items = [];
+      state.total = 0;
+      state.status = "idle";
+      state.error = null;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchCarrito.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchCarrito.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.items = action.payload.items;
+        state.total = action.payload.total;
+      })
+      .addCase(fetchCarrito.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(addProductToCart.rejected, (state, action) => {
+          state.error = action.payload;
+      });
+  },
 });
 
 export const { resetCarrito } = cartSlice.actions;
