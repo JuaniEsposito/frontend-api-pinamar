@@ -99,18 +99,14 @@ export default function FinalizarCompraPage() {
   if (direcciones.length === 0) {
     return (
       <div className="max-w-3xl mx-auto mt-12 p-6 bg-white rounded-2xl shadow-lg">
-        <h2 className="text-3xl font-extrabold mb-8 text-center text-green-700 tracking-tight">
-          Finalizar compra
-        </h2>
-        <div className="text-center py-8">
-          <p className="text-gray-600 mb-4">No tenés direcciones registradas.</p>
-          <button
-            onClick={() => navigate("/mis-direcciones")}
-            className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700"
-          >
-            Agregar dirección
-          </button>
-        </div>
+        {/* ... */}
+        <button
+          // 🟢 CAMBIO AQUÍ: Añadimos el 'state' a la navegación
+          onClick={() => navigate("/mis-direcciones", { state: { from: "/finalizar-compra" } })}
+          className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700"
+        >
+          Agregar dirección
+        </button>
       </div>
     );
   }

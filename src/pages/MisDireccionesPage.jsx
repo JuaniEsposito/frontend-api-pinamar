@@ -4,12 +4,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchDirecciones, saveDireccion, deleteDireccion, clearDireccionesMsg } from "../redux/direccionesSlice";
 import { localidadesAMBA } from "../data/localidadesAMBA";
 import { toast } from 'react-toastify';
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function MisDireccionesPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const { direcciones, loading, error, success } = useSelector((state) => state.direcciones);
   
-  // 👇 Obtener el usuario logueado desde Redux
   const { usuario } = useSelector((state) => state.auth);
   
   const [showForm, setShowForm] = useState(false);
@@ -24,14 +26,12 @@ export default function MisDireccionesPage() {
     tipoVivienda: "casa",
   });
 
-  // 👇 CAMBIO AQUÍ: Cargar direcciones solo si hay usuario
   useEffect(() => {
     if (usuario?.id) {
-      dispatch(fetchDirecciones(usuario.id)); // 👈 Pasá el ID del usuario
+      dispatch(fetchDirecciones(usuario.id));
     }
   }, [dispatch, usuario]);
 
-  // Limpiar mensajes después de 3 segundos
   useEffect(() => {
     if (error || success) {
       const timer = setTimeout(() => {
@@ -51,39 +51,43 @@ export default function MisDireccionesPage() {
     }
   };
 
-  const handleAddDireccion = (e) => {
+  // 🟢 MODIFICACIÓN 1: Se convierte la función a 'async' para esperar la respuesta.
+  const handleAddDireccion = async (e) => {
     e.preventDefault();
     if (!formData.calle || !formData.numero || !formData.ciudad || !formData.codigoPostal) {
       toast.error("Por favor, completá todos los campos obligatorios.");
       return;
     }
 
-    // Validar que haya un usuario logueado
     if (!usuario || !usuario.id) {
       toast.error("Debes estar logueado para agregar una dirección.");
       return;
     }
 
-    // Preparar el objeto para enviar al backend con el ID del usuario logueado
     const direccionToSave = {
       ...formData,
       usuario: { id: usuario.id }
     };
 
-    dispatch(saveDireccion({ direccion: direccionToSave, editId }));
-    
-    // Resetear formulario
-    setFormData({
-      calle: "",
-      numero: "",
-      pisoDepto: "",
-      ciudad: "",
-      provincia: "Buenos Aires",
-      codigoPostal: "",
-      tipoVivienda: "casa",
-    });
-    setShowForm(false);
-    setEditId(null);
+    try {
+      // 🟢 MODIFICACIÓN 2: Se espera a que la acción de guardar termine usando 'await' y '.unwrap()'.
+      await dispatch(saveDireccion({ direccion: direccionToSave, editId })).unwrap();
+
+      // 🟢 MODIFICACIÓN 3: Se comprueba si existe una ruta de origen en el 'state' de la navegación.
+      const redirectPath = location.state?.from;
+
+      if (redirectPath) {
+        // Si existe, se muestra un mensaje y se redirige al usuario de vuelta.
+        toast.success("Dirección guardada. Volviendo al proceso de compra...");
+        navigate(redirectPath);
+      } else {
+        // Si no, se ejecuta el comportamiento normal de resetear y cerrar el formulario.
+        handleCancelForm();
+      }
+    } catch (rejectedValueOrSerializedError) {
+      // Si la acción de guardar falla, se muestra un toast con el error.
+      toast.error("No se pudo guardar la dirección.");
+    }
   };
 
   const handleEditDireccion = (dir) => {
@@ -120,7 +124,6 @@ export default function MisDireccionesPage() {
     });
   };
 
-  // 👇 Mostrar mensaje si no hay usuario
   if (!usuario) {
     return (
       <div className="max-w-3xl mx-auto mt-10 p-4">
@@ -143,7 +146,6 @@ export default function MisDireccionesPage() {
         </button>
       </div>
 
-      {/* Mensajes de error/éxito */}
       <AnimatePresence>
         {error && (
           <motion.div
@@ -167,7 +169,6 @@ export default function MisDireccionesPage() {
         )}
       </AnimatePresence>
 
-      {/* Formulario */}
       <AnimatePresence>
         {showForm && (
           <motion.form
@@ -274,14 +275,12 @@ export default function MisDireccionesPage() {
         )}
       </AnimatePresence>
 
-      {/* Loading */}
       {loading && (
         <div className="text-center py-8">
           <p className="text-gray-600">Cargando direcciones...</p>
         </div>
       )}
 
-      {/* Lista de direcciones */}
       {!loading && (
         <div className="space-y-4">
           {direcciones.length === 0 ? (
