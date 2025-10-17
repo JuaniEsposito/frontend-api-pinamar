@@ -1,121 +1,99 @@
-import { useState } from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
-import { useAuth } from "../auth/AuthProvider";
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { loginThunk, clearAuthError } from "../redux/authSlice"; 
+import { toast } from 'react-toastify';
 
 export default function SignInPage() {
-  const [usuario, setUsuario] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
-  const { login } = useAuth();
 
-  const from = location.state?.from?.pathname || "/";
+  const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
+
+  // Si el usuario ya está autenticado, lo redirige al inicio.
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/");
+    }
+  }, [isAuthenticated, navigate]);
+
+  // Limpia el mensaje de error cuando el componente se desmonta.
+  useEffect(() => {
+    return () => {
+      dispatch(clearAuthError());
+    };
+  }, [dispatch]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
+    
+    // Limpia cualquier error anterior antes de intentar el login
+    dispatch(clearAuthError());
 
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      login({
-        jwt: "este-es-un-token-falso-para-la-demo",
-        usuario: {
-          id: 1,
-          nombre: usuario || "Usuario Demo",
-          apellido: usuario || "Demo",
-          email: `${usuario || "usuario"}@correo.com`,
-          username: usuario || "usuariodemo",
-          fecha_registro: new Date().toISOString(),
-          rol: "USER",
-        },
+    dispatch(loginThunk({ username, password }))
+      .unwrap() // .unwrap() permite usar .then() y .catch() con el resultado del thunk
+      .then(() => {
+        // Éxito: el usuario se logueó correctamente
+        toast.success("¡Sesión iniciada correctamente!");
+        navigate("/"); // Redirige a la página principal
+      })
+      .catch((err) => {
+        // Fallo: el error ya se guarda en el estado de Redux,
+        // por lo que se mostrará automáticamente en el div de error.
+        console.error("Fallo en el login:", err);
       });
-      
-      navigate(from, { replace: true });
-
-    } catch (err) {
-      console.error("Error durante el login:", err);
-      setError("Ocurrió un error inesperado al iniciar sesión.");
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
-    <div
-      className="max-w-md mx-auto relative overflow-hidden z-10 bg-white p-8 rounded-lg shadow-md
-      before:w-24 before:h-24 before:absolute before:bg-green-100 before:rounded-full before:-z-10 before:blur-2xl
-      after:w-32 after:h-32 after:absolute after:bg-green-200 after:rounded-full after:-z-10 after:blur-xl after:top-24 after:-right-12"
+    <form
+      onSubmit={handleLogin}
+      className="max-w-md mx-auto mt-20 p-6 bg-white shadow-lg rounded-xl border"
     >
-      <button
-        onClick={() => navigate(-1)}
-        className="absolute left-4 top-4 p-2 rounded-full text-green-500 hover:bg-green-100 transition"
-        title="Volver"
-        type="button"
-      >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2.2}
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-      </button>
-      <h2 className="text-2xl font-bold text-green-700 mb-6 text-center">
-        Iniciar sesión
-      </h2>
-      <form className="form" onSubmit={handleLogin}>
-        <input
-          type="text"
-          placeholder="Usuario"
-          value={usuario}
-          onChange={(e) => setUsuario(e.target.value)}
-          className="input mt-1 p-2 w-full bg-gray-100 border border-green-300 rounded-md text-green-900 mb-4 focus:ring-2 focus:ring-green-500"
-          required
-        />
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="input mt-1 p-2 w-full bg-gray-100 border border-green-300 rounded-md text-green-900 mb-4 focus:ring-2 focus:ring-green-500"
-          required
-        />
-        <button
-          type="submit"
-          className="login-button bg-green-600 hover:bg-green-700 text-white px-4 py-2 font-bold rounded-md w-full transition mt-2"
-          disabled={loading}
-        >
-          {loading ? "Ingresando..." : "Iniciar sesión"}
-        </button>
-        {error && (
-          <div className="bg-red-100 text-red-700 p-2 rounded mt-3">
-            {error}
-          </div>
-        )}
-      </form>
+      <h2 className="text-2xl font-bold mb-6 text-center text-primary">Iniciar Sesión</h2>
 
-      <div className="flex flex-col mt-6">
-        <span className="text-center text-gray-500 mb-2">
-          ¿No tenés cuenta?
-        </span>
+      {/* Muestra el mensaje de error que viene del estado de Redux */}
+      {error && (
+        <div className="mb-4 text-red-600 text-center bg-red-100 p-3 rounded-lg border border-red-200">
+          {error}
+        </div>
+      )}
+
+      <input
+        type="text"
+        placeholder="Usuario"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        className="w-full border p-3 mb-4 rounded-lg focus:ring-2 focus:ring-primary"
+        required
+      />
+      <input
+        type="password"
+        placeholder="Contraseña"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        className="w-full border p-3 mb-4 rounded-lg focus:ring-2 focus:ring-primary"
+        required
+      />
+      <button
+        type="submit"
+        className="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50"
+        disabled={loading}
+      >
+        {loading ? "Iniciando..." : "Ingresar"}
+      </button>
+
+      <p className="mt-6 text-center text-sm text-gray-600">
+        ¿No tenés cuenta?{" "}
         <Link
           to="/signup"
-          className="w-full bg-white border border-green-500 text-green-700 font-bold py-2 rounded-md text-center hover:bg-green-50 transition"
+          className="text-primary hover:text-green-700 font-semibold"
         >
-          Crear cuenta
+          Registrate acá
         </Link>
-      </div>
-    </div>
+      </p>
+    </form>
   );
 }
