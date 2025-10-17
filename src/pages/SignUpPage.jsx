@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { registerThunk, clearAuthError } from "../redux/authSlice";
-import { toast } from 'react-toastify'; // ✅ IMPORTAMOS TOASTIFY
+import { toast } from 'react-toastify';
 
 export default function SignUpPage() {
   const [username, setUsername] = useState("");
@@ -10,15 +10,15 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [direccion, setDireccion] = useState("");
   
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Obtiene el estado de Redux
   const { loading, error } = useSelector((state) => state.auth); 
 
   useEffect(() => {
-    // Limpia el error de Redux al montar/desmontar
     return () => dispatch(clearAuthError());
   }, [dispatch]);
 
@@ -26,45 +26,43 @@ export default function SignUpPage() {
     e.preventDefault();
 
     if (!email.includes("@")) {
-      // ✅ ALERT REEMPLAZADO
       toast.error("Por favor, ingresá un correo electrónico válido.");
       return;
     }
 
     dispatch(clearAuthError()); 
 
-    // 🚀 Llama al thunk de registro (crea usuario y simula login)
     dispatch(
       registerThunk({
         username,
         email,
-        password, 
+        password,
         nombre,
         apellido,
-        rol: "USER", 
+        telefono,
+        direccion,
+        rol: "USER",
       })
     )
-      .unwrap() 
+      .unwrap()
       .then(() => {
-        // ✅ ALERT REEMPLAZADO
         toast.success("Cuenta creada con éxito. Ahora podés iniciar sesión.");
         navigate("/signin");
       })
       .catch((err) => {
-        // Fallo: El error se muestra en el UI desde el estado 'error'
-        console.error("Fallo en el registro:", err);
+        console.error("Error en el registro:", err);
       });
   };
 
   return (
     <form
       onSubmit={handleRegister}
-      className="max-w-md mx-auto mt-20 p-6 bg-white shadow rounded relative"
+      className="max-w-md mx-auto mt-20 p-6 bg-white shadow-lg rounded-xl border relative"
     >
       <button
         onClick={() => navigate("/signin")}
-        className="absolute left-4 top-4 p-2 rounded-full text-[#6DB33F] hover:bg-gray-100 transition"
-        title="Volver"
+        className="absolute left-4 top-4 p-2 rounded-full text-green-600 hover:bg-gray-100 transition"
+        title="Volver a Iniciar Sesión"
         type="button"
       >
         <svg
@@ -81,22 +79,20 @@ export default function SignUpPage() {
           />
         </svg>
       </button>
-      <h2 className="text-xl font-bold mb-4 text-center">Crear cuenta</h2>
+      <h2 className="text-2xl font-bold mb-6 text-center text-primary">Crear cuenta</h2>
 
-      {/* Muestra el error de Redux */}
       {error && (
-        <div className="mb-4 text-red-600 text-center bg-red-100 p-2 rounded">
+        <div className="mb-4 text-red-600 text-center bg-red-100 p-3 rounded-lg border border-red-200">
           {error}
         </div>
       )}
 
-      {/* Inputs */}
       <input
         type="text"
         placeholder="Nombre"
         value={nombre}
         onChange={(e) => setNombre(e.target.value)}
-        className="w-full border p-2 mb-4 rounded"
+        className="w-full border p-3 mb-4 rounded-lg focus:ring-2 focus:ring-primary"
         required
       />
       <input
@@ -104,7 +100,7 @@ export default function SignUpPage() {
         placeholder="Apellido"
         value={apellido}
         onChange={(e) => setApellido(e.target.value)}
-        className="w-full border p-2 mb-4 rounded"
+        className="w-full border p-3 mb-4 rounded-lg focus:ring-2 focus:ring-primary"
         required
       />
       <input
@@ -112,7 +108,7 @@ export default function SignUpPage() {
         placeholder="Contraseña"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        className="w-full border p-2 mb-4 rounded"
+        className="w-full border p-3 mb-4 rounded-lg focus:ring-2 focus:ring-primary"
         required
       />
       <input
@@ -120,7 +116,7 @@ export default function SignUpPage() {
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="w-full border p-2 mb-4 rounded"
+        className="w-full border p-3 mb-4 rounded-lg focus:ring-2 focus:ring-primary"
         required
       />
       <input
@@ -128,24 +124,39 @@ export default function SignUpPage() {
         placeholder="Usuario"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
-        className="w-full border p-2 mb-4 rounded"
+        className="w-full border p-3 mb-4 rounded-lg focus:ring-2 focus:ring-primary"
+        required
+      />
+      <input
+        type="text"
+        placeholder="Teléfono"
+        value={telefono}
+        onChange={(e) => setTelefono(e.target.value)}
+        className="w-full border p-3 mb-4 rounded-lg focus:ring-2 focus:ring-primary"
+        required
+      />
+      <input
+        type="text"
+        placeholder="Dirección"
+        value={direccion}
+        onChange={(e) => setDireccion(e.target.value)}
+        className="w-full border p-3 mb-4 rounded-lg focus:ring-2 focus:ring-primary"
         required
       />
 
       <button
         type="submit"
-        className="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700"
+        className="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50"
         disabled={loading}
       >
-        {loading ? "Registrando e Iniciando Sesión..." : "Registrarse"}
+        {loading ? "Registrando..." : "Registrarse"}
       </button>
       
-      {/* Link a Iniciar Sesión */}
-      <p className="mt-4 text-center text-sm text-gray-600">
+      <p className="mt-6 text-center text-sm text-gray-600">
         ¿Ya tenés cuenta?{" "}
         <Link
           to="/signin"
-          className="text-primary hover:text-[#6DB33F] font-semibold"
+          className="text-primary hover:text-green-700 font-semibold"
         >
           Iniciá sesión acá
         </Link>
