@@ -1,24 +1,9 @@
-// src/pages/AdminPanelPage.jsx (SIN ENCABEZADO)
+// src/pages/DashboardPage.jsx
 
 import React, { useState, useEffect } from 'react';
-// Importaciones de íconos para las estadísticas
-import { FaChartBar, FaTag, FaStar, FaDollarSign } from 'react-icons/fa';
+import { FaTag } from 'react-icons/fa';
 
-// --- Datos de Ejemplo para el Resumen y Gráficos ---
-const summaryStats = [
-    { title: "Órdenes Pendientes", value: "12", icon: <FaChartBar />, color: "text-blue-500", detail: "Pendientes de envío" },
-    { title: "Nuevos Productos (Mes)", value: "3", icon: <FaStar />, color: "text-yellow-500", detail: "En lo que va del mes" },
-    { title: "Total de Ventas (Hoy)", value: "$ 1.500", icon: <FaDollarSign />, color: "text-green-500", detail: "Ingresos del día" },
-];
-
-const categorySales = [
-    { name: "Panadería", value: "$ 4.500", icon: <FaTag />, color: "text-indigo-500" },
-    { name: "Lácteos", value: "$ 2.800", icon: <FaTag />, color: "text-teal-500" },
-    { name: "Frutas y Verduras", value: "$ 1.200", icon: <FaTag />, color: "text-orange-500" },
-];
-
-
-// --- Componentes Reutilizables ---
+// --- Componentes Reutilizables (Card, ProductItem, CategoryItem, ProductFormModal) ---
 
 /**
  * Componente Tarjeta base con título y botón de acción.
@@ -37,7 +22,7 @@ const Card = ({ title, buttonText, children, onButtonClick }) => (
                 </button>
             )}
         </div>
-        <div className="space-y-4 flex-grow">
+        <div className="space-y-4 flex-grow overflow-y-auto max-h-96 pr-2">
             {children}
         </div>
     </div>
@@ -46,24 +31,31 @@ const Card = ({ title, buttonText, children, onButtonClick }) => (
 /**
  * Componente para mostrar un Producto dentro de la lista de administración.
  */
-const ProductItem = ({ name, category, imgSrc, imgAlt }) => (
+const ProductItem = ({ product, onEdit, onDelete }) => (
     <div className="flex items-center justify-between p-3 bg-background-light dark:bg-background-dark rounded-lg border border-gray-100 dark:border-gray-700 transition-shadow hover:shadow-md">
         <div className="flex items-center space-x-4">
-            <img alt={imgAlt} className="w-16 h-16 object-cover rounded-md flex-shrink-0" src={imgSrc} />
+            {/* Si la URL de la imagen existe, la usamos; si no, usamos un placeholder. */}
+            <img 
+                alt={product.nombre} 
+                className="w-16 h-16 object-cover rounded-md flex-shrink-0" 
+                src={product.imagenes && product.imagenes.length > 0 ? product.imagenes[0] : `https://via.placeholder.com/64x64?text=${product.nombre[0]}`} 
+            />
             <div>
-                <p className="font-semibold text-text-light dark:text-text-dark">{name}</p>
-                <p className="text-sm text-subtle-light dark:text-subtle-dark">{category}</p>
+                <p className="font-semibold text-text-light dark:text-text-dark">{product.nombre}</p>
+                <p className="text-sm text-subtle-light dark:text-subtle-dark">Stock: {product.stock} | Cat: {product.categoria || 'N/A'}</p>
             </div>
         </div>
         <div className="flex items-center space-x-2 flex-shrink-0">
             <button
-                aria-label={`Editar producto ${name}`}
+                aria-label={`Editar producto ${product.nombre}`}
+                onClick={() => onEdit(product)}
                 className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-subtle-light dark:text-subtle-dark transition-colors"
             >
                 <span className="material-icons text-base">edit</span>
             </button>
             <button
-                aria-label={`Eliminar producto ${name}`}
+                aria-label={`Eliminar producto ${product.nombre}`}
+                onClick={() => onDelete(product.id)}
                 className="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900 text-red-500 transition-colors"
             >
                 <span className="material-icons text-base">delete</span>
@@ -72,9 +64,6 @@ const ProductItem = ({ name, category, imgSrc, imgAlt }) => (
     </div>
 );
 
-/**
- * Componente para mostrar una Categoría dentro de la lista de administración.
- */
 const CategoryItem = ({ name }) => (
     <div className="flex items-center justify-between p-3 bg-background-light dark:bg-background-dark rounded-lg border border-gray-100 dark:border-gray-700 transition-shadow hover:shadow-md">
         <p className="font-semibold text-text-light dark:text-text-dark">{name}</p>
@@ -94,40 +83,137 @@ const CategoryItem = ({ name }) => (
         </div>
     </div>
 );
+const ProductFormModal = ({ product, onClose, onSave }) => {
+    // Asegura que los campos requeridos tengan valores por defecto
+    const [formData, setFormData] = useState(product || {
+        nombre: '',
+        descripcion: '',
+        precio: 0,
+        marca: '',
+        stock: 0,
+        descuento: 0,
+        // 🚨 VALORES POR DEFECTO PARA LOS CAMPOS FALTANTES
+        categoria_id: product?.categoria_id || 1, // ID Categoria (Debes saber cuál es una ID válida)
+        stock_minimo: product?.stock_minimo || 0, // Stock mínimo
+        imagenes: product?.imagenes || [],
+    });
 
-/**
- * Componente para mostrar una estadística resumida.
- */
-const StatCard = ({ title, value, icon, color, detail }) => (
-    <div className="flex items-center p-4 bg-card-light dark:bg-card-dark rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
-        <div className={`mr-4 text-3xl ${color} flex-shrink-0`}>
-            {icon}
+    const handleChange = (e) => {
+        const { name, value, type } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'number' ? parseFloat(value) : value,
+        }));
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSave(formData);
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-card-dark p-6 rounded-xl shadow-2xl w-full max-w-lg m-4">
+                <h2 className="text-2xl font-bold mb-4 text-text-light dark:text-text-dark">
+                    {product ? 'Editar Producto' : 'Crear Producto'}
+                </h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    
+                    <div>
+                        <label className="block text-sm font-medium text-subtle-light dark:text-subtle-dark">Nombre</label>
+                        <input
+                            type="text"
+                            name="nombre"
+                            value={formData.nombre}
+                            onChange={handleChange}
+                            required
+                            className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark"
+                        />
+                    </div>
+                    
+                    <div>
+                        <label className="block text-sm font-medium text-subtle-light dark:text-subtle-dark">Descripción</label>
+                        <textarea
+                            name="descripcion"
+                            value={formData.descripcion}
+                            onChange={handleChange}
+                            className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-subtle-light dark:text-subtle-dark">Precio ($)</label>
+                            <input
+                                type="number"
+                                name="precio"
+                                value={formData.precio}
+                                onChange={handleChange}
+                                required
+                                min="0"
+                                step="0.01"
+                                className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-subtle-light dark:text-subtle-dark">Stock</label>
+                            <input
+                                type="number"
+                                name="stock"
+                                value={formData.stock}
+                                onChange={handleChange}
+                                required
+                                min="0"
+                                className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark"
+                            />
+                        </div>
+                    </div>
+                    
+                    {/* El campo marca no es obligatorio en tu ejemplo, pero es bueno tenerlo */}
+                    <div>
+                        <label className="block text-sm font-medium text-subtle-light dark:text-subtle-dark">Marca</label>
+                        <input
+                            type="text"
+                            name="marca"
+                            value={formData.marca || ''}
+                            onChange={handleChange}
+                            className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark"
+                        />
+                    </div>
+                    
+                    <div className="flex justify-end space-x-3 mt-6">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-opacity-90 transition"
+                        >
+                            Guardar Producto
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div>
-            <p className="text-sm text-subtle-light dark:text-subtle-dark">{title}</p>
-            <p className="text-2xl font-bold text-text-light dark:text-text-dark">{value}</p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{detail}</p>
-        </div>
-    </div>
-);
+    );
+};
+
 
 // --- Componente Principal ---
 
-const AdminPanelPage = () => {
-    // La lógica del tema (isDark, useEffects, toggleTheme) se mantiene
-    // para que la funcionalidad de modo oscuro/claro funcione en la página,
-    // incluso sin el botón visible en el encabezado.
+const DashboardPage = () => {
+    // --- Lógica del Tema (Modo Oscuro/Claro) ---
     const [isDark, setIsDark] = useState(null);
-
-    // Lógica del tema (Inicialización)
     useEffect(() => {
         const savedTheme = localStorage.getItem('theme');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         const initialDark = savedTheme ? savedTheme === 'dark' : prefersDark;
         setIsDark(initialDark);
     }, []);
-
-    // Lógica del tema (Aplicación)
     useEffect(() => {
         if (isDark !== null) {
             if (isDark) {
@@ -139,45 +225,198 @@ const AdminPanelPage = () => {
             }
         }
     }, [isDark]);
+    // ---------------------------------------------
 
-    // Funciones de acción de ejemplo
-    const handleCreateProduct = () => console.log("Crear Producto...");
+    // --- Estado para la Gestión de Productos ---
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [productToEdit, setProductToEdit] = useState(null); 
+    const [isModalOpen, setIsModalOpen] = useState(false); 
+
+    const API_BASE_URL = "http://localhost:8080/producto";
+
+    // --- Carga de Productos (CORREGIDA) ---
+    const fetchProducts = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await fetch(API_BASE_URL);
+            
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: El servidor no respondió correctamente.`);
+            }
+            
+            const data = await response.json();
+            
+            // CORRECCIÓN: Accedemos a la propiedad 'productos'
+            const productsArray = data.productos; 
+
+            if (!Array.isArray(productsArray)) {
+                 throw new Error("Formato de datos inválido: La propiedad 'productos' no es una lista.");
+            }
+            
+            setProducts(productsArray);
+
+        } catch (err) {
+            console.error("Error fetching products:", err);
+            setError(`Error de Conexión: ${err.message}`); 
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchProducts();
+    }, []);
+
+
+    // --- Handlers de Acción de Productos (Se mantienen con la URL base) ---
+    const handleCreateProduct = () => {
+        setProductToEdit(null); 
+        setIsModalOpen(true);
+    };
+
+    const handleEditProduct = (product) => {
+        setProductToEdit(product);
+        setIsModalOpen(true);
+    };
+
+    const handleDeleteProduct = async (id) => {
+        if (!window.confirm(`¿Estás seguro de que quieres eliminar el producto con ID ${id}?`)) return;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
+            if (response.ok || response.status === 204) {
+                setProducts(prev => prev.filter(p => p.id !== id));
+            } else {
+                throw new Error('Error al eliminar el producto.');
+            }
+        } catch (err) {
+            console.error("Error deleting product:", err);
+            alert("No se pudo eliminar el producto. Verifica la ruta DELETE.");
+        }
+    };
+
+    // --- Handlers de Acción de Productos (SOLUCIÓN para error 400 'id debe ser > 0') ---
+
+    // --- Handlers de Acción de Productos (SOLUCIÓN FINAL para errores 400: id y validación de precio) ---
+
+    // --- Handlers de Acción de Productos (SOLUCIÓN FINAL para el error 400 en PUT) ---
+
+    // --- Handlers de Acción de Productos (AJUSTE FINAL para el error 400 en PUT) ---
+    // --- Handlers de Acción de Productos (Añadiendo campos obligatorios del Backend) ---
+    const handleSaveProduct = async (productData) => {
+        
+        // Determinar si es una creación o edición
+        const isNew = !productData.id || productData.id <= 0;
+        const method = isNew ? 'POST' : 'PUT';
+        
+        // Obtenemos el ID para la URL (si existe)
+        const productIdForUrl = productData.id; 
+        const url = isNew ? API_BASE_URL : `${API_BASE_URL}/${productIdForUrl}`;
+        
+        try {
+            // 1. Clonar y construir el objeto a enviar
+            const dataToSend = { ...productData }; 
+
+            // 2. 🚨 INCLUSIÓN DE CAMPOS OBLIGATORIOS FALTANTES
+            // La entidad en Java requiere una CATEGORIA (objeto) o un categoria_id (si usas un DTO de entrada)
+            // Usaremos el categoria_id que sabemos que existe en el producto original para la edición.
+            dataToSend.categoria_id = productData.categoria_id || 1; // Usar el ID original, o 1 por defecto si es nuevo
+            dataToSend.stock_minimo = productData.stock_minimo || 0; // Usar el original, o 0 por defecto
+            
+            // El backend espera el objeto CATEGORIA en el DTO, no el nombre (lo elimina)
+            delete dataToSend.categoria; 
+
+            // 3. LIMPIEZA FORZOSA: Eliminar el 'id' del cuerpo (SOLUCIÓN al error 400)
+            if (dataToSend.id) {
+                delete dataToSend.id; 
+            }
+            
+            // 4. Ejecutar Fetch
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dataToSend), 
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.text();
+                
+                // Intenta extraer un mensaje de error legible
+                let errorMessage = `Error ${response.status} en la operación ${method}. Detalles: ${errorBody.substring(0, 100)}...`;
+                try {
+                    const errorJson = JSON.parse(errorBody);
+                    errorMessage = errorJson.mensaje || errorJson.error || errorMessage;
+                } catch (e) {
+                    // ...
+                }
+
+                throw new Error(errorMessage);
+            }
+
+            // Éxito
+            await fetchProducts(); 
+            setIsModalOpen(false); 
+
+        } catch (err) {
+            console.error("Error saving product:", err);
+            alert(`Error al guardar el producto: ${err.message}`);
+        }
+    };
+
+
+
+
     const handleCreateCategory = () => console.log("Crear Categoría...");
-
 
     return (
         <div className="min-h-screen flex flex-col bg-background-light dark:bg-background-dark font-sans transition-colors duration-300">
             
-            {/* EL ENCABEZADO (header) HA SIDO ELIMINADO COMPLETAMENTE */}
+            {/* Modal de Producto */}
+            {isModalOpen && (
+                <ProductFormModal 
+                    product={productToEdit}
+                    onClose={() => setIsModalOpen(false)}
+                    onSave={handleSaveProduct}
+                />
+            )}
 
-            {/* Contenido Principal (Ahora comienza directamente con la "Vista General") */}
+            {/* Contenido Principal (Dashboard) */}
             <main className="flex-grow p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full">
 
-                {/* Sección de Estadísticas/Resumen */}
-                {/* Nota: Se incluye un título de página grande en lugar del header */}
-                <h1 className="text-4xl font-extrabold text-text-light dark:text-text-dark mb-8">Dashboard Administrativo</h1>
+                <h1 className="text-4xl font-extrabold text-text-light dark:text-text-dark mb-8">Dashboard Administrativo 🚀</h1>
                 
-                <h2 className="text-3xl font-bold text-text-light dark:text-text-dark mb-6">Vista General 📊</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                    {summaryStats.map((item) => (
-                        <StatCard key={item.title} {...item} />
-                    ))}
-                </div>
-
                 <hr className="border-t border-gray-200 dark:border-gray-700 my-8" />
 
                 {/* Sección de Administración de Productos y Categorías */}
                 <h2 className="text-3xl font-bold text-text-light dark:text-text-dark mb-6">Gestión de Inventario 📦</h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+                    
                     {/* Card de Productos */}
                     <Card
                         title="Productos"
                         buttonText="Crear Producto"
                         onButtonClick={handleCreateProduct}
                     >
-                        <ProductItem name="Pan Artesanal" category="Panadería" imgSrc="https://lh3.googleusercontent.com/aida-public/AB6AXuDnJYVWJFrauI08Qao5fMvlJlA11ECBJVXQ8ypYFTpids4ABJPYslSYqdS9SubTL6zT8dE-xV7Qw8d2m7DzRbb8qJcZiviPOZwhyXp1v7IifSLZ0RzpXtOWglTFSSC-pKS7pStshm6g32je-aHpsqkso6vn0nM8cA0Ky6N5sJfJK4lXHSJi23CXW-VUa2zOyGqdreB7Sp9a6EoCNlwPKpwMtGncKnNtSI2q-w3bJ6pzCPDb164DOUtqAc8whieP3EJFusXvPDtyo5Q" imgAlt="Pan artesanal" />
-                        <ProductItem name="Leche Fresca" category="Lácteos" imgSrc="https://lh3.googleusercontent.com/aida-public/AB6AXuBV1mZRucU7nYCZkgkX5S4WI6L16qatboMTtkAqftrcdjdOBVXG07Hug9hV3ziOzrzAI7zKKQa_wBMlsM-6twIb7Jng4Pyx5mzpLg_H5Wjs-sYTisE3SsS86BaW0SrgzQHrEUn70ZLTsVtX-5TTc_qff8OwBgggvxCUCohtECIj0qocaaFlXLrqc0NPl55YHkyZPUcEHaJ7dlj7zO-9OSY8p14OyaWXOHvkLFC-IFn56iThR86LFwKg9s6a6u0My8EIZyYtJyzvuio" imgAlt="Leche Fresca" />
-                        <ProductItem name="Manzanas Rojas" category="Frutas y Verduras" imgSrc="https://lh3.googleusercontent.com/aida-public/AB6AXuDUxA3M6B7IFCBnozbM-R_mqBl5ZEQEUyad7HN-CHJMGSu4C24O7578CXzJCRlDIG4pfA_vO3fbhvS8Z-5de1jzShKtgF8HQIhbeNkVEWmCEgYYJrAEfQB0CEzLqeyhREaM_jwuQ0I1xNEDfSF3lwq-f5n6W2sJF_7s2w5DXpI5zg9hdc6NeCmxb3V0oMUllhA7jfZbvFVMm683BU1zypuFiZ1yUWtcLidOwHIVdE9Qg2ENsZ2yh_zLHMeS_wn6hewfAo1aXxCkREI" imgAlt="Manzanas rojas" />
+                        {loading && <p className="text-center text-blue-500">Cargando productos...</p>}
+                        {error && <p className="text-center text-red-500">{error}</p>}
+                        
+                        {!loading && !error && (!Array.isArray(products) || products.length === 0) && (
+                            <p className="text-center text-subtle-light dark:text-subtle-dark">
+                                No hay productos disponibles.
+                            </p>
+                        )}
+                        
+                        {Array.isArray(products) && products.map((product) => (
+                            <ProductItem 
+                                key={product.id} 
+                                product={product} 
+                                onEdit={handleEditProduct} 
+                                onDelete={handleDeleteProduct}
+                            />
+                        ))}
                     </Card>
 
                     {/* Card de Categorías */}
@@ -193,33 +432,10 @@ const AdminPanelPage = () => {
                         <CategoryItem name="Limpieza" />
                     </Card>
                 </div>
-                
-                {/* Columna Derecha: Ventas por Categoría (Nuevo) */}
-                <div className="mt-8">
-                    <Card title="Ventas Recientes por Categoría" buttonText={null}>
-                        <div className="space-y-4">
-                            {categorySales.map((cat) => (
-                                <div key={cat.name} className="flex justify-between items-center p-3 bg-background-light dark:bg-background-dark rounded-lg border border-gray-100 dark:border-gray-700">
-                                    <div className="flex items-center">
-                                        <div className={`mr-3 text-lg ${cat.color}`}>
-                                            {cat.icon}
-                                        </div>
-                                        <p className="text-text-light dark:text-text-dark font-semibold">{cat.name}</p>
-                                    </div>
-                                    <p className="font-bold text-lg text-primary">{cat.value}</p>
-                                </div>
-                            ))}
-                            <div className="text-right pt-4 border-t border-gray-200 dark:border-gray-700">
-                                <p className="text-sm text-subtle-light dark:text-subtle-dark">Total Ventas (Período)</p>
-                                <p className="text-2xl font-extrabold text-green-600 dark:text-green-400">$ 8.500</p>
-                            </div>
-                        </div>
-                    </Card>
-                </div>
 
             </main>
         </div>
     );
 };
 
-export default AdminPanelPage;
+export default DashboardPage;
