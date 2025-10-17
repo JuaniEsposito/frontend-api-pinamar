@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-// Importa el thunk de registro y la acción para limpiar errores del authSlice
 import { registerThunk, clearAuthError } from "../redux/authSlice"; 
 
 export default function SignUpPage() {
@@ -10,59 +9,48 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
-  // 🆕 Nuevos campos requeridos por el backend (vistos en la imagen de Postman)
-  const [telefono, setTelefono] = useState("");
-  const [direccion, setDireccion] = useState(""); 
   
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // 🔄 Usa useSelector para obtener el estado de loading y error desde Redux
+  // Obtiene el estado de Redux
   const { loading, error } = useSelector((state) => state.auth); 
 
-  // Limpia el mensaje de error de Redux al salir de la página
   useEffect(() => {
-    // Si tienes una propiedad `isAuthenticated` en authSlice y quieres redirigir
-    // inmediatamente después de un registro exitoso, la lógica iría aquí.
-    // Por ahora, solo limpiamos el error:
+    // Limpia el error de Redux al montar/desmontar
     return () => dispatch(clearAuthError());
   }, [dispatch]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    // Validación de email básico
     if (!email.includes("@")) {
       alert("Por favor, ingresá un correo electrónico válido.");
       return; 
     }
 
-    // Limpia errores anteriores antes de la nueva llamada
     dispatch(clearAuthError()); 
 
-    // 🚀 Llama al thunk de registro de Redux/Axios
+    // 🚀 Llama al thunk de registro (crea usuario y simula login)
     dispatch(
       registerThunk({
         username,
         email,
-        password,
+        password, 
         nombre,
         apellido,
-        telefono, // Incluido
-        direccion, // Incluido
-        rol: "USER", // Rol por defecto
+        rol: "USER", 
       })
     )
-      .unwrap() // Desenvuelve la Promise para manejar el éxito/fracaso
+      .unwrap() 
       .then(() => {
-        // En caso de éxito (status 2xx)
-        alert("Cuenta creada con éxito. Ahora podés iniciar sesión.");
-        navigate("/signin"); // Redirige a Iniciar Sesión
+        // Éxito: Registro completado y estado de Redux actualizado.
+        alert("¡Cuenta creada con éxito! Sesión iniciada. ¡Bienvenido!");
+        navigate("/"); // Redirige al home (ya logeado)
       })
       .catch((err) => {
-        // En caso de fallo, el error ya está seteado en el estado de Redux
-        // por rejectWithValue en el thunk.
-        console.error("Error en el registro:", err);
+        // Fallo: El error se muestra en el UI desde el estado 'error'
+        console.error("Fallo en el registro:", err);
       });
   };
 
@@ -93,14 +81,14 @@ export default function SignUpPage() {
       </button>
       <h2 className="text-xl font-bold mb-4 text-center">Crear cuenta</h2>
 
-      {/* Muestra el error obtenido desde el estado de Redux */}
+      {/* Muestra el error de Redux */}
       {error && (
         <div className="mb-4 text-red-600 text-center bg-red-100 p-2 rounded">
           {error} 
         </div>
       )}
 
-      {/* Inputs existentes */}
+      {/* Inputs */}
       <input
         type="text"
         placeholder="Nombre"
@@ -126,7 +114,7 @@ export default function SignUpPage() {
         required
       />
       <input
-        type="email" // ⬅️ Vuelto a 'email' para validación nativa más simple
+        type="email"
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
@@ -141,33 +129,16 @@ export default function SignUpPage() {
         className="w-full border p-2 mb-4 rounded"
         required
       />
-      
-      {/* 🆕 Nuevos Inputs para Teléfono y Dirección */}
-      <input
-        type="text"
-        placeholder="Teléfono"
-        value={telefono}
-        onChange={(e) => setTelefono(e.target.value)}
-        className="w-full border p-2 mb-4 rounded"
-        required
-      />
-      <input
-        type="text"
-        placeholder="Dirección"
-        value={direccion}
-        onChange={(e) => setDireccion(e.target.value)}
-        className="w-full border p-2 mb-4 rounded"
-        required
-      />
 
       <button
         type="submit"
         className="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700"
-        disabled={loading} // 🔄 Usa el loading de Redux
+        disabled={loading}
       >
-        {loading ? "Registrando..." : "Registrarse"}
+        {loading ? "Registrando e Iniciando Sesión..." : "Registrarse"}
       </button>
       
+      {/* Link a Iniciar Sesión */}
       <p className="mt-4 text-center text-sm text-gray-600">
         ¿Ya tenés cuenta?{" "}
         <Link

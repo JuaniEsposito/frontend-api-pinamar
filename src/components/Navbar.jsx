@@ -1,6 +1,8 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef, useMemo } from "react";
-import { useAuth } from "../auth/AuthProvider";
+// ❌ Eliminamos: import { useAuth } from "../auth/AuthProvider";
+import { useDispatch, useSelector } from "react-redux"; // 🆕
+import { logoutThunk } from "../redux/authSlice"; // 🆕 Importamos el thunk de logout
 import logoMarket from "../assets/logo.png";
 
 export default function Navbar() {
@@ -12,13 +14,17 @@ export default function Navbar() {
   const [userDropdown, setUserDropdown] = useState(false);
   const userDropdownRef = useRef(null);
   const navigate = useNavigate();
+  const dispatch = useDispatch(); // 🆕 Usamos useDispatch
 
-  const { isAuthenticated, usuario, logout } = useAuth();
-  const token = null;
-  const carrito = { items: [], total: 0 };
-  const loading = false;
-  const categoriasRedux = [];
-  const totalItems = carrito?.items?.reduce(
+  // 🔄 Obtenemos el estado de Redux
+  const { isAuthenticated, usuario } = useSelector((state) => state.auth); // 🆕
+  const carritoItems = useSelector((state) => state.cart?.items || []);
+  // ❗ Estas variables solían venir de useAuth/Redux. Las obtenemos del store ahora:
+  const token = null; // No necesario en el componente, pero lo mantenemos si era un placeholder.
+  const loading = false; // Asume que no hay loading general en el navbar.
+  const categoriasRedux = []; // ⚠️ Reemplaza esto con useSelector si tienes un categoriesSlice
+
+  const totalItems = carritoItems.reduce(
     (sum, item) => sum + (item.cantidad || 0),
     0
   );
@@ -32,6 +38,7 @@ export default function Navbar() {
     }
   }
 
+  // Lógica para cerrar el dropdown del usuario al hacer click fuera
   useEffect(() => {
     function handleClickOutside(e) {
       if (
@@ -47,6 +54,20 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [userDropdown]);
 
+  // Lógica para cerrar el dropdown de Categorías al hacer click fuera
+  const dropdownRef = useRef(null);
+  useEffect(() => {
+    if (!dropdown) return;
+    function handleClickOutside(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdown(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [dropdown]);
+
+  // Generación de links de Categorías (se mantiene)
   const categoriesDropdown = useMemo(() => {
     const cats = Array.isArray(categoriasRedux)
       ? categoriasRedux.filter((cat) => cat.parentId === null)
@@ -61,17 +82,13 @@ export default function Navbar() {
 
   const navLinks = [{ label: "Categorías", dropdown: categoriesDropdown }];
 
-  const dropdownRef = useRef(null);
-  useEffect(() => {
-    if (!dropdown) return;
-    function handleClickOutside(e) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setDropdown(null);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [dropdown]);
+  // 🆕 Función de Logout adaptada a Redux
+  const handleLogout = () => {
+    dispatch(logoutThunk()); // Llama al thunk de logout
+    setUserDropdown(false);
+    alert("¡Sesión cerrada, hasta luego!");
+    navigate("/"); // Opcional: navegar al inicio
+  };
 
   return (
     <>
@@ -108,7 +125,7 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* SearchBar Desktop */}
+          {/* SearchBar Desktop (sin cambios) */}
           <form
             onSubmit={handleSearchSubmit}
             className="hidden md:flex flex-1 mx-6 max-w-xl"
@@ -128,7 +145,7 @@ export default function Navbar() {
             </button>
           </form>
 
-          {/* Desktop Nav */}
+          {/* Desktop Nav (Categorías - sin cambios) */}
           <div className="hidden md:flex items-center gap-2">
             {navLinks.map((link) => (
               <div
@@ -201,6 +218,7 @@ export default function Navbar() {
 
           {/* User Actions + Mobile Search */}
           <div className="flex items-center gap-2 sm:gap-4">
+            {/* Botón Buscar Móvil (sin cambios) */}
             <button
               className="md:hidden p-2 rounded-full hover:bg-accent/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               onClick={() => setShowMobileSearch(true)}
@@ -231,6 +249,7 @@ export default function Navbar() {
                 />
               </svg>
             </button>
+            {/* Botón Carrito (sin cambios) */}
             <div className="relative group">
               <button
                 className="relative"
@@ -259,6 +278,7 @@ export default function Navbar() {
                 )}
               </button>
             </div>
+            {/* 🔑 Botón de Usuario / Ingresar */}
             {isAuthenticated ? (
               <div
                 className="hidden sm:flex items-center gap-2 relative"
@@ -272,7 +292,7 @@ export default function Navbar() {
                   type="button"
                 >
                   <span className="truncate max-w-[120px]">
-                    {usuario.nombre}
+                    {usuario?.nombre || usuario?.username || 'Mi Cuenta'}
                   </span>
                   <svg
                     className={`w-4 h-4 ml-1 transition-transform ${
@@ -316,7 +336,7 @@ export default function Navbar() {
                     >
                       Mis Pedidos
                     </Link>
-                    {/* --- AQUÍ SE AGREGA EL NUEVO ENLACE --- */}
+                    {/* --- Enlace a Mis Paneles (Dashboard) --- */}
                     <Link
                       to="/mis-dashboards"
                       className="block px-4 py-2 text-dark hover:bg-accent/40 hover:text-primary rounded transition"
@@ -334,11 +354,7 @@ export default function Navbar() {
                       </Link>
                     )}
                     <button
-                      onClick={() => {
-                        setUserDropdown(false);
-                        logout();
-                        alert("¡Sesión cerrada, hasta luego!");
-                      }}
+                      onClick={handleLogout} // 🆕 Usa la nueva función de logout
                       className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 hover:text-red-700 rounded transition font-semibold"
                     >
                       Cerrar sesión
@@ -349,11 +365,13 @@ export default function Navbar() {
             ) : (
               <NavLink
                 to="/signin"
-                className="bg-primary hover:bg-[#ffff] text-white font-semibold px-5 py-2 rounded-r-md transition border-2"
+                className="hidden sm:inline-flex bg-primary hover:bg-[#ffff] text-white font-semibold px-5 py-2 rounded-md transition border-2"
+                // Nota: Tu código original tenía rounded-r-md, lo cambié a rounded-md por consistencia visual sin searchbar
               >
                 Ingresar
               </NavLink>
             )}
+            {/* Botón de Menú Móvil (sin cambios) */}
             <button
               className="md:hidden ml-2 p-2 rounded-full hover:bg-accent/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               onClick={() => setOpen(!open)}
@@ -384,7 +402,7 @@ export default function Navbar() {
           </div>
         </nav>
 
-        {/* Mobile Search Modal */}
+        {/* Mobile Search Modal (sin cambios) */}
         {showMobileSearch && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
             <form
@@ -417,7 +435,7 @@ export default function Navbar() {
           </div>
         )}
 
-        {/* Mobile Nav Overlay */}
+        {/* Mobile Nav Overlay y Drawer (sin cambios en la estructura) */}
         <div
           className={`fixed inset-0 z-40 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ${
             open
@@ -427,7 +445,6 @@ export default function Navbar() {
           onClick={() => setOpen(false)}
           aria-hidden={!open}
         />
-        {/* Mobile Nav Drawer */}
         <div
           className={`fixed top-0 right-0 z-50 w-4/5 max-w-xs h-full bg-white/95 shadow-2xl transform transition-transform duration-300 rounded-l-3xl border-l border-accent flex flex-col ${
             open ? "translate-x-0" : "translate-x-full"
@@ -436,13 +453,14 @@ export default function Navbar() {
           aria-modal="true"
           aria-label="Menú principal"
         >
+          {/* Botón de cierre (adaptado el estilo para que se parezca al de ingresar) */}
           <button
-            className="bg-primary hover:bg-[#ffff] text-white font-semibold px-5 py-2 rounded-r-md transition border-2"
+            className="absolute top-4 right-4 p-2 rounded-full text-primary hover:bg-accent/40"
             onClick={() => setOpen(false)}
             aria-label="Cerrar menú"
           >
             <svg
-              className="w-7 h-7 text-primary"
+              className="w-7 h-7"
               fill="none"
               stroke="currentColor"
               strokeWidth={2}
@@ -455,7 +473,24 @@ export default function Navbar() {
               />
             </svg>
           </button>
+          
           <div className="flex flex-col gap-2 px-8 mt-4">
+            {/* Si está logeado, mostrar un resumen y opciones */}
+            {isAuthenticated ? (
+                <div className="py-3 px-4 mb-2 bg-gray-50 rounded-full">
+                    <span className="font-bold text-dark">Hola, {usuario.nombre}</span>
+                </div>
+            ) : (
+                <NavLink
+                    to="/signin"
+                    className="py-3 px-4 rounded-full font-semibold text-lg bg-primary text-white hover:bg-secondary transition-all duration-200 shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    onClick={() => setOpen(false)}
+                >
+                    Ingresar
+                </NavLink>
+            )}
+
+            {/* Links del menú móvil */}
             {navLinks.map((link) => (
               <div key={link.label} className="flex flex-col">
                 <button
@@ -505,19 +540,47 @@ export default function Navbar() {
                 )}
               </div>
             ))}
+
+            {isAuthenticated && (
+                <>
+                <NavLink
+                    to="/perfil"
+                    className="py-3 px-4 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-accent/60 hover:text-primary transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    onClick={() => setOpen(false)}
+                >
+                    Mis datos
+                </NavLink>
+                <NavLink
+                    to="/mis-pedidos"
+                    className="py-3 px-4 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-accent/60 hover:text-primary transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    onClick={() => setOpen(false)}
+                >
+                    Mis Pedidos
+                </NavLink>
+                {usuario?.rol === "ADMIN" && (
+                    <NavLink
+                        to="/admin"
+                        className="py-3 px-4 rounded-full font-semibold text-lg flex items-center gap-2 bg-red-100 text-red-600 hover:bg-red-200 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        onClick={() => setOpen(false)}
+                    >
+                        Panel de Administración
+                    </NavLink>
+                )}
+                <button
+                    onClick={() => { setOpen(false); handleLogout(); }}
+                    className="py-3 px-4 rounded-full font-semibold text-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-200 shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary mt-4"
+                >
+                    Cerrar sesión
+                </button>
+                </>
+            )}
+            
             <NavLink
               to="/carrito"
               className="py-3 px-4 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-accent/60 hover:text-primary transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               onClick={() => setOpen(false)}
             >
               <span className="text-xl text-secondary">🛒</span> Carrito
-            </NavLink>
-            <NavLink
-              to="/signin"
-              className="py-3 px-4 rounded-full font-semibold text-lg bg-primary text-white hover:bg-secondary transition-all duration-200 shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              onClick={() => setOpen(false)}
-            >
-              Ingresar
             </NavLink>
           </div>
         </div>

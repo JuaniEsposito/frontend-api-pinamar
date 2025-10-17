@@ -1,26 +1,23 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios"; // 👈 Importamos Axios
+import axios from "axios"; 
 
-const API_URL = "http://localhost:8080/usuarios";
+const API_URL = "http://localhost:8080/usuarios"; 
 
 // Helper para manejar errores de Axios y devolver un mensaje limpio
 const getAxiosErrorMessage = (error) => {
   if (error.response && error.response.data) {
-    // Si el backend devuelve un mensaje, úsalo (ej: error.response.data.mensaje o .message)
-    return error.response.data.mensaje || error.response.data.message || error.message;
+    return error.response.data.mensaje || error.response.data.message || "Error del servidor.";
   }
-  // Para errores de red o desconocidos
   return error.message || "Error de red o desconocido.";
 };
 
 // -----------------------------------------------------------------
-// Login
+// Login (Se mantiene sin cambios)
 // -----------------------------------------------------------------
 export const loginThunk = createAsyncThunk(
   "auth/login",
   async ({ username, password }, { rejectWithValue }) => {
     try {
-      // Usamos axios.post
       const response = await axios.post(`${API_URL}/login`, { username, password });
       const data = response.data;
       
@@ -32,83 +29,88 @@ export const loginThunk = createAsyncThunk(
       
       return { token: data.token, usuario: data.usuario };
     } catch (e) {
-      // Usamos el helper de error
-      return rejectWithValue(getAxiosErrorMessage(e) || "Error de autenticación.");
+      return rejectWithValue(getAxiosErrorMessage(e) || "Credenciales inválidas.");
     }
   }
 );
 
 // -----------------------------------------------------------------
-// Logout (solo limpia el estado)
+// Logout (Se mantiene sin cambios)
 // -----------------------------------------------------------------
 export const logoutThunk = createAsyncThunk("auth/logout", async () => {
   localStorage.removeItem("auth");
 });
 
 // -----------------------------------------------------------------
-// Registro de usuario
+// 🔑 Registro de usuario (Login Mock implementado)
 // -----------------------------------------------------------------
 export const registerThunk = createAsyncThunk(
   "auth/register",
   async (userData, { rejectWithValue }) => {
     try {
-      // Usamos axios.post
+      // 1. Llamada de REGISTRO
       const response = await axios.post(API_URL, userData);
-      // Retorna la respuesta completa del nuevo usuario
-      return response.data; 
+      
+      // 🔑 CAMBIO CLAVE AQUÍ: Acceder a la propiedad 'data' de la respuesta del backend
+      const usuarioCreado = response.data.data; // <-- ¡Esto es lo que necesitamos!
+      
+      // 2. SIMULAR AUTENTICACIÓN: Generar token mock
+      // Aseguramos que usuarioCreado sea un objeto antes de acceder a username
+      const username = usuarioCreado?.username || 'user_sin_nombre';
+      const mockToken = `mock_token_for_${username}_${Date.now()}`;
+
+      // 3. Crear objeto de autenticación
+      const authData = {
+          token: mockToken, 
+          usuario: usuarioCreado 
+      };
+
+      // 4. Persistir en localStorage y devolver
+      localStorage.setItem("auth", JSON.stringify(authData));
+      
+      return authData; 
+
     } catch (e) {
-      // Usamos el helper de error
+      // ... manejo de errores ...
       return rejectWithValue(getAxiosErrorMessage(e) || "Error al registrar usuario.");
     }
   }
 );
 
 // -----------------------------------------------------------------
-// Verificar email para reset password
+// Resto de Thunks (Verificar email, Cambiar contraseña)
 // -----------------------------------------------------------------
 export const verificarEmailThunk = createAsyncThunk(
   "auth/verificarEmail",
   async (email, { rejectWithValue }) => {
     try {
-      // Usamos axios.get
       const response = await axios.get(`${API_URL}/exists/email/${encodeURIComponent(email)}`);
       return response.data;
     } catch (e) {
-      // Usamos el helper de error
       return rejectWithValue(getAxiosErrorMessage(e) || "Error al verificar el correo.");
     }
   }
 );
 
-// -----------------------------------------------------------------
-// Cambiar contraseña (reset por email)
-// -----------------------------------------------------------------
 export const cambiarPasswordThunk = createAsyncThunk(
   "auth/cambiarPassword",
   async ({ email, nuevaContrasena }, { rejectWithValue }) => {
     try {
-      // Usamos axios.put
       const response = await axios.put(
         `${API_URL}/cambiar-password?email=${email}`,
         { nuevaContrasena }
       );
-      // Axios parsea la respuesta, si no es JSON, usa response.data.
       return response.data; 
     } catch (e) {
-      // Usamos el helper de error
       return rejectWithValue(getAxiosErrorMessage(e) || "Error al cambiar la contraseña.");
     }
   }
 );
 
-// -----------------------------------------------------------------
-// Cambiar contraseña logueado
-// -----------------------------------------------------------------
 export const cambiarPasswordLogThunk = createAsyncThunk(
   "auth/cambiarPasswordLog",
   async ({ token, contrasenaActual, nuevaContrasena }, { rejectWithValue }) => {
     try {
-      // Usamos axios.put
       const response = await axios.put(`${API_URL}/password`, 
         { contrasenaActual, nuevaContrasena },
         {
@@ -117,17 +119,15 @@ export const cambiarPasswordLogThunk = createAsyncThunk(
           },
         }
       );
-      // Axios parsea la respuesta, si no es JSON, usa response.data.
       return response.data;
     } catch (e) {
-      // Usamos el helper de error
       return rejectWithValue(getAxiosErrorMessage(e) || "Error al cambiar la contraseña.");
     }
   }
 );
 
 // -----------------------------------------------------------------
-// Estado Inicial y Slice (sin cambios en la lógica del slice)
+// Estado Inicial y Slice (ExtraReducers no necesitan cambio, ya que esperan {token, usuario})
 // -----------------------------------------------------------------
 
 const initialState = (() => {
@@ -143,13 +143,7 @@ const initialState = (() => {
         isAuthenticated: !!token,
       };
     } catch {
-      return {
-        token: null,
-        usuario: null,
-        loading: false,
-        error: "",
-        isAuthenticated: false,
-      };
+      localStorage.removeItem("auth"); 
     }
   }
   return {
@@ -203,58 +197,33 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.error = "";
       })
-      // Registro
+      // Registro (Ahora usa los datos del mock)
       .addCase(registerThunk.pending, (state) => {
         state.loading = true;
         state.error = "";
       })
-      .addCase(registerThunk.fulfilled, (state) => {
+      .addCase(registerThunk.fulfilled, (state, action) => {
         state.loading = false;
+        // Usa los datos de autenticación mock/real devueltos
+        state.token = action.payload.token; 
+        state.usuario = action.payload.usuario;
+        state.isAuthenticated = true;
         state.error = "";
       })
       .addCase(registerThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-      // Verificar email
-      .addCase(verificarEmailThunk.pending, (state) => {
-        state.loading = true;
-        state.error = "";
-      })
-      .addCase(verificarEmailThunk.fulfilled, (state) => {
-        state.loading = false;
-        state.error = "";
-      })
-      .addCase(verificarEmailThunk.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      // Cambiar contraseña (reset)
-      .addCase(cambiarPasswordThunk.pending, (state) => {
-        state.loading = true;
-        state.error = "";
-      })
-      .addCase(cambiarPasswordThunk.fulfilled, (state) => {
-        state.loading = false;
-        state.error = "";
-      })
-      .addCase(cambiarPasswordThunk.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      // Cambiar contraseña logueado
-      .addCase(cambiarPasswordLogThunk.pending, (state) => {
-        state.loading = true;
-        state.error = "";
-      })
-      .addCase(cambiarPasswordLogThunk.fulfilled, (state) => {
-        state.loading = false;
-        state.error = "";
-      })
-      .addCase(cambiarPasswordLogThunk.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      });
+      // Resto de casos (verificarEmail, cambiarPassword)
+       .addCase(verificarEmailThunk.pending, (state) => { state.loading = true; state.error = ""; })
+       .addCase(verificarEmailThunk.fulfilled, (state) => { state.loading = false; state.error = ""; })
+       .addCase(verificarEmailThunk.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
+       .addCase(cambiarPasswordThunk.pending, (state) => { state.loading = true; state.error = ""; })
+       .addCase(cambiarPasswordThunk.fulfilled, (state) => { state.loading = false; state.error = ""; })
+       .addCase(cambiarPasswordThunk.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
+       .addCase(cambiarPasswordLogThunk.pending, (state) => { state.loading = true; state.error = ""; })
+       .addCase(cambiarPasswordLogThunk.fulfilled, (state) => { state.loading = false; state.error = ""; })
+       .addCase(cambiarPasswordLogThunk.rejected, (state, action) => { state.loading = false; state.error = action.payload; });
   },
 });
 

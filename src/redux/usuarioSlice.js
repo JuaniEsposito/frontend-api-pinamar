@@ -1,59 +1,96 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios"; // 👈 Importamos Axios
 
-// Traer perfil de usuario
-export const fetchPerfil = createAsyncThunk(
-  "usuario/fetchPerfil",
-  async ({ token, id }, { rejectWithValue }) => {
-    try {
-      const res = await fetch(`http://localhost:4040/usuarios/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("No se pudo cargar el perfil.");
-      return await res.json();
-    } catch (e) {
-      return rejectWithValue(e.message || "Error al cargar perfil.");
-    }
+const API_URL = "http://localhost:8080/usuarios"; // 👈 URL Base ajustada a 8080
+
+// Helper para manejar errores de Axios y devolver un mensaje limpio
+const getAxiosErrorMessage = (error, defaultMsg) => {
+  if (error.response && error.response.data) {
+    // Si el backend devuelve un mensaje (propiedad 'mensaje' o 'message'), úsalo
+    return error.response.data.mensaje || error.response.data.message || defaultMsg;
   }
+  return error.message || defaultMsg;
+};
+
+// -----------------------------------------------------------------
+// Traer perfil de usuario
+// -----------------------------------------------------------------
+export const fetchPerfil = createAsyncThunk(
+  "usuario/fetchPerfil",
+  async ({ token, id }, { rejectWithValue }) => {
+    try {
+      // Usamos axios.get (o fetch adaptado, lo haré con fetch para compatibilidad con tu código actual)
+      const res = await fetch(`http://localhost:8080/usuarios/${id}`, { // 🚨 Usar 8080 si corresponde
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("No se pudo cargar el perfil.");
+       
+      const responseJson = await res.json();
+      
+      // 🔑 CAMBIO CLAVE: Devolver solo la propiedad 'data'
+      return responseJson.data; // <--- Devolvemos el objeto de perfil limpio
+      
+    } catch (e) {
+      return rejectWithValue(e.message || "Error al cargar perfil.");
+    }
+  }
 );
 
+// -----------------------------------------------------------------
+// Traer lista de usuarios
+// -----------------------------------------------------------------
 export const fetchUsuarios = createAsyncThunk(
   "usuario/fetchUsuarios",
   async (token, { rejectWithValue }) => {
     try {
-      const res = await fetch("http://localhost:4040/usuarios", {
+      // Usamos axios.get
+      const response = await axios.get(API_URL, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("No se pudo cargar la lista de usuarios.");
-      return await res.json(); // Ajustá según lo que devuelva tu backend (array directo o {content: [...]})
+      return response.data; // Ajustá según lo que devuelva tu backend
     } catch (e) {
-      return rejectWithValue(e.message || "Error al cargar usuarios.");
+      return rejectWithValue(getAxiosErrorMessage(e, "Error al cargar lista de usuarios."));
     }
   }
 );
 
+// -----------------------------------------------------------------
 // Editar perfil de usuario
+// -----------------------------------------------------------------
 export const updatePerfil = createAsyncThunk(
   "usuario/updatePerfil",
   async ({ token, formData }, { getState, rejectWithValue }) => {
     try {
       const state = getState();
-      const userId = state.auth?.usuario?.id;
-      if (!userId) throw new Error("No se encontró el usuario autenticado.");
-      const res = await fetch(`http://localhost:4040/usuarios/${userId}`, {
-        method: "PATCH",
+      // 🔑 Obtener userId desde el authSlice (ya migrado)
+      const userId = state.auth?.usuario?.id; 
+      
+      if (!userId) {
+        // Esto previene la llamada si no hay ID disponible
+        throw new Error("No se encontró el ID del usuario autenticado para actualizar.");
+      }
+
+      // Usamos axios.patch para la actualización
+      const response = await axios.patch(`${API_URL}/${userId}`, formData, {
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
       });
-      if (!res.ok) throw new Error("No se pudo actualizar el perfil.");
-      return await res.json();
+
+      return response.data;
     } catch (e) {
-      return rejectWithValue(e.message || "Error al actualizar perfil.");
+      // Si el error fue lanzado internamente (por no haber userId)
+      if (e.message.includes("ID del usuario")) {
+          return rejectWithValue(e.message);
+      }
+      return rejectWithValue(getAxiosErrorMessage(e, "Error al actualizar perfil."));
     }
   }
 );
+
+// -----------------------------------------------------------------
+// Slice y Reducers (Sin cambios funcionales en la lógica)
+// -----------------------------------------------------------------
 
 const usuarioSlice = createSlice({
   name: "usuario",
@@ -71,6 +108,7 @@ const usuarioSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // fetchPerfil
       .addCase(fetchPerfil.pending, (state) => {
         state.loading = true;
         state.error = "";
@@ -81,8 +119,10 @@ const usuarioSlice = createSlice({
       })
       .addCase(fetchPerfil.rejected, (state, action) => {
         state.loading = false;
+        state.perfil = null; // Limpiar perfil si la carga falla
         state.error = action.payload;
       })
+      // updatePerfil
       .addCase(updatePerfil.pending, (state) => {
         state.loading = true;
         state.error = "";
@@ -90,7 +130,8 @@ const usuarioSlice = createSlice({
       })
       .addCase(updatePerfil.fulfilled, (state, action) => {
         state.loading = false;
-        state.perfil = action.payload;
+        // El perfil se actualiza con los nuevos datos devueltos por la API
+        state.perfil = action.payload; 
         state.success = "Perfil actualizado correctamente.";
       })
       .addCase(updatePerfil.rejected, (state, action) => {
