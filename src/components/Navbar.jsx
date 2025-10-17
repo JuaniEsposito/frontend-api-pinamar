@@ -220,19 +220,10 @@ export default function Navbar() {
                           className="block px-4 py-2 font-semibold text-dark bg-blue-100 hover:bg-blue-200 rounded transition"
                           onClick={() => setUserDropdown(false)}
                       >
-                          Mis Paneles
+                          Mi Panel
                       </Link>
                   )}
-                  
-                  {usuario?.rol === "ADMIN" && (
-                      <Link
-                          to="/admin/productos"
-                          className="block px-4 py-2 font-semibold text-dark bg-yellow-100 hover:bg-yellow-200 rounded transition"
-                          onClick={() => setUserDropdown(false)}
-                      >
-                          Panel de Admin
-                      </Link>
-                  )}
+                
                   
                   <button
                     onClick={handleLogout}
@@ -392,16 +383,7 @@ export default function Navbar() {
                       Mis Paneles
                   </NavLink>
               )}
-              
-              {usuario?.rol === "ADMIN" && (
-                  <NavLink
-                      to="/admin/productos"
-                      className="py-3 px-4 rounded-full font-semibold text-lg flex items-center gap-2 bg-yellow-100 text-dark hover:bg-yellow-200 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                      onClick={() => setOpen(false)}
-                  >
-                      Panel de Administración
-                  </NavLink>
-              )}
+             
               
               <button
                   onClick={() => { handleLogout(); setOpen(false); }}
