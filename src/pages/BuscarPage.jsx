@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
-import { useAuth } from "../auth/AuthProvider";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchCarrito, patchCarrito } from "../redux/cartSlice";
-
+import { useDispatch } from "react-redux";
+// ✅ 1. Importación corregida: Se cambia 'patchCarrito' y 'fetchCarrito' por 'addProductToCart'.
+import { addProductToCart } from "../redux/cartSlice";
 
 const SORT_OPTIONS = [
   { value: "relevancia", label: "Relevancia" },
@@ -145,9 +144,9 @@ function ProductQuickView({ product, onClose, onAddToCart }) {
           </div>
           <button
             className={`bg-primary text-white font-semibold px-6 py-3 rounded-lg shadow transition text-base w-full flex items-center justify-center gap-2 relative
-							${added ? "bg-green-600" : "hover:bg-secondary"}
-							${loading ? "opacity-70 cursor-not-allowed" : ""}
-						`}
+              ${added ? "bg-green-600" : "hover:bg-secondary"}
+              ${loading ? "opacity-70 cursor-not-allowed" : ""}
+            `}
             onClick={handleAdd}
             disabled={loading}
           >
@@ -187,6 +186,7 @@ function ProductQuickView({ product, onClose, onAddToCart }) {
     </div>
   );
 }
+
 function useQueryParam(name) {
   const { search } = useLocation();
   return new URLSearchParams(search).get(name);
@@ -194,12 +194,11 @@ function useQueryParam(name) {
 
 export default function BuscarPage() {
   const categoriaIdParam = useQueryParam("categoriaId");
-  const token = useSelector((state) => state.auth.token);
   const dispatch = useDispatch();
   const searchParam = useQueryParam("search");
   const [query, setQuery] = useState(searchParam);
   const [marcas, setMarcas] = useState([]);
-  const [marcasDisponibles, setMarcasDisponibles] = useState([]); // <-- NUEVO
+  const [marcasDisponibles, setMarcasDisponibles] = useState([]);
   const [precioMin, setPrecioMin] = useState("");
   const [precioMax, setPrecioMax] = useState("");
   const [promo, setPromo] = useState(false);
@@ -214,23 +213,21 @@ export default function BuscarPage() {
 
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(12);
-  // Si hay un ID de categoría en la URL, lo agregamos a los filtros
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
+
   useEffect(() => {
     if (categoriaIdParam && categoriasApi.length > 0) {
-      // Solo agregá el ID de la categoría principal
       setCategorias([String(categoriaIdParam)]);
-      setPage(0); // opcional: resetea la página al cambiar filtro
+      setPage(0);
     }
-    // Solo corre cuando cambian estos valores
   }, [categoriaIdParam, categoriasApi]);
 
-  // Fetch categorías desde el backend
   useEffect(() => {
     async function fetchCategorias() {
       try {
         const res = await fetch("http://localhost:4040/categorias");
         const data = await res.json();
-        // Solo categorías principales (parentId === null)
         setCategoriasApi(
           Array.isArray(data.content)
             ? data.content.filter((cat) => cat.parentId === null)
@@ -243,7 +240,6 @@ export default function BuscarPage() {
     fetchCategorias();
   }, []);
 
-  // Fetch productos del backend paginado
   useEffect(() => {
     async function fetchProductos() {
       setLoading(true);
@@ -254,7 +250,7 @@ export default function BuscarPage() {
         if (query) params.push(`nombre=${encodeURIComponent(query)}`);
         if (marcas.length > 0) params.push(`marca=${marcas.join(",")}`);
         if (categorias.length > 0)
-          params.push(`categoriaId=${categorias[0]}`); // Solo el primer ID
+          params.push(`categoriaId=${categorias[0]}`);
         if (subcategorias.length > 0)
           params.push(`subcategoriaId=${subcategorias.join(",")}`);
         if (precioMin) params.push(`precioMin=${precioMin}`);
@@ -269,7 +265,6 @@ export default function BuscarPage() {
         const productosArr = Array.isArray(data.content) ? data.content : [];
         setProductos(productosArr);
 
-        // Extrae marcas únicas de los productos
         const marcasSet = new Set();
         productosArr.forEach((p) => {
           if (p.marca && typeof p.marca === "string" && p.marca.trim() !== "") {
@@ -288,7 +283,7 @@ export default function BuscarPage() {
       } catch (err) {
         setError("No se pudieron cargar los productos.");
         setProductos([]);
-        setMarcasDisponibles([]); // <-- Limpia marcas si hay error
+        setMarcasDisponibles([]);
         setTotalPages(1);
         setTotalElements(0);
       } finally {
@@ -296,7 +291,6 @@ export default function BuscarPage() {
       }
     }
     fetchProductos();
-    // eslint-disable-next-line
   }, [
     query,
     marcas,
@@ -314,8 +308,6 @@ export default function BuscarPage() {
     setQuery(searchParam);
   }, [searchParam]);
 
-  
-  // Solo productos con stock > 0 y, si promo está activo, descuento > 0
   const productosFiltrados = [...productos]
     .filter((p) => Number(p.stock) > 0)
     .filter((p) => !promo || Number(p.descuento) > 0)
@@ -343,11 +335,6 @@ export default function BuscarPage() {
         ? categorias.filter((c) => c !== catId)
         : [...categorias, catId]
     );
-    setSubcategorias((subs) =>
-      subs.filter((sub) =>
-        subcategoriasDisponibles.map((s) => s.id).includes(sub)
-      )
-    );
   }
 
   function handleSubcategoriaChange(subId) {
@@ -358,14 +345,16 @@ export default function BuscarPage() {
     );
   }
 
+  // ✅ 2. Función 'handleAddToCart' simplificada para usar el nuevo thunk.
   async function handleAddToCart(id, cantidad) {
     try {
-      await dispatch(patchCarrito({ token, productoId: id, cantidad }));
-      await dispatch(fetchCarrito(token));
-    } catch {}
+      // El thunk se encarga de todo: obtener token, llamar a la API y actualizar el estado.
+      await dispatch(addProductToCart({ productoId: id, cantidad }));
+    } catch (err) {
+      console.error("Error al agregar el producto:", err);
+    }
   }
 
-  // Para animación visual en ProductCard
   const [addedId, setAddedId] = useState(null);
   const [unitsMap, setUnitsMap] = useState({});
 
@@ -375,10 +364,6 @@ export default function BuscarPage() {
     setAddedId(id);
     setTimeout(() => setAddedId(null), 1200);
   };
-
-  // Paginación
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalElements, setTotalElements] = useState(0);
 
   return (
     <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-6 py-8">
@@ -391,7 +376,7 @@ export default function BuscarPage() {
               <label className="block text-sm font-medium mb-1">Buscar</label>
               <input
                 type="text"
-                value={query}
+                value={query || ""}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Nombre, marca, etc."
                 className="w-full px-3 py-2 border border-gray-200 rounded focus:ring-2 focus:ring-primary"
@@ -422,7 +407,6 @@ export default function BuscarPage() {
                 Categoría
               </label>
               <div>
-                <label className="block text-sm font-medium mb-1"></label>
                 <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
                   {categoriasApi.map((c) => (
                     <label
@@ -439,30 +423,6 @@ export default function BuscarPage() {
                     </label>
                   ))}
                 </div>
-              </div>
-            </div>
-            <div>
-              
-              <div className="flex flex-col gap-1 max-h-32 overflow-y-auto">
-                {subcategoriasDisponibles.length === 0 && (
-                  <span className="text-xs text-gray-400">
-                    Seleccioná una categoría
-                  </span>
-                )}
-                {subcategoriasDisponibles.map((sub) => (
-                  <label
-                    key={sub.id}
-                    className="flex items-center gap-2 text-sm"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={subcategorias.includes(String(sub.id))}
-                      onChange={() => handleSubcategoriaChange(String(sub.id))}
-                      className="rounded border-gray-300 text-primary focus:ring-primary"
-                    />
-                    {sub.nombre}
-                  </label>
-                ))}
               </div>
             </div>
             <div className="flex gap-2">
@@ -491,16 +451,6 @@ export default function BuscarPage() {
                 />
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <input
-                id="promo"
-                type="checkbox"
-                checked={promo}
-                onChange={(e) => setPromo(e.target.checked)}
-                className="rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              
-            </div>
           </form>
         </aside>
         {/* Resultados */}
@@ -523,7 +473,6 @@ export default function BuscarPage() {
                   </option>
                 ))}
               </select>
-              {/* Mostrar por página */}
               <label htmlFor="pageSize" className="ml-4 text-sm text-gray-700">
                 Mostrar:
               </label>
@@ -591,14 +540,13 @@ export default function BuscarPage() {
                     weight={p.unidad_medida}
                     offer={p.descuento > 0 ? `${p.descuento}% OFF` : undefined}
                     bestSeller={p.bestSeller}
-                    onQuickView={setQuickView}
+                    onQuickView={() => setQuickView(p)}
                     onAddToCart={handleAddToCartWithAnim}
                     added={addedId === p.id}
                     units={unitsMap[p.id] || 0}
                   />
                 ))}
               </div>
-              {/* Paginación */}
               {totalPages > 1 && (
                 <div className="flex justify-center items-center gap-2 mt-8">
                   <button

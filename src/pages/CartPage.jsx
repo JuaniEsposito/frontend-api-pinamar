@@ -1,10 +1,23 @@
-import { useEffect, useState, useMemo } from "react";
+// src/pages/CartPage.jsx
+
+import { useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTrash, FaPlus, FaMinus, FaShoppingCart } from "react-icons/fa";
-import carritoVacio from "../assets/carritovacio.png";
-import { useAuth } from "../auth/AuthProvider";
 
+// Hooks de Redux para interactuar con el store
+import { useSelector, useDispatch } from "react-redux";
+
+// Thunks (acciones asíncronas) que creamos en el slice
+import {
+  fetchCarrito,
+  addProductToCart,
+  removeProductFromCart,
+} from "../redux/cartSlice"; // <-- Asegurate de que la ruta sea correcta
+
+import carritoVacio from "../assets/carritovacio.png";
+
+// Este componente no necesita cambios, está perfecto.
 function CarritoVacio() {
   return (
     <div className="flex flex-col items-center justify-center mt-16 mb-16">
@@ -44,32 +57,37 @@ function CarritoVacio() {
 }
 
 export default function CartPage() {
-  const { cart, updateCartItemQuantity, removeProductFromCart, isAuthenticated } = useAuth();
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
+  // 1. Leemos el estado directamente desde el store de Redux
+  const { items: cart, status, total } = useSelector((state) => state.cart);
+  const { isAuthenticated } = useSelector((state) => state.auth); // Leemos si el usuario está logueado desde el authSlice
+
+  // 2. Usamos useEffect para cargar el carrito cuando el componente se monta
   useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => setLoading(false), 300);
-    return () => clearTimeout(timer);
-  }, [cart]);
+    // Si el usuario está logueado y el carrito no se ha cargado ('idle'), disparamos la acción para traerlo del back.
+    if (isAuthenticated && status === "idle") {
+      dispatch(fetchCarrito());
+    }
+  }, [status, isAuthenticated, dispatch]);
 
-  const totalCarrito = useMemo(() => {
-    if (!cart) return 0;
-    return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  }, [cart]);
-
+  // 3. Las funciones ahora despachan las acciones de Redux
   const handleIncrement = (item) => {
-    updateCartItemQuantity(item.id, 1);
+    dispatch(addProductToCart({ productoId: item.id, cantidad: 1 }));
   };
-  
+
   const handleDecrement = (item) => {
-    updateCartItemQuantity(item.id, -1);
+    dispatch(removeProductFromCart({ productoId: item.id, cantidad: 1 }));
   };
 
   const handleEliminar = (productoId) => {
-    removeProductFromCart(productoId);
+    // Buscamos el item para saber la cantidad total y eliminarlo completo del carrito
+    const item = cart.find((p) => p.id === productoId);
+    if (item) {
+      dispatch(removeProductFromCart({ productoId: item.id, cantidad: item.quantity }));
+    }
   };
 
   const irAPago = () => {
@@ -81,14 +99,17 @@ export default function CartPage() {
     }
   };
 
-  if (loading) {
+  // 4. Manejamos el estado de carga que nos da Redux
+  if (status === "loading") {
     return <div className="mt-10 text-center text-xl">Cargando carrito...</div>;
   }
-  
+
+  // Si no hay productos, mostramos el componente de carrito vacío
   if (!cart || cart.length === 0) {
     return <CarritoVacio />;
   }
 
+  // 5. El JSX para renderizar la lista y el resumen no cambia mucho, solo que ahora los datos vienen de Redux
   return (
     <div className="max-w-5xl mx-auto mt-12 p-4 flex flex-col md:flex-row gap-8">
       <div className="flex-1">
@@ -107,19 +128,11 @@ export default function CartPage() {
                 className="flex flex-col sm:flex-row items-center gap-4 px-6 py-5 border-b last:border-b-0 hover:bg-gray-50 transition"
               >
                 <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border">
-                  <img
-                    src={item.imageUrl || ""}
-                    alt={item.name}
-                    className="w-full h-full object-contain"
-                  />
+                  <img src={item.imageUrl || ""} alt={item.name} className="w-full h-full object-contain" />
                 </div>
                 <div className="flex-1 w-full sm:w-auto text-center sm:text-left">
-                  <div className="font-bold text-lg text-gray-800">
-                    {item.name}
-                  </div>
-                  <div className="text-gray-500 text-sm">
-                    Cantidad: <span className="font-semibold">{item.quantity}</span>
-                  </div>
+                  <div className="font-bold text-lg text-gray-800">{item.name}</div>
+                  <div className="text-gray-500 text-sm">Cantidad: <span className="font-semibold">{item.quantity}</span></div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 transition" onClick={() => handleDecrement(item)}>
@@ -130,12 +143,8 @@ export default function CartPage() {
                   </button>
                 </div>
                 <div className="flex flex-col items-end gap-1 min-w-[120px]">
-                  <div className="font-bold text-lg text-green-700">
-                    {`$${(item.price * item.quantity).toFixed(2)}`}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {`$${item.price.toFixed(2)} c/u`}
-                  </div>
+                  <div className="font-bold text-lg text-green-700">{`$${(item.price * item.quantity).toFixed(2)}`}</div>
+                  <div className="text-sm text-gray-500">{`$${item.price.toFixed(2)} c/u`}</div>
                 </div>
                 <button
                   className="p-2 text-red-500 hover:bg-red-100 rounded-full transition"
@@ -159,12 +168,12 @@ export default function CartPage() {
           <h2 className="text-xl font-bold mb-4 text-green-800">Resumen</h2>
           <div className="flex justify-between text-gray-700 text-base mb-2">
             <span>Subtotal</span>
-            <span>{`$${totalCarrito.toFixed(2)}`}</span>
+            <span>{`$${total.toFixed(2)}`}</span>
           </div>
           <div className="border-t pt-4 mt-4">
             <div className="flex justify-between text-gray-900 font-bold text-xl mb-1">
               <span>Total</span>
-              <span>{`$${totalCarrito.toFixed(2)}`}</span>
+              <span>{`$${total.toFixed(2)}`}</span>
             </div>
           </div>
           <button
