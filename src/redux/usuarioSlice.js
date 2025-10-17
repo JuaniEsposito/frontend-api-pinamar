@@ -62,24 +62,24 @@ export const updatePerfil = createAsyncThunk(
   async ({ token, formData }, { getState, rejectWithValue }) => {
     try {
       const state = getState();
-      // 🔑 Obtener userId desde el authSlice (ya migrado)
-      const userId = state.auth?.usuario?.id; 
+      const userId = state.auth?.usuario?.id;
       
       if (!userId) {
-        // Esto previene la llamada si no hay ID disponible
         throw new Error("No se encontró el ID del usuario autenticado para actualizar.");
       }
 
-      // Usamos axios.patch para la actualización
-      const response = await axios.patch(`${API_URL}/${userId}`, formData, {
+      // 1. Llamada a la API (asumiendo que usas Axios y puerto 8080)
+      const response = await axios.patch(`http://localhost:8080/usuarios/${userId}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      return response.data;
+      // 🔑 CAMBIO CLAVE AQUÍ: Devolver solo la propiedad 'data'
+      // El backend responde: {"mensaje": "...", "data": {datos_actualizados}}
+      return response.data.data; 
+
     } catch (e) {
-      // Si el error fue lanzado internamente (por no haber userId)
       if (e.message.includes("ID del usuario")) {
           return rejectWithValue(e.message);
       }
