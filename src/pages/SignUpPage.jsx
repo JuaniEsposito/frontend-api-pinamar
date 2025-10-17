@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { registerThunk, clearAuthError } from "../redux/authSlice"; 
+import { registerThunk, clearAuthError } from "../redux/authSlice";
+import { toast } from 'react-toastify'; // ✅ IMPORTAMOS TOASTIFY
 
 export default function SignUpPage() {
   const [username, setUsername] = useState("");
@@ -25,8 +26,9 @@ export default function SignUpPage() {
     e.preventDefault();
 
     if (!email.includes("@")) {
-      alert("Por favor, ingresá un correo electrónico válido.");
-      return; 
+      // ✅ ALERT REEMPLAZADO
+      toast.error("Por favor, ingresá un correo electrónico válido.");
+      return;
     }
 
     dispatch(clearAuthError()); 
@@ -44,9 +46,9 @@ export default function SignUpPage() {
     )
       .unwrap() 
       .then(() => {
-        // Éxito: Registro completado y estado de Redux actualizado.
-        alert("¡Cuenta creada con éxito! Sesión iniciada. ¡Bienvenido!");
-        navigate("/"); // Redirige al home (ya logeado)
+        // ✅ ALERT REEMPLAZADO
+        toast.success("Cuenta creada con éxito. Ahora podés iniciar sesión.");
+        navigate("/signin");
       })
       .catch((err) => {
         // Fallo: El error se muestra en el UI desde el estado 'error'
@@ -84,7 +86,7 @@ export default function SignUpPage() {
       {/* Muestra el error de Redux */}
       {error && (
         <div className="mb-4 text-red-600 text-center bg-red-100 p-2 rounded">
-          {error} 
+          {error}
         </div>
       )}
 

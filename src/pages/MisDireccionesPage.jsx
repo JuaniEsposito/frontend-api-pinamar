@@ -1,8 +1,22 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+<<<<<<< HEAD
 import { useDispatch, useSelector } from "react-redux";
 import { fetchDirecciones, saveDireccion, deleteDireccion, clearDireccionesMsg } from "../redux/direccionesSlice";
 import { localidadesAMBA } from "../data/localidadesAMBA";
+=======
+import { localidadesAMBA } from "../data/localidadesAMBA";
+import { toast } from 'react-toastify'; // ✅ IMPORTAMOS TOASTIFY
+
+const DIRECCIONES_INICIALES = [
+  {
+    id: 1,
+    calle: "Av. Libertador",
+    numero: "1234",
+    ciudad: "CABA",
+  },
+];
+>>>>>>> 8ce09ee99921155d23619d4d448f67deb388463c
 
 export default function MisDireccionesPage() {
   const dispatch = useDispatch();
@@ -16,11 +30,15 @@ export default function MisDireccionesPage() {
   const [formData, setFormData] = useState({
     calle: "",
     numero: "",
+<<<<<<< HEAD
     pisoDepto: "",
     ciudad: "",
     provincia: "Buenos Aires",
     codigoPostal: "",
     tipoVivienda: "casa",
+=======
+    ciudad: "",
+>>>>>>> 8ce09ee99921155d23619d4d448f67deb388463c
   });
 
   // Cargar direcciones al montar el componente
@@ -50,8 +68,14 @@ export default function MisDireccionesPage() {
 
   const handleAddDireccion = (e) => {
     e.preventDefault();
+<<<<<<< HEAD
     if (!formData.calle || !formData.numero || !formData.ciudad || !formData.codigoPostal) {
       alert("Por favor, completá todos los campos obligatorios.");
+=======
+    if (!formData.calle || !formData.numero || !formData.ciudad) {
+      // ✅ ALERT REEMPLAZADO POR TOAST
+      toast.error("Por favor, completá todos los campos.");
+>>>>>>> 8ce09ee99921155d23619d4d448f67deb388463c
       return;
     }
 
@@ -186,6 +210,7 @@ export default function MisDireccionesPage() {
                 inputMode="numeric"
                 required
               />
+<<<<<<< HEAD
               
               <input
                 name="pisoDepto"
@@ -195,6 +220,8 @@ export default function MisDireccionesPage() {
                 className="w-full border p-2 rounded"
               />
 
+=======
+>>>>>>> 8ce09ee99921155d23619d4d448f67deb388463c
               <select
                 name="ciudad"
                 value={formData.ciudad}
@@ -209,6 +236,7 @@ export default function MisDireccionesPage() {
                   </option>
                 ))}
               </select>
+<<<<<<< HEAD
 
               <input
                 name="provincia"
@@ -255,6 +283,8 @@ export default function MisDireccionesPage() {
                   Cancelar Edición
                 </button>
               )}
+=======
+>>>>>>> 8ce09ee99921155d23619d4d448f67deb388463c
             </div>
           </motion.form>
         )}
