@@ -24,7 +24,8 @@ import DashboardPage from "./pages/DashboardPage";
 import Footer from "./components/Footer";
 import "./App.css";
 
-// ✅ 1. IMPORTA LOS COMPONENTES Y ESTILOS DE REACT-TOASTIFY
+// ✅ 1. IMPORTAMOS EL COMPONENTE GUARDIÁN DE RUTAS
+import AdminRoute from "./components/AdminRoute";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -34,7 +35,7 @@ function App() {
       <Navbar />
       <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-6 lg:px-16 py-8">
         <Routes>
-          {/* Rutas públicas */}
+          {/* Rutas públicas y de acceso */}
           <Route path="/" element={<HomePage />} />
           <Route path="/buscar" element={<BuscarPage />} />
           <Route path="/categorias" element={<CategoriesPage />} />
@@ -45,7 +46,7 @@ function App() {
           <Route path="/producto/id/:id" element={<ProductDetailPage />} />
           <Route path="/producto/:slug" element={<ProductDetailPage />} />
           
-          {/* Rutas de usuario */}
+          {/* Rutas de usuario (no admin) */}
           <Route path="/carrito" element={<CartPage />} />
           <Route path="/perfil" element={<ProfilePage />} />
           <Route path="/mis-pedidos" element={<MisPedidosPage />} />
@@ -57,26 +58,28 @@ function App() {
           <Route path="/finalizar-compra" element={<FinalizarCompraPage />} />
           <Route path="/step-pago" element={<StepPago />} />
 
-          {/* Rutas de edición (Admin) */}
+          {/* === RUTAS PROTEGIDAS PARA ADMINISTRADORES === */}
+          
+          {/* Rutas de Edición/Creación (Admin) - CADA UNA ENVUELTA */}
           <Route
             path="/editar-producto/:id"
-            element={<ProductEditPage modo="editar" />}
+            element={<AdminRoute><ProductEditPage modo="editar" /></AdminRoute>}
           />
           <Route
             path="/crear-producto"
-            element={<ProductEditPage modo="crear" />}
+            element={<AdminRoute><ProductEditPage modo="crear" /></AdminRoute>}
           />
           <Route
             path="/editar-categoria/:id"
-            element={<CategoryEditPage modo="editar" />}
+            element={<AdminRoute><CategoryEditPage modo="editar" /></AdminRoute>}
           />
           <Route
             path="/crear-categoria"
-            element={<CategoryEditPage modo="crear" />}
+            element={<AdminRoute><CategoryEditPage modo="crear" /></AdminRoute>}
           />
 
-          {/* Rutas de admin con layout */}
-          <Route path="/admin" element={<AdminPage />}>
+          {/* Rutas de Admin con Layout - EL WRAPPER VA EN EL LAYOUT PRINCIPAL */}
+          <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>}>
             <Route path="productos" element={<AdminPanelProductPage />} />
             <Route path="categorias" element={<AdminPanelCategoriesPage />} />
           </Route>
@@ -87,8 +90,6 @@ function App() {
       </div>
       <Footer />
 
-      {/* ✅ 2. AGREGA EL CONTENEDOR DE NOTIFICACIONES AL FINAL */}
-      {/* Este componente invisible se encargará de mostrar todos los toasts */}
       <ToastContainer
         position="bottom-right"
         autoClose={4000}
