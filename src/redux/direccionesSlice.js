@@ -1,11 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-// Traer direcciones
+// Traer direcciones por usuario
 export const fetchDirecciones = createAsyncThunk(
   "direcciones/fetchDirecciones",
-  async (_, { rejectWithValue }) => {
+  async (usuarioId, { rejectWithValue }) => {  // 👈 Cambié _ por usuarioId
     try {
-      const res = await fetch("http://localhost:8080/direcciones");
+      // 👇 Ahora usa el endpoint que filtra por usuario
+      const res = await fetch(`http://localhost:8080/direcciones/usuario/${usuarioId}`);
       if (!res.ok) throw new Error("No se pudieron cargar las direcciones.");
       const data = await res.json();
       return Array.isArray(data) ? data : [];
