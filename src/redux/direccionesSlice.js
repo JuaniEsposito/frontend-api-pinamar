@@ -3,12 +3,9 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 // Traer direcciones
 export const fetchDirecciones = createAsyncThunk(
   "direcciones/fetchDirecciones",
-  async (token, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const res = await fetch("http://localhost:4040/direcciones", {
-        headers: { Authorization: `Bearer ${token}` },
-        credentials: "include",
-      });
+      const res = await fetch("http://localhost:8080/direcciones");
       if (!res.ok) throw new Error("No se pudieron cargar las direcciones.");
       const data = await res.json();
       return Array.isArray(data) ? data : [];
@@ -21,19 +18,17 @@ export const fetchDirecciones = createAsyncThunk(
 // Crear o editar dirección
 export const saveDireccion = createAsyncThunk(
   "direcciones/saveDireccion",
-  async ({ token, direccion, editId }, { rejectWithValue }) => {
+  async ({ direccion, editId }, { rejectWithValue }) => {
     try {
       const url = editId
-        ? `http://localhost:4040/direcciones/${editId}`
-        : "http://localhost:4040/direcciones";
+        ? `http://localhost:8080/direcciones/${editId}`
+        : "http://localhost:8080/direcciones";
       const method = editId ? "PUT" : "POST";
       const res = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
-        credentials: "include",
         body: JSON.stringify(direccion),
       });
       if (!res.ok) throw new Error(editId ? "No se pudo modificar la dirección." : "No se pudo crear la dirección.");
@@ -48,12 +43,10 @@ export const saveDireccion = createAsyncThunk(
 // Eliminar dirección
 export const deleteDireccion = createAsyncThunk(
   "direcciones/deleteDireccion",
-  async ({ token, id }, { rejectWithValue }) => {
+  async (id, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:4040/direcciones/${id}`, {
+      const res = await fetch(`http://localhost:8080/direcciones/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-        credentials: "include",
       });
       if (!res.ok) throw new Error("No se pudo eliminar la dirección.");
       return id;
