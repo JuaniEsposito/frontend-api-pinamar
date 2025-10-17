@@ -10,8 +10,8 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
-  const [telefono, setTelefono] = useState("");
-  const [direccion, setDireccion] = useState("");
+  //const [telefono, setTelefono] = useState("");
+  //const [direccion, setDireccion] = useState("");
   
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -39,8 +39,8 @@ export default function SignUpPage() {
         password,
         nombre,
         apellido,
-        telefono,
-        direccion,
+        //telefono,
+        //direccion,
         rol: "USER",
       })
     )
@@ -127,22 +127,7 @@ export default function SignUpPage() {
         className="w-full border p-3 mb-4 rounded-lg focus:ring-2 focus:ring-primary"
         required
       />
-      <input
-        type="text"
-        placeholder="Teléfono"
-        value={telefono}
-        onChange={(e) => setTelefono(e.target.value)}
-        className="w-full border p-3 mb-4 rounded-lg focus:ring-2 focus:ring-primary"
-        required
-      />
-      <input
-        type="text"
-        placeholder="Dirección"
-        value={direccion}
-        onChange={(e) => setDireccion(e.target.value)}
-        className="w-full border p-3 mb-4 rounded-lg focus:ring-2 focus:ring-primary"
-        required
-      />
+      
 
       <button
         type="submit"
