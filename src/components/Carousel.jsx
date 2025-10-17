@@ -48,7 +48,7 @@ export default function Carousel({ items = [] }) { // Acepta 'items' como prop
         <div className="relative w-full h-[220px] sm:h-[320px] md:h-[400px] rounded-2xl overflow-hidden shadow-lg mb-10">
             <img
                 src={imgSrc}
-                alt={title || "Promoción"}
+                alt={title || ""}
                 onError={() => setImgSrc(FALLBACK_IMG)}
                 className="absolute inset-0 w-full h-full object-cover object-center"
             />

@@ -3,57 +3,7 @@
 import { createContext, useContext, useState } from "react";
 
 // --- 1. DATOS INICIALES MOCK (PRODUCTOS SALUDABLES) ---
-const INITIAL_PRODUCTS = [
-  { 
-    id: 1, name: "Manzanas Rojas Frescas", price: 350.00, stock: 50, brand: "La Huerta", 
-    description: "Manzanas crujientes del Alto Valle, ideales para consumo fresco.", 
-    category: "Frutas", imageUrl: "https://placehold.co/100x100/FF5733/FFFFFF?text=Manzana",
-    unidad_medida: "kg", descuento: 0, bestSeller: true
-  },
-  { 
-    id: 2, name: "Lechuga Morada Orgánica", price: 180.50, stock: 30, brand: "Tierra Viva", 
-    description: "Hojas frescas y crujientes, cultivada sin pesticidas.", 
-    category: "Vegetales", imageUrl: "https://placehold.co/100x100/3CB371/FFFFFF?text=Lechuga",
-    unidad_medida: "unidad", descuento: 15, bestSeller: false
-  },
-  { 
-    id: 3, name: "Agua Mineral sin Gas 1.5L", price: 120.00, stock: 100, brand: "Vida Pura", 
-    description: "Agua de manantial, embotellada en origen.", 
-    category: "Bebidas", imageUrl: "https://placehold.co/100x100/87CEFA/000000?text=Agua",
-    unidad_medida: "litro", descuento: 0, bestSeller: false
-  },
-  { 
-    id: 4, name: "Mix de Frutos Secos Premium", price: 950.00, stock: 20, brand: "NutriMix", 
-    description: "Almendras, nueces y castañas de cajú. Fuente de energía.", 
-    category: "Snacks", imageUrl: "https://placehold.co/100x100/A0BFFF/000000?text=Frutos+Secos",
-    unidad_medida: "250g", descuento: 20, bestSeller: true
-  },
-  { 
-    id: 5, name: "Tomates Cherry", price: 280.00, stock: 45, brand: "El Campo", 
-    description: "Pequeños tomates ideales para ensaladas o picadas.", 
-    category: "Vegetales", imageUrl: "https://placehold.co/100x100/DC143C/FFFFFF?text=Tomate",
-    unidad_medida: "250g", descuento: 5, bestSeller: false
-  },
-  { 
-    id: 6, name: "Jugo de Naranja Orgánico", price: 300.00, stock: 60, brand: "Citrus Fresh", 
-    description: "100% exprimido, sin azúcares añadidos.", 
-    category: "Bebidas", imageUrl: "https://placehold.co/100x100/FFA500/FFFFFF?text=Jugo",
-    unidad_medida: "litro", descuento: 0, bestSeller: true
-  },
-  { 
-    id: 7, name: "Pan Integral", price: 420.00, stock: 15, brand: "La Panera", 
-    description: "Rico en fibra y semillas, ideal para tostadas.", 
-    category: "Panadería", imageUrl: "https://placehold.co/100x100/D2B48C/000000?text=Pan",
-    unidad_medida: "unidad", descuento: 10, bestSeller: false
-  },
-  { 
-    id: 8, name: "Cerveza Artesanal IPA", price: 550.00, stock: 50, brand: "Patagonia", 
-    description: "Cerveza artesanal de alta calidad.", 
-    category: "Bebidas", imageUrl: "https://placehold.co/100x100/F0F8FF/000000?text=Cerveza",
-    unidad_medida: "lata", descuento: 0, bestSeller: false
-  },
-];
-
+const INITIAL_PRODUCTS = [];
 const INITIAL_CART = []; 
 const INITIAL_ORDERS = [];
 

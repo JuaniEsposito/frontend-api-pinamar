@@ -213,6 +213,7 @@ const authSlice = createSlice({
       .addCase(registerThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      
       })
       // Resto de casos (verificarEmail, cambiarPassword)
        .addCase(verificarEmailThunk.pending, (state) => { state.loading = true; state.error = ""; })

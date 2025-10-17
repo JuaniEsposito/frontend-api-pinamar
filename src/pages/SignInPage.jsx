@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { loginThunk, clearAuthError } from "../redux/authSlice"; 
+import { fetchCategorias } from "../redux/categoriesSlice"; // 👈 Agregá este import
 import { toast } from 'react-toastify';
 
 export default function SignInPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+
   
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -34,15 +36,17 @@ export default function SignInPage() {
     dispatch(clearAuthError());
 
     dispatch(loginThunk({ username, password }))
-      .unwrap() // .unwrap() permite usar .then() y .catch() con el resultado del thunk
+      .unwrap()
       .then(() => {
+        // 👇 NUEVO: Cargar categorías después del login exitoso
+        dispatch(fetchCategorias());
+        
         // Éxito: el usuario se logueó correctamente
         toast.success("¡Sesión iniciada correctamente!");
         navigate("/"); // Redirige a la página principal
       })
       .catch((err) => {
-        // Fallo: el error ya se guarda en el estado de Redux,
-        // por lo que se mostrará automáticamente en el div de error.
+        // Fallo: el error ya se guarda en el estado de Redux
         console.error("Fallo en el login:", err);
       });
   };

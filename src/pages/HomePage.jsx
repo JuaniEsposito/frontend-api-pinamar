@@ -255,11 +255,11 @@ export default function HomePage() {
     const [totalPages, setTotalPages] = useState(1);
     const [totalElements, setTotalElements] = useState(0);
     const [banners] = useState([ 
-        { img: bannerFoto1, text: "Frescura Garantizada"},
-        { img: bannerFoto2, text: "Mejores Precios"},
-        { img: bannerFoto3, text: "Compra Rápida"},
-        { img: bannerFoto4, text: "Envíos a Domicilio"},
-        { img: bannerFoto5, text: "Stock Asegurado"},
+        { img: bannerFoto1,},
+        { img: bannerFoto2,},
+        { img: bannerFoto3,},
+        { img: bannerFoto4,},
+        { img: bannerFoto5,},
     ]);
   
     // Estado para la animación de agregar al carrito
@@ -300,7 +300,7 @@ export default function HomePage() {
         setLoading(true);
         setError("");
         try {
-            // ✅ CORRECCIÓN: Usamos la URL base corregida a 8080
+            //  Usamos la URL base correcta
             const response = await fetch(API_BASE_URL); 
             
             if (!response.ok) {

@@ -529,7 +529,7 @@ export default function Navbar() {
                   Mis Pedidos
               </NavLink>
 
-              {/* ✅ CORRECCIÓN MÓVIL: Mis Paneles (Dashboard) - SOLO visible para ADMIN */}
+              {/* Mis Paneles (Dashboard) - SOLO visible para ADMIN */}
               {usuario?.rol === "ADMIN" && (
                   <NavLink
                       to="/mis-dashboards"
@@ -540,7 +540,7 @@ export default function Navbar() {
                   </NavLink>
               )}
               
-              {/* ✅ CORRECCIÓN MÓVIL: Panel de Admin general */}
+              {/*  Panel de Admin general */}
               {usuario?.rol === "ADMIN" && (
                   <NavLink
                       to="/admin/productos"

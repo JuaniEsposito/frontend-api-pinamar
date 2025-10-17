@@ -26,6 +26,7 @@ export default function ProductCard({
   const [units, setUnits] = useState(unitsProp || 0)
   const [loading, setLoading] = useState(false)
   const [showQty, setShowQty] = useState(unitsProp > 0)
+  
   // Sincroniza unidades si viene de props (para animación global)
   useEffect(() => {
     if (typeof unitsProp === "number") setUnits(unitsProp)
