@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux"; // 🆕
 import { logoutThunk } from "../redux/authSlice"; // 🆕 Importamos el thunk de logout
 import logoMarket from "../assets/logo.png";
+import { toast } from 'react-toastify';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -28,6 +29,11 @@ export default function Navbar() {
     (sum, item) => sum + (item.cantidad || 0),
     0
   );
+  const handleLogout = () => {
+    dispatch(logoutThunk());
+    toast.success("¡Sesión cerrada, hasta luego!");
+    setUserDropdown(false);
+  };
 
   function handleSearchSubmit(e) {
     e.preventDefault();
@@ -41,10 +47,7 @@ export default function Navbar() {
   // Lógica para cerrar el dropdown del usuario al hacer click fuera
   useEffect(() => {
     function handleClickOutside(e) {
-      if (
-        userDropdownRef.current &&
-        !userDropdownRef.current.contains(e.target)
-      ) {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(e.target)) {
         setUserDropdown(false);
       }
     }
@@ -81,14 +84,6 @@ export default function Navbar() {
   }, [categoriasRedux]);
 
   const navLinks = [{ label: "Categorías", dropdown: categoriesDropdown }];
-
-  // 🆕 Función de Logout adaptada a Redux
-  const handleLogout = () => {
-    dispatch(logoutThunk()); // Llama al thunk de logout
-    setUserDropdown(false);
-    alert("¡Sesión cerrada, hasta luego!");
-    navigate("/"); // Opcional: navegar al inicio
-  };
 
   return (
     <>
@@ -252,7 +247,7 @@ export default function Navbar() {
             {/* Botón Carrito (sin cambios) */}
             <div className="relative group">
               <button
-                className="relative"
+                className="relative p-2"
                 onClick={() => navigate("/carrito")}
                 aria-label="Ver carrito"
               >
@@ -272,7 +267,7 @@ export default function Navbar() {
                   />
                 </svg>
                 {totalItems > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full px-2 py-0.5">
+                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                     {totalItems}
                   </span>
                 )}
@@ -567,7 +562,7 @@ export default function Navbar() {
                     </NavLink>
                 )}
                 <button
-                    onClick={() => { setOpen(false); handleLogout(); }}
+                    onClick={() => { setOpen(false);}}
                     className="py-3 px-4 rounded-full font-semibold text-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-200 shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary mt-4"
                 >
                     Cerrar sesión

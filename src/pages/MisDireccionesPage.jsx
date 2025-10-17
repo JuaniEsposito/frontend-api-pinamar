@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { localidadesAMBA } from "../data/localidadesAMBA"; // 1. Importamos nuestro listado
+import { localidadesAMBA } from "../data/localidadesAMBA";
+import { toast } from 'react-toastify'; // ✅ IMPORTAMOS TOASTIFY
 
 const DIRECCIONES_INICIALES = [
   {
@@ -17,7 +18,7 @@ export default function MisDireccionesPage() {
   const [formData, setFormData] = useState({
     calle: "",
     numero: "",
-    ciudad: "", // El valor inicial ahora puede ser vacío
+    ciudad: "",
   });
 
   const handleInputChange = (e) => {
@@ -33,7 +34,8 @@ export default function MisDireccionesPage() {
   const handleAddDireccion = (e) => {
     e.preventDefault();
     if (!formData.calle || !formData.numero || !formData.ciudad) {
-      alert("Por favor, completá todos los campos.");
+      // ✅ ALERT REEMPLAZADO POR TOAST
+      toast.error("Por favor, completá todos los campos.");
       return;
     }
 
@@ -57,7 +59,6 @@ export default function MisDireccionesPage() {
         <h1 className="text-3xl font-bold text-green-700">Mis Direcciones</h1>
         <button
           onClick={() => setShowForm(!showForm)}
-
           className="px-4 py-2 rounded-lg font-semibold text-white bg-green-600 hover:bg-green-700 transition-colors"
         >
           {showForm ? "Cancelar" : "Agregar nueva dirección"}
@@ -91,8 +92,6 @@ export default function MisDireccionesPage() {
                 type="text"
                 inputMode="numeric"
               />
-              
-              {/* --- 2. REEMPLAZAMOS EL INPUT POR UN SELECT --- */}
               <select
                 name="ciudad"
                 value={formData.ciudad}
@@ -106,7 +105,6 @@ export default function MisDireccionesPage() {
                   </option>
                 ))}
               </select>
-
             </div>
             <button
               type="submit"

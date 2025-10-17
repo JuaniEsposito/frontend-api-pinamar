@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import { a } from "framer-motion/client";
 
 // Traer productos (con filtros opcionales)
 export const fetchProductos = createAsyncThunk(
@@ -22,15 +21,12 @@ export const fetchProductos = createAsyncThunk(
       if (query.length > 0) url += "?" + query.join("&");
       const res = await axios.get(url);
       if (res.status !== 200) throw new Error("No se pudieron cargar los productos.");
-      const data = res.data;
-      // Devuelve el objeto completo, no solo el array
-      return data;
+      return res.data;
     } catch (e) {
       return rejectWithValue(e.message || "Error al cargar productos.");
     }
   }
 );
-
 
 // Traer un producto por su ID
 export const fetchProductoById = createAsyncThunk(
@@ -39,22 +35,34 @@ export const fetchProductoById = createAsyncThunk(
     try {
       const res = await axios.get(`http://localhost:4040/producto/id/${id}`);
       if (res.status !== 200) throw new Error("No se pudo cargar el producto.");
-      return res.data; // Un solo producto
+      // Tu backend devuelve un objeto { mensaje, producto }, nos quedamos solo con 'producto'
+      return res.data.producto;
     } catch (e) {
       return rejectWithValue(e.message || "Error al cargar producto.");
     }
   }
 );
 
+// ✅ THUNK NUEVO PARA PRODUCTOS RELACIONADOS
+export const fetchRelatedProducts = createAsyncThunk(
+  "productos/fetchRelatedProducts",
+  async (id, { rejectWithValue }) => {
+    try {
+      const res = await axios.get(`http://localhost:4040/producto/id/${id}/relacionados`);
+      if (res.status !== 200) throw new Error("No se pudo cargar los productos relacionados.");
+      return res.data; // Devuelve un array de productos
+    } catch (e) {
+      return rejectWithValue(e.message || "Error al cargar productos relacionados.");
+    }
+  }
+);
 
 export const deleteProducto = createAsyncThunk(
   "productos/deleteProducto",
   async ({ id, token }, { rejectWithValue }) => {
     try {
       const res = await axios.delete(`http://localhost:4040/producto/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.status === 200) {
         return id;
@@ -116,7 +124,8 @@ const productosSlice = createSlice({
   name: "productos",
   initialState: {
     productos: [],
-    productoDetalle: null,     
+    productoDetalle: null,
+    relacionados: [], // ✅ ESTADO NUEVO
     loading: false,
     error: "",
   },
@@ -133,7 +142,6 @@ const productosSlice = createSlice({
       })
       .addCase(fetchProductos.fulfilled, (state, action) => {
         state.loading = false;
-        // Si viene paginado, guarda el array y los datos extra
         if (action.payload && Array.isArray(action.payload.content)) {
           state.productos = action.payload.content;
           state.paginacion = {
@@ -167,6 +175,17 @@ const productosSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         state.productoDetalle = null;
+      })
+      // ✅ CASOS NUEVOS PARA RELACIONADOS
+      .addCase(fetchRelatedProducts.pending, (state) => {
+        // Opcional: manejar un estado de carga específico si es necesario
+      })
+      .addCase(fetchRelatedProducts.fulfilled, (state, action) => {
+        state.relacionados = action.payload;
+      })
+      .addCase(fetchRelatedProducts.rejected, (state, action) => {
+        state.relacionados = [];
+        console.error("Error en relacionados:", action.payload);
       });
   },
 });

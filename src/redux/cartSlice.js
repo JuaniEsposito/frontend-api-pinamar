@@ -1,57 +1,62 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { getToken } from "../utils/auth"; // Suponiendo que tienes una función para obtener el token
 
-// Traer carrito
+// Thunk para OBTENER el carrito del usuario logueado
 export const fetchCarrito = createAsyncThunk(
   "cart/fetchCarrito",
-  async (token) => {
-    const res = await fetch("http://localhost:4040/carritos", {
+  async (_, { rejectWithValue }) => {
+    const token = getToken();
+    if (!token) return rejectWithValue("No hay token");
+
+    const response = await fetch("http://localhost:4040/carritos/mi-carrito", {
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
     });
-    if (!res.ok) return { items: [], total: 0 };
-    return await res.json();
+
+    if (!response.ok) {
+      return rejectWithValue("No se pudo cargar el carrito");
+    }
+    const data = await response.json();
+    // Tu backend devuelve un CarritoResponse, que puede no tener `items`.
+    // Asegurémonos de que el estado siempre tenga una estructura consistente.
+    return {
+      items: data.items || [],
+      total: data.total || 0,
+    };
   }
 );
 
+// Thunk para AGREGAR un producto (o sumar cantidad)
+export const addProductToCart = createAsyncThunk(
+  "cart/addProductToCart",
+  async ({ productoId, cantidad }, { dispatch, rejectWithValue }) => {
+    const token = getToken();
+    if (!token) return rejectWithValue("No hay token");
 
-// Sumar/restar cantidad
-export const patchCarrito = createAsyncThunk(
-  "cart/patchCarrito",
-  async ({ token, productoId, cantidad }) => {
     await fetch(
-      `http://localhost:4040/carritos/${productoId}?cantidad=${cantidad}`,
+      `http://localhost:4040/carritos/mi-carrito/producto/${productoId}?cantidad=${cantidad}`,
       {
         method: "PATCH",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       }
     );
+    // Después de agregar, volvemos a pedir el carrito completo para actualizar el estado
+    dispatch(fetchCarrito());
   }
 );
 
-// Eliminar/restar uno
-export const deleteCarrito = createAsyncThunk(
-  "cart/deleteCarrito",
-  async ({ token, productoId }) => {
-    await fetch(`http://localhost:4040/carritos/${productoId}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  }
-);
+// Thunk para ELIMINAR un producto (o restar cantidad)
+export const removeProductFromCart = createAsyncThunk(
+  "cart/removeProductFromCart",
+  async ({ productoId, cantidad }, { dispatch, rejectWithValue }) => {
+    const token = getToken();
+    if (!token) return rejectWithValue("No hay token");
 
-// Eliminar todos de un producto
-export const deleteAllCarrito = createAsyncThunk(
-  "cart/deleteAllCarrito",
-  async ({ token, productoId, cantidad }) => {
     await fetch(
-      `http://localhost:4040/carritos/${productoId}?cantidad=${cantidad}`,
+      `http://localhost:4040/carritos/mi-carrito/producto/${productoId}?cantidad=${cantidad}`,
       {
         method: "DELETE",
         headers: {
@@ -59,39 +64,41 @@ export const deleteAllCarrito = createAsyncThunk(
         },
       }
     );
+    // Después de eliminar, volvemos a pedir el carrito completo para actualizar el estado
+    dispatch(fetchCarrito());
   }
 );
 
 const cartSlice = createSlice({
   name: "cart",
   initialState: {
-    carrito: { items: [], total: 0 },
-    loading: false,
+    items: [],
+    total: 0,
+    status: "idle", // 'idle' | 'loading' | 'succeeded' | 'failed'
     error: null,
   },
   reducers: {
     resetCarrito(state) {
-      state.carrito = { items: [], total: 0 };
-      state.loading = false;
+      state.items = [];
+      state.total = 0;
+      state.status = "idle";
       state.error = null;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchCarrito.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        state.status = "loading";
       })
       .addCase(fetchCarrito.fulfilled, (state, action) => {
-        state.carrito = action.payload;
-        state.loading = false;
+        state.status = "succeeded";
+        state.items = action.payload.items;
+        state.total = action.payload.total;
       })
-      .addCase(fetchCarrito.rejected, (state) => {
-        state.carrito = { items: [], total: 0 };
-        state.loading = false;
-        state.error = "No se pudo cargar el carrito";
+      .addCase(fetchCarrito.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
       });
-    // patchCarrito, deleteCarrito, deleteAllCarrito no modifican el state directamente
   },
 });
 
