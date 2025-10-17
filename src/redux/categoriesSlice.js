@@ -5,11 +5,14 @@ export const fetchCategorias = createAsyncThunk(
   "categorias/fetchCategorias",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await fetch("http://localhost:4040/categorias");
+      // 👇 Cambié el puerto y el endpoint
+      const res = await fetch("http://localhost:8080/categorias/all");
+      if (!res.ok) throw new Error("Error al cargar categorías");
       const data = await res.json();
-      return Array.isArray(data.content) ? data.content : data;
+      // El endpoint /all devuelve directamente un array
+      return Array.isArray(data) ? data : [];
     } catch (e) {
-      return rejectWithValue("No se pudieron cargar las categorías.");
+      return rejectWithValue(e.message || "No se pudieron cargar las categorías.");
     }
   }
 );
@@ -18,7 +21,7 @@ export const addCategoria = createAsyncThunk(
   "categorias/addCategoria",
   async ({ nombre, parentId, token }, { rejectWithValue }) => {
     try {
-      const res = await fetch("http://localhost:4040/categorias", {
+      const res = await fetch("http://localhost:8080/categorias", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -26,11 +29,11 @@ export const addCategoria = createAsyncThunk(
         },
         body: JSON.stringify({ nombre, parentId: parentId || null }),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) throw new Error("Error al crear categoría");
       const data = await res.json();
       return data;
-    } catch {
-      return rejectWithValue("No se pudo crear la categoría.");
+    } catch (e) {
+      return rejectWithValue(e.message || "No se pudo crear la categoría.");
     }
   }
 );
@@ -39,7 +42,7 @@ export const editCategoria = createAsyncThunk(
   "categorias/editCategoria",
   async ({ id, nombre, parentId, token }, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:4040/categorias/${id}`, {
+      const res = await fetch(`http://localhost:8080/categorias/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -47,11 +50,11 @@ export const editCategoria = createAsyncThunk(
         },
         body: JSON.stringify({ nombre, parentId: parentId || null }),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) throw new Error("Error al editar categoría");
       const data = await res.json();
       return data;
-    } catch {
-      return rejectWithValue("No se pudo editar la categoría.");
+    } catch (e) {
+      return rejectWithValue(e.message || "No se pudo editar la categoría.");
     }
   }
 );
@@ -60,16 +63,16 @@ export const deleteCategoria = createAsyncThunk(
   "categorias/deleteCategoria",
   async ({ id, token }, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:4040/categorias/${id}`, {
+      const res = await fetch(`http://localhost:8080/categorias/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) throw new Error("Error al eliminar categoría");
       return id;
-    } catch {
-      return rejectWithValue("No se pudo eliminar la categoría.");
+    } catch (e) {
+      return rejectWithValue(e.message || "No se pudo eliminar la categoría.");
     }
   }
 );
@@ -96,14 +99,7 @@ const categoriesSlice = createSlice({
       })
       .addCase(fetchCategorias.fulfilled, (state, action) => {
         state.loading = false;
-        // Forzar siempre array
-        if (Array.isArray(action.payload)) {
-          state.categorias = action.payload;
-        } else if (action.payload && Array.isArray(action.payload.content)) {
-          state.categorias = action.payload.content;
-        } else {
-          state.categorias = [];
-        }
+        state.categorias = Array.isArray(action.payload) ? action.payload : [];
       })
       .addCase(fetchCategorias.rejected, (state, action) => {
         state.loading = false;
