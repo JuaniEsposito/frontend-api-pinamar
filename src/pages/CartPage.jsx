@@ -1,23 +1,16 @@
-// src/pages/CartPage.jsx
-
 import { useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTrash, FaPlus, FaMinus, FaShoppingCart } from "react-icons/fa";
-
-// Hooks de Redux para interactuar con el store
 import { useSelector, useDispatch } from "react-redux";
-
-// Thunks (acciones asíncronas) que creamos en el slice
 import {
   fetchCarrito,
   addProductToCart,
   removeProductFromCart,
-} from "../redux/cartSlice"; // <-- Asegurate de que la ruta sea correcta
-
+} from "../redux/cartSlice";
 import carritoVacio from "../assets/carritovacio.png";
+import { toast } from 'react-toastify'; // ✅ IMPORTAMOS TOASTIFY
 
-// Este componente no necesita cambios, está perfecto.
 function CarritoVacio() {
   return (
     <div className="flex flex-col items-center justify-center mt-16 mb-16">
@@ -61,19 +54,15 @@ export default function CartPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 1. Leemos el estado directamente desde el store de Redux
   const { items: cart, status, total } = useSelector((state) => state.cart);
-  const { isAuthenticated } = useSelector((state) => state.auth); // Leemos si el usuario está logueado desde el authSlice
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
-  // 2. Usamos useEffect para cargar el carrito cuando el componente se monta
   useEffect(() => {
-    // Si el usuario está logueado y el carrito no se ha cargado ('idle'), disparamos la acción para traerlo del back.
     if (isAuthenticated && status === "idle") {
       dispatch(fetchCarrito());
     }
   }, [status, isAuthenticated, dispatch]);
 
-  // 3. Las funciones ahora despachan las acciones de Redux
   const handleIncrement = (item) => {
     dispatch(addProductToCart({ productoId: item.id, cantidad: 1 }));
   };
@@ -83,7 +72,6 @@ export default function CartPage() {
   };
 
   const handleEliminar = (productoId) => {
-    // Buscamos el item para saber la cantidad total y eliminarlo completo del carrito
     const item = cart.find((p) => p.id === productoId);
     if (item) {
       dispatch(removeProductFromCart({ productoId: item.id, cantidad: item.quantity }));
@@ -94,22 +82,20 @@ export default function CartPage() {
     if (isAuthenticated) {
       navigate("/finalizar-compra");
     } else {
-      alert("Necesitás iniciar sesión para continuar con la compra.");
+      // ✅ ALERT REEMPLAZADO POR TOAST
+      toast.warn("Necesitás iniciar sesión para continuar con la compra.");
       navigate("/signin", { state: { from: location } });
     }
   };
 
-  // 4. Manejamos el estado de carga que nos da Redux
   if (status === "loading") {
     return <div className="mt-10 text-center text-xl">Cargando carrito...</div>;
   }
 
-  // Si no hay productos, mostramos el componente de carrito vacío
   if (!cart || cart.length === 0) {
     return <CarritoVacio />;
   }
 
-  // 5. El JSX para renderizar la lista y el resumen no cambia mucho, solo que ahora los datos vienen de Redux
   return (
     <div className="max-w-5xl mx-auto mt-12 p-4 flex flex-col md:flex-row gap-8">
       <div className="flex-1">

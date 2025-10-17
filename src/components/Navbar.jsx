@@ -1,7 +1,9 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef, useMemo } from "react";
-import { useAuth } from "../auth/AuthProvider";
+import { useSelector, useDispatch } from "react-redux";
+import { logoutThunk } from "../redux/authSlice"; 
 import logoMarket from "../assets/logo.png";
+import { toast } from 'react-toastify';
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -12,16 +14,24 @@ export default function Navbar() {
   const [userDropdown, setUserDropdown] = useState(false);
   const userDropdownRef = useRef(null);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const { isAuthenticated, usuario, logout } = useAuth();
-  const token = null;
-  const carrito = { items: [], total: 0 };
-  const loading = false;
-  const categoriasRedux = [];
-  const totalItems = carrito?.items?.reduce(
-    (sum, item) => sum + (item.cantidad || 0),
-    0
-  );
+  // Lee el estado de autenticación y del carrito directamente desde Redux
+  const { isAuthenticated, usuario } = useSelector((state) => state.auth);
+  const { items: cartItems } = useSelector((state) => state.cart); 
+  const categoriasRedux = []; // Suponiendo que esto vendrá de un categoriesSlice en el futuro
+
+  // Calcula el número total de ítems en el carrito
+  const totalItems = useMemo(() => {
+    if (!cartItems || cartItems.length === 0) return 0;
+    return cartItems.reduce((sum, item) => sum + item.cantidad, 0);
+  }, [cartItems]);
+
+  const handleLogout = () => {
+    dispatch(logoutThunk());
+    toast.success("¡Sesión cerrada, hasta luego!");
+    setUserDropdown(false);
+  };
 
   function handleSearchSubmit(e) {
     e.preventDefault();
@@ -34,10 +44,7 @@ export default function Navbar() {
 
   useEffect(() => {
     function handleClickOutside(e) {
-      if (
-        userDropdownRef.current &&
-        !userDropdownRef.current.contains(e.target)
-      ) {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(e.target)) {
         setUserDropdown(false);
       }
     }
@@ -233,7 +240,7 @@ export default function Navbar() {
             </button>
             <div className="relative group">
               <button
-                className="relative"
+                className="relative p-2"
                 onClick={() => navigate("/carrito")}
                 aria-label="Ver carrito"
               >
@@ -253,7 +260,7 @@ export default function Navbar() {
                   />
                 </svg>
                 {totalItems > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full px-2 py-0.5">
+                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                     {totalItems}
                   </span>
                 )}
@@ -316,7 +323,6 @@ export default function Navbar() {
                     >
                       Mis Pedidos
                     </Link>
-                    {/* --- AQUÍ SE AGREGA EL NUEVO ENLACE --- */}
                     <Link
                       to="/mis-dashboards"
                       className="block px-4 py-2 text-dark hover:bg-accent/40 hover:text-primary rounded transition"
@@ -334,11 +340,7 @@ export default function Navbar() {
                       </Link>
                     )}
                     <button
-                      onClick={() => {
-                        setUserDropdown(false);
-                        logout();
-                        alert("¡Sesión cerrada, hasta luego!");
-                      }}
+                      onClick={handleLogout}
                       className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 hover:text-red-700 rounded transition font-semibold"
                     >
                       Cerrar sesión

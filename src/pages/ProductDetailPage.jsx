@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchProductoById, fetchRelatedProducts } from "../redux/productosSlice";
 import { addProductToCart } from "../redux/cartSlice";
+import { toast } from 'react-toastify'; // ✅ IMPORTAMOS TOASTIFY
 
 const FALLBACK_IMG = "https://cdn-icons-png.flaticon.com/512/1046/1046857.png";
 
@@ -14,7 +15,6 @@ export default function ProductDetailPage() {
 
   const [qty, setQty] = useState(1);
   const [addCartLoading, setAddCartLoading] = useState(false);
-  const [addCartMsg, setAddCartMsg] = useState("");
   const [added, setAdded] = useState(false);
   const [units, setUnits] = useState(0);
 
@@ -44,23 +44,29 @@ export default function ProductDetailPage() {
   const images = product?.imagenes?.map(img => img.imagen) || [];
   const mainImg = images[mainImgIdx] || FALLBACK_IMG;
 
+  // ✅ LÓGICA DE AGREGAR AL CARRITO CON NOTIFICACIONES TOAST
   async function handleAddToCart() {
     if (!product?.id || !qty) return;
     setAddCartLoading(true);
-    setAddCartMsg("");
     try {
+      // Usamos .unwrap() para poder usar try/catch con el thunk
       await dispatch(
         addProductToCart({ productoId: product.id, cantidad: qty })
-      );
-      setAddCartMsg("Producto agregado al carrito.");
+      ).unwrap();
+
+      // Si el dispatch tiene éxito, mostramos el toast de éxito
+      toast.success(`¡${product.nombre} agregado al carrito!`);
+      
+      // Lógica de UI para la animación
       setUnits(units + qty);
       setAdded(true);
       setTimeout(() => setAdded(false), 1200);
-    } catch {
-      setAddCartMsg("No se pudo agregar al carrito.");
+
+    } catch (err) {
+      // Si el dispatch falla, mostramos el toast de error
+      toast.error(err.message || "No se pudo agregar al carrito.");
     }
     setAddCartLoading(false);
-    setTimeout(() => setAddCartMsg(""), 2000);
   }
 
   if (loading) {
@@ -85,8 +91,17 @@ export default function ProductDetailPage() {
 
   return (
     <div className="max-w-5xl mx-auto mt-10 flex flex-col gap-8 px-2 sm:px-6">
-      {/* ... (El JSX de la página de detalle del producto) ... */}
-      {/* SECCIÓN DE RELACIONADOS (ahora dinámica) */}
+      {/* ... (Tu JSX para la galería y detalles del producto principal no cambia) ... */}
+      {/* Este es un ejemplo de cómo se vería el botón */}
+      <div className="flex items-center gap-3 mb-4 relative">
+        <label htmlFor="qty">Cantidad:</label>
+        <input id="qty" type="number" value={qty} onChange={(e) => setQty(Number(e.target.value))} min={1} max={product.stock} />
+        <button onClick={handleAddToCart} disabled={addCartLoading}>
+          {addCartLoading ? "Agregando..." : "Agregar al carrito"}
+        </button>
+      </div>
+
+      {/* SECCIÓN DE RELACIONADOS (dinámica) */}
       {relacionados.length > 0 && (
         <div className="mt-10">
           <h2 className="text-xl font-bold mb-4 text-dark">

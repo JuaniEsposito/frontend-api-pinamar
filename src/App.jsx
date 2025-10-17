@@ -20,9 +20,13 @@ import PedidoDetallePage from "./pages/PedidoDetallePage";
 import FinalizarCompraPage from "./pages/FinalizarCompraPage";
 import StepPago from "./pages/StepPago";
 import MisDireccionesPage from "./pages/MisDireccionesPage";
-import DashboardPage from "./pages/DashboardPage"; // <-- 1. IMPORTAMOS LA NUEVA PÁGINA
+import DashboardPage from "./pages/DashboardPage";
 import Footer from "./components/Footer";
 import "./App.css";
+
+// ✅ 1. IMPORTA LOS COMPONENTES Y ESTILOS DE REACT-TOASTIFY
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   return (
@@ -47,7 +51,7 @@ function App() {
           <Route path="/mis-pedidos" element={<MisPedidosPage />} />
           <Route path="/mis-pedidos/:id" element={<PedidoDetallePage />} />
           <Route path="/mis-direcciones" element={<MisDireccionesPage />} />
-          <Route path="/mis-dashboards" element={<DashboardPage />} /> {/* <-- 2. AÑADIMOS LA NUEVA RUTA */}
+          <Route path="/mis-dashboards" element={<DashboardPage />} />
 
           {/* Rutas de compra */}
           <Route path="/finalizar-compra" element={<FinalizarCompraPage />} />
@@ -82,6 +86,21 @@ function App() {
         </Routes>
       </div>
       <Footer />
+
+      {/* ✅ 2. AGREGA EL CONTENEDOR DE NOTIFICACIONES AL FINAL */}
+      {/* Este componente invisible se encargará de mostrar todos los toasts */}
+      <ToastContainer
+        position="bottom-right"
+        autoClose={4000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </div>
   );
 }

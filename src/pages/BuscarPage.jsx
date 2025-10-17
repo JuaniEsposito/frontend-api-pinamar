@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import { useDispatch } from "react-redux";
-// ✅ 1. Importación corregida: Se cambia 'patchCarrito' y 'fetchCarrito' por 'addProductToCart'.
 import { addProductToCart } from "../redux/cartSlice";
+import { toast } from 'react-toastify'; // ✅ IMPORTAMOS TOASTIFY
 
 const SORT_OPTIONS = [
   { value: "relevancia", label: "Relevancia" },
@@ -68,9 +68,9 @@ function ProductQuickView({ product, onClose, onAddToCart }) {
   }
 
   const handleAdd = async () => {
-    if (!onAddToCart || !product.id) return;
+    if (!onAddToCart || !product) return;
     setLoading(true);
-    await onAddToCart(product.id, qty);
+    await onAddToCart(product, qty); // Se pasa el objeto producto completo
     setAdded(true);
     setUnits(units + qty);
     setLoading(false);
@@ -215,6 +215,8 @@ export default function BuscarPage() {
   const [pageSize, setPageSize] = useState(12);
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
+  const [addedId, setAddedId] = useState(null);
+  const [unitsMap, setUnitsMap] = useState({});
 
   useEffect(() => {
     if (categoriaIdParam && categoriasApi.length > 0) {
@@ -345,23 +347,26 @@ export default function BuscarPage() {
     );
   }
 
-  // ✅ 2. Función 'handleAddToCart' simplificada para usar el nuevo thunk.
-  async function handleAddToCart(id, cantidad) {
+  async function handleAddToCart(producto, cantidad) {
     try {
-      // El thunk se encarga de todo: obtener token, llamar a la API y actualizar el estado.
-      await dispatch(addProductToCart({ productoId: id, cantidad }));
+      await dispatch(
+        addProductToCart({ productoId: producto.id, cantidad })
+      ).unwrap();
+      
+      toast.success(`¡${producto.nombre} agregado al carrito!`);
+      
     } catch (err) {
-      console.error("Error al agregar el producto:", err);
+      toast.error(err.message || "No se pudo agregar el producto.");
     }
   }
 
-  const [addedId, setAddedId] = useState(null);
-  const [unitsMap, setUnitsMap] = useState({});
+  const handleAddToCartWithAnim = async (producto, cantidad) => {
+    if (!producto) return;
 
-  const handleAddToCartWithAnim = async (id, cantidad) => {
-    await handleAddToCart(id, cantidad);
-    setUnitsMap((prev) => ({ ...prev, [id]: (prev[id] || 0) + cantidad }));
-    setAddedId(id);
+    await handleAddToCart(producto, cantidad);
+
+    setUnitsMap((prev) => ({ ...prev, [producto.id]: (prev[producto.id] || 0) + cantidad }));
+    setAddedId(producto.id);
     setTimeout(() => setAddedId(null), 1200);
   };
 
@@ -369,7 +374,6 @@ export default function BuscarPage() {
     <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-6 py-8">
       <h1 className="text-3xl font-bold mb-6 text-primary">Buscar productos</h1>
       <div className="flex flex-col md:flex-row gap-8">
-        {/* Sidebar de filtros */}
         <aside className="w-full md:w-72 flex-shrink-0 mb-4 md:mb-0">
           <form className="bg-white rounded-xl shadow p-6 flex flex-col gap-4 sticky top-28">
             <div>
@@ -453,7 +457,6 @@ export default function BuscarPage() {
             </div>
           </form>
         </aside>
-        {/* Resultados */}
         <main className="flex-1">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
             <h2 className="text-xl font-semibold text-dark">Resultados</h2>
@@ -541,7 +544,7 @@ export default function BuscarPage() {
                     offer={p.descuento > 0 ? `${p.descuento}% OFF` : undefined}
                     bestSeller={p.bestSeller}
                     onQuickView={() => setQuickView(p)}
-                    onAddToCart={handleAddToCartWithAnim}
+                    onAddToCart={(cantidad) => handleAddToCartWithAnim(p, cantidad)}
                     added={addedId === p.id}
                     units={unitsMap[p.id] || 0}
                   />
