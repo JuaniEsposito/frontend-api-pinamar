@@ -19,7 +19,7 @@ const Card = ({ title, buttonText, children, onButtonClick }) => (
                     onClick={onButtonClick}
                     className="bg-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-opacity-90 transition transform hover:scale-[1.02] shadow-md"
                 >
-                    <span className="material-icons text-lg">add</span>
+                    
                     <span>{buttonText}</span>
                 </button>
             )}
@@ -63,14 +63,14 @@ const ProductItem = ({ product, onEdit, onDelete }) => {
                     onClick={() => onEdit(product)}
                     className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-subtle-light dark:text-subtle-dark transition-colors"
                 >
-                    <span className="material-icons text-base">edit</span>
+                    <span className="material-icons text-base">Editar</span>
                 </button>
                 <button
                     aria-label={`Eliminar producto ${product.nombre}`}
                     onClick={() => onDelete(product.id)}
                     className="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900 text-red-500 transition-colors"
                 >
-                    <span className="material-icons text-base">delete</span>
+                    <span className="material-icons text-base">Eliminar</span>
                 </button>
             </div>
         </div>
@@ -462,8 +462,13 @@ const CategoryFormModal = ({ category, onClose, onSave }) => {
 const DashboardPage = () => {
     const dispatch = useDispatch();
     
-    // Obtener datos de Redux
-    const { categorias, loading: loadingCategorias } = useSelector((state) => state.categorias);
+    // --- INICIO DE LA MODIFICACIÓN ---
+    // Obtener datos de Redux de la forma correcta
+    const categoriesSlice = useSelector((state) => state.categorias);
+    const categorias = categoriesSlice.items || [];
+    const loadingCategorias = categoriesSlice.status === 'loading';
+    // --- FIN DE LA MODIFICACIÓN ---
+
     const { token } = useSelector((state) => state.auth);
 
     // Lógica del Tema (Modo Oscuro/Claro)
@@ -708,29 +713,6 @@ const DashboardPage = () => {
                         ))}
                     </Card>
 
-                    {/* Card de Categorías */}
-                    <Card
-                        title="Categorías"
-                        buttonText="Crear Categoría"
-                        onButtonClick={handleCreateCategory}
-                    >
-                        {loadingCategorias && <p className="text-center text-blue-500">Cargando categorías...</p>}
-                        
-                        {!loadingCategorias && categorias.length === 0 && (
-                            <p className="text-center text-subtle-light dark:text-subtle-dark">
-                                No hay categorías disponibles.
-                            </p>
-                        )}
-                        
-                        {categorias.map((cat) => (
-                            <CategoryItem 
-                                key={cat.id} 
-                                category={cat}
-                                onEdit={handleEditCategory}
-                                onDelete={handleDeleteCategory}
-                            />
-                        ))}
-</Card>
                 </div>
 
             </main>

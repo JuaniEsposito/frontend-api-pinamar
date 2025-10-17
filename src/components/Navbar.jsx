@@ -9,8 +9,6 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const [dropdown, setDropdown] = useState(null);
-  const [mobileDropdown, setMobileDropdown] = useState(null);
   const [userDropdown, setUserDropdown] = useState(false);
   const userDropdownRef = useRef(null);
   const navigate = useNavigate();
@@ -18,7 +16,6 @@ export default function Navbar() {
 
   const { isAuthenticated, usuario } = useSelector((state) => state.auth);
   const { items: cartItems } = useSelector((state) => state.cart); 
-  const categoriasRedux = []; // Placeholder
 
   const totalItems = useMemo(() => {
     if (!cartItems || cartItems.length === 0) return 0;
@@ -54,32 +51,6 @@ export default function Navbar() {
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [userDropdown]);
-
-  const categoriesDropdown = useMemo(() => {
-    const cats = Array.isArray(categoriasRedux)
-      ? categoriasRedux.filter((cat) => cat.parentId === null)
-      : [];
-    return [{ name: "Ver todos", to: "/buscar" }].concat(
-      cats.map((cat) => ({
-        name: cat.nombre,
-        to: `/buscar?categoriaId=${cat.id}`,
-      }))
-    );
-  }, [categoriasRedux]);
-
-  const navLinks = [{ label: "Categorías", dropdown: categoriesDropdown }];
-
-  const dropdownRef = useRef(null);
-  useEffect(() => {
-    if (!dropdown) return;
-    function handleClickOutside(e) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setDropdown(null);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [dropdown]);
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-xl shadow-lg border-b border-gray-100">
@@ -133,75 +104,9 @@ export default function Navbar() {
           </button>
         </form>
 
-        <div className="hidden md:flex items-center gap-2">
-          {navLinks.map((link) => (
-            <div
-              key={link.label}
-              className="relative"
-              ref={link.label === "Categorías" ? dropdownRef : undefined}
-            >
-              <button
-                className={`px-5 py-2 rounded-full font-semibold transition-all duration-200 text-base flex items-center gap-1 ${
-                  dropdown === link.label
-                    ? "bg-primary text-white shadow-md"
-                    : "text-dark hover:bg-accent/70 hover:text-primary"
-                } focus:outline-none focus-visible:ring-2 focus-visible:ring-primary`}
-                aria-haspopup="true"
-                aria-expanded={dropdown === link.label}
-                type="button"
-                onClick={() =>
-                  setDropdown(dropdown === link.label ? null : link.label)
-                }
-              >
-                {link.label}
-                <svg
-                  className="w-4 h-4 ml-1"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-              {dropdown === "Categorías" && link.dropdown.length > 0 && (
-                <div
-                  className="absolute left-0 top-full mt-0 bg-white rounded-xl shadow-lg border border-gray-100 z-50 animate-fade-in"
-                  style={{
-                    minWidth: 400,
-                    maxWidth: 700,
-                    maxHeight: 420,
-                    overflowY: "auto",
-                    padding: "1rem 0.7rem",
-                    display: "grid",
-                    gridTemplateColumns:
-                      "repeat(auto-fit, minmax(170px, 1fr))",
-                    gap: "0.2rem 0.3rem",
-                  }}
-                >
-                  {link.dropdown.map((item) => (
-                    <Link
-                      key={item.name}
-                      to={item.to}
-                      className="px-2 py-2 text-dark hover:bg-accent/40 hover:text-primary rounded transition text-base font-medium"
-                      tabIndex={0}
-                      style={{
-                        whiteSpace: "nowrap",
-                      }}
-                      onClick={() => setDropdown(null)}
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+        {/* 🗑️ Botón de Categorías eliminado de aquí */}
+        <div className="hidden md:flex items-center gap-2"></div>
+
 
         <div className="flex items-center gap-2 sm:gap-4">
           <button
@@ -309,7 +214,6 @@ export default function Navbar() {
                     Mis Pedidos
                   </Link>
                   
-                  {/* ✅ CORRECCIÓN ESCRITORIO: Mis Paneles (Dashboard) - SOLO visible para ADMIN */}
                   {usuario?.rol === "ADMIN" && (
                       <Link
                           to="/mis-dashboards"
@@ -320,7 +224,6 @@ export default function Navbar() {
                       </Link>
                   )}
                   
-                  {/* ✅ El enlace al Panel de Admin general ya estaba bien */}
                   {usuario?.rol === "ADMIN" && (
                       <Link
                           to="/admin/productos"
@@ -461,59 +364,10 @@ export default function Navbar() {
             </NavLink>
           )}
 
-          {navLinks.map((link) => (
-            <div key={link.label} className="flex flex-col">
-              <button
-                className="py-3 px-4 rounded-full font-semibold text-lg flex items-center justify-between bg-gray-50 hover:bg-accent/40 hover:text-primary transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                onClick={() =>
-                  setMobileDropdown(
-                    mobileDropdown === link.label ? null : link.label
-                  )
-                }
-                aria-haspopup="true"
-                aria-expanded={mobileDropdown === link.label}
-                type="button"
-              >
-                {link.label}
-                <svg
-                  className={`w-4 h-4 ml-2 transition-transform ${
-                    mobileDropdown === link.label ? "rotate-180" : ""
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-              {mobileDropdown === link.label && (
-                <div className="flex flex-col pl-4 border-l border-accent/40 bg-white/90 rounded-b-xl">
-                  {link.dropdown.map((item) => (
-                    <Link
-                      key={item.name}
-                      to={item.to}
-                      className="py-2 px-2 text-dark hover:bg-accent/40 hover:text-primary rounded transition"
-                      onClick={() => {
-                        setOpen(false);
-                        setMobileDropdown(null);
-                      }}
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+          {/* 🗑️ Botón de Categorías del menú móvil eliminado */}
           
           {isAuthenticated && (
               <>
-              {/* Rutas de Usuario Móvil */}
               <NavLink
                   to="/perfil"
                   className="py-3 px-4 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-accent/60 hover:text-primary transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
@@ -529,7 +383,6 @@ export default function Navbar() {
                   Mis Pedidos
               </NavLink>
 
-              {/* ✅ CORRECCIÓN MÓVIL: Mis Paneles (Dashboard) - SOLO visible para ADMIN */}
               {usuario?.rol === "ADMIN" && (
                   <NavLink
                       to="/mis-dashboards"
@@ -540,7 +393,6 @@ export default function Navbar() {
                   </NavLink>
               )}
               
-              {/* ✅ CORRECCIÓN MÓVIL: Panel de Admin general */}
               {usuario?.rol === "ADMIN" && (
                   <NavLink
                       to="/admin/productos"
@@ -551,7 +403,6 @@ export default function Navbar() {
                   </NavLink>
               )}
               
-              {/* Botón Cerrar Sesión Móvil */}
               <button
                   onClick={() => { handleLogout(); setOpen(false); }}
                   className="py-3 px-4 rounded-full font-semibold text-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-200 shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary mt-4"
