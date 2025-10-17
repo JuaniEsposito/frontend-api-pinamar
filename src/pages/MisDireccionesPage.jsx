@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchDirecciones, saveDireccion, deleteDireccion, clearDireccionesMsg } from "../redux/direccionesSlice";
 import { localidadesAMBA } from "../data/localidadesAMBA";
-import { toast } from 'react-toastify'; //
+import { toast } from 'react-toastify';
 
 export default function MisDireccionesPage() {
   const dispatch = useDispatch();
@@ -24,10 +24,12 @@ export default function MisDireccionesPage() {
     tipoVivienda: "casa",
   });
 
-  // Cargar direcciones al montar el componente
+  // 👇 CAMBIO AQUÍ: Cargar direcciones solo si hay usuario
   useEffect(() => {
-    dispatch(fetchDirecciones());
-  }, [dispatch]);
+    if (usuario?.id) {
+      dispatch(fetchDirecciones(usuario.id)); // 👈 Pasá el ID del usuario
+    }
+  }, [dispatch, usuario]);
 
   // Limpiar mensajes después de 3 segundos
   useEffect(() => {
@@ -52,19 +54,20 @@ export default function MisDireccionesPage() {
   const handleAddDireccion = (e) => {
     e.preventDefault();
     if (!formData.calle || !formData.numero || !formData.ciudad || !formData.codigoPostal) {
-    toast.error("Por favor, completá todos los campos.");      return;
+      toast.error("Por favor, completá todos los campos obligatorios.");
+      return;
     }
 
     // Validar que haya un usuario logueado
     if (!usuario || !usuario.id) {
-      alert("Debes estar logueado para agregar una dirección.");
+      toast.error("Debes estar logueado para agregar una dirección.");
       return;
     }
 
     // Preparar el objeto para enviar al backend con el ID del usuario logueado
     const direccionToSave = {
       ...formData,
-      usuario: { id: usuario.id } // 👈 Ahora usa el ID del usuario logueado desde Redux
+      usuario: { id: usuario.id }
     };
 
     dispatch(saveDireccion({ direccion: direccionToSave, editId }));
@@ -116,6 +119,17 @@ export default function MisDireccionesPage() {
       tipoVivienda: "casa",
     });
   };
+
+  // 👇 Mostrar mensaje si no hay usuario
+  if (!usuario) {
+    return (
+      <div className="max-w-3xl mx-auto mt-10 p-4">
+        <div className="text-center py-8">
+          <p className="text-gray-600 mb-4">Debes iniciar sesión para ver tus direcciones.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto mt-10 p-4">

@@ -11,8 +11,9 @@ export default function FinalizarCompraPage() {
   const dispatch = useDispatch();
   const { cart, checkout } = useAuth();
   
-  // 👇 Obtener direcciones desde Redux
+  // 👇 Obtener direcciones Y usuario desde Redux
   const { direcciones, loading: loadingDirecciones } = useSelector((state) => state.direcciones);
+  const { usuario } = useSelector((state) => state.auth);
 
   const [direccionId, setDireccionId] = useState("");
   const [envio] = useState(true);
@@ -21,10 +22,12 @@ export default function FinalizarCompraPage() {
   const [error, setError] = useState("");
   const [step, setStep] = useState(2);
 
-  // 👇 Cargar direcciones al montar el componente
+  // 👇 CAMBIO AQUÍ: Cargar direcciones solo si hay usuario
   useEffect(() => {
-    dispatch(fetchDirecciones());
-  }, [dispatch]);
+    if (usuario?.id) {
+      dispatch(fetchDirecciones(usuario.id)); // 👈 Pasá el ID del usuario
+    }
+  }, [dispatch, usuario]);
 
   // 👇 Setear la primera dirección por defecto cuando carguen
   useEffect(() => {
@@ -68,6 +71,20 @@ export default function FinalizarCompraPage() {
       setError("No se pudo procesar el pedido.");
     }
   };
+
+  // 👇 Mostrar mensaje si no hay usuario
+  if (!usuario) {
+    return (
+      <div className="max-w-3xl mx-auto mt-12 p-6 bg-white rounded-2xl shadow-lg">
+        <h2 className="text-3xl font-extrabold mb-8 text-center text-green-700 tracking-tight">
+          Finalizar compra
+        </h2>
+        <div className="text-center py-8">
+          <p className="text-gray-600 mb-4">Debes iniciar sesión para finalizar tu compra.</p>
+        </div>
+      </div>
+    );
+  }
 
   // 👇 Mostrar loading mientras cargan las direcciones
   if (loadingDirecciones) {
