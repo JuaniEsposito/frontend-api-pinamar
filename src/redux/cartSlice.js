@@ -86,6 +86,37 @@ export const removeProductFromCart = createAsyncThunk(
   }
 );
 
+export const checkoutThunk = createAsyncThunk(
+  "cart/checkout",
+  async (orderData, { dispatch, rejectWithValue, getState }) => {
+    const token = getToken();
+    const userId = getState().auth.usuario?.id;
+    if (!token || !userId) return rejectWithValue("Debe iniciar sesión para finalizar la compra.");
+
+    try {
+      // 1. Endpoint para crear la orden (asumo /ordenes/usuario/{userId})
+      // orderData debe contener { direccionId, totalFinal, descuento, etc. }
+      const response = await api.post(`/ordenes/usuario/${userId}`, orderData, { 
+          headers: {
+              Authorization: `Bearer ${token}`,
+          },
+      });
+
+      // 2. Si es exitoso, reiniciamos el estado del carrito localmente
+      dispatch(resetCarrito());
+      
+      // 3. Devolvemos la orden confirmada desde el backend (puede venir envuelta en 'data')
+      const ordenConfirmada = response.data.data || response.data;
+
+      return ordenConfirmada;
+      
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || "Error al procesar el pago y crear la orden.";
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
 const cartSlice = createSlice({
   name: "cart",
   initialState: {
@@ -93,6 +124,8 @@ const cartSlice = createSlice({
     total: 0,
     status: "idle", 
     error: null,
+    checkoutStatus: "idle",
+    ordenConfirmada: null,
   },
   reducers: {
     resetCarrito(state) {
@@ -106,6 +139,7 @@ const cartSlice = createSlice({
     builder
       .addCase(fetchCarrito.pending, (state) => {
         state.status = "loading";
+        state.error = null;
       })
       .addCase(fetchCarrito.fulfilled, (state, action) => {
         state.status = "succeeded";
@@ -115,11 +149,25 @@ const cartSlice = createSlice({
       .addCase(fetchCarrito.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
+        state.items = [];
+        state.total = 0;
       })
       .addCase(addProductToCart.rejected, (state, action) => {
           state.error = action.payload;
-      });
-  },
+      })
+     .addCase(checkoutThunk.pending, (state) => {
+        state.checkoutStatus = "loading";
+        state.error = null;
+      })
+      .addCase(checkoutThunk.fulfilled, (state, action) => {
+        state.checkoutStatus = "succeeded";
+        state.ordenConfirmada = action.payload;
+      })
+      .addCase(checkoutThunk.rejected, (state, action) => {
+        state.checkoutStatus = "failed";
+        state.error = action.payload;
+      });
+  },
 });
 
 export const { resetCarrito } = cartSlice.actions;

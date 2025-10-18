@@ -1,3 +1,4 @@
+/* eslint-disable no-irregular-whitespace */
 import { useEffect, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
