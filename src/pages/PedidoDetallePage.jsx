@@ -16,6 +16,8 @@ export default function PedidoDetallePage() {
     year: 'numeric', month: 'long', day: 'numeric'
   });
   const total = typeof pedido.total === "number" ? pedido.total.toFixed(2) : "0.00";
+  const subtotal = pedido.subtotal ?? pedido.totalOriginal ?? 0; 
+  const descuentoTotal = pedido.descuentoTotal ?? 0;
 
   return (
     <div className="max-w-3xl mx-auto mt-10 p-4">
@@ -29,7 +31,7 @@ export default function PedidoDetallePage() {
         <div id="pedido-detalle-pdf">
           <div className="flex justify-between items-center mb-4 pb-4 border-b">
             <h2 className="text-2xl font-bold text-gray-800">
-              Pedido #{String(pedido.id).padStart(6, '0')}
+              Pedido #{String(pedido.ordenId).padStart(6, '0')}
             </h2>
             <span className="text-sm font-medium bg-green-100 text-green-800 px-3 py-1 rounded-full">
               {pedido.estado}
@@ -52,7 +54,6 @@ export default function PedidoDetallePage() {
                 </tr>
               </thead>
               <tbody>
-                {/* TU LÓGICA AQUÍ YA ES CORRECTA */}
                 {productos.map((prod, index) => (
                   <tr key={prod.id || index} className="border-b last:border-b-0">
                     <td className="py-3">{prod.nombreProducto}</td>
@@ -65,22 +66,22 @@ export default function PedidoDetallePage() {
           </div>
 
           <div className="text-right mt-6 pt-4 border-t space-y-2">
-            {pedido.descuento > 0 && (
-              <>
-                <div className="text-gray-600">
-                  <span>Subtotal: </span>
-                  <span className="font-medium">${pedido.totalOriginal.toFixed(2)}</span>
-                </div>
-                <div className="text-green-600">
-                  <span>Descuento: </span>
-                  <span className="font-medium">-${pedido.descuento.toFixed(2)}</span>
-                </div>
-              </>
-            )}
-            <div className="font-bold text-xl text-gray-800">
-              Total pagado: ${total}
-            </div>
-          </div>
+                        {/* 🔑 DESGLOSE USANDO PROPIEDADES REALES DEL BACKEND/STATE */}
+                        <div className="text-gray-600">
+                            <span>Subtotal (Productos): </span>
+                            {/* Usamos el subtotal que viene del body de la orden */}
+                            <span className="font-medium">${subtotal.toFixed(2)}</span> 
+                        </div>
+                        {descuentoTotal > 0 && (
+                            <div className="text-red-600">
+                                <span>Descuento: </span>
+                                <span className="font-medium">-${descuentoTotal.toFixed(2)}</span>
+                            </div>
+                        )}
+                        <div className="font-bold text-xl text-gray-800">
+                            Total pagado: ${total}
+                        </div>
+                    </div>
         </div>
         
         <div className="flex justify-between items-center mt-8">
