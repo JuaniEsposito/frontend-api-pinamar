@@ -51,7 +51,7 @@ function ProductCard({ id, name, brand, img, price, weight, offer, stock, descri
 
   return (
     <div className="bg-white rounded-xl shadow hover:shadow-lg transition p-4 flex flex-col justify-between border border-gray-100 hover:border-primary">
-      <Link to={`/producto/id/${id}`} className="flex flex-col items-center text-center">
+      <div onClick={handleQuickView} className="flex flex-col items-center text-center">
         <img
           src={imageUrl}
           alt={name}
@@ -62,7 +62,7 @@ function ProductCard({ id, name, brand, img, price, weight, offer, stock, descri
         <div className="text-xs text-muted mb-1">{brand} {weight && `· ${weight}`}</div>
         <div className="text-primary font-bold text-lg mb-2">${price?.toFixed(2)}</div>
         <div className="text-xs text-gray-400">Stock: {stock || 0}</div>
-      </Link>
+      </div>
       <div className="mt-3 flex flex-col gap-1">
         <button
           className="bg-accent text-dark text-sm px-3 py-1 rounded-lg hover:bg-primary/90 hover:text-white transition shadow"
