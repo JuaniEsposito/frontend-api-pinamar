@@ -6,7 +6,7 @@ import usuarioReducer from "./redux/usuarioSlice";
 import authReducer from "./redux/authSlice";
 import productosReducer from "./redux/productosSlice";
 import ordenesReducer from "./redux/ordenesSlice";
-
+import pedidosReducer from "./redux/pedidosSlice";
 const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -16,6 +16,7 @@ const store = configureStore({
     usuario: usuarioReducer,
     productos: productosReducer,
     ordenes: ordenesReducer,
+    pedidos: pedidosReducer,
 
   },
 });
