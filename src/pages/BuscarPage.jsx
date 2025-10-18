@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addProductToCart } from "../redux/cartSlice";
-import { toast } from 'react-toastify'; // ✅ IMPORTAMOS TOASTIFY
+import { toast } from 'react-toastify';
 
 const SORT_OPTIONS = [
   { value: "relevancia", label: "Relevancia" },
@@ -70,7 +70,7 @@ function ProductQuickView({ product, onClose, onAddToCart }) {
   const handleAdd = async () => {
     if (!onAddToCart || !product) return;
     setLoading(true);
-    await onAddToCart(product, qty); // Se pasa el objeto producto completo
+    await onAddToCart(product, qty);
     setAdded(true);
     setUnits(units + qty);
     setLoading(false);
@@ -196,7 +196,9 @@ export default function BuscarPage() {
   const categoriaIdParam = useQueryParam("categoriaId");
   const dispatch = useDispatch();
   const searchParam = useQueryParam("search");
-  const [query, setQuery] = useState(searchParam);
+  const qParam = useQueryParam("q"); // ✅ Búsqueda general desde el navbar
+  
+  const [query, setQuery] = useState(searchParam || "");
   const [marcas, setMarcas] = useState([]);
   const [marcasDisponibles, setMarcasDisponibles] = useState([]);
   const [precioMin, setPrecioMin] = useState("");
@@ -218,6 +220,32 @@ export default function BuscarPage() {
   const [addedId, setAddedId] = useState(null);
   const [unitsMap, setUnitsMap] = useState({});
 
+  // ✅ Cargar categorías al montar
+  useEffect(() => {
+    async function fetchCategorias() {
+      try {
+        const res = await fetch("http://localhost:8080/categorias/all");
+        if (!res.ok) throw new Error("Error al cargar categorías");
+        
+        const data = await res.json();
+        console.log("📂 Categorías recibidas:", data);
+        
+        const categoriasParent = Array.isArray(data)
+          ? data.filter((cat) => cat.parentId === null || cat.parentId === undefined)
+          : [];
+          
+        console.log("📂 Categorías padre filtradas:", categoriasParent);
+        setCategoriasApi(categoriasParent);
+        
+      } catch (err) {
+        console.error("❌ Error al cargar categorías:", err);
+        setCategoriasApi([]);
+      }
+    }
+    fetchCategorias();
+  }, []);
+
+  // ✅ Si viene categoriaId por URL, seleccionarla automáticamente
   useEffect(() => {
     if (categoriaIdParam && categoriasApi.length > 0) {
       setCategorias([String(categoriaIdParam)]);
@@ -225,54 +253,96 @@ export default function BuscarPage() {
     }
   }, [categoriaIdParam, categoriasApi]);
 
- useEffect(() => {
-  async function fetchCategorias() {
-    try {
-      // ✅ Usar el endpoint /all que ya tenés en el backend
-      const res = await fetch("http://localhost:8080/categorias/all");
-      const data = await res.json();
-      
-      // ✅ La respuesta de /all ya es un array directo
-      setCategoriasApi(
-        Array.isArray(data)
-          ? data.filter((cat) => cat.parentId === null || cat.parentId === undefined)
-          : []
-      );
-    } catch (err) {
-      console.error("Error al cargar categorías:", err);
-      setCategoriasApi([]);
-    }
-  }
-  fetchCategorias();
-}, []);
-
+  // ✅ FETCH DE PRODUCTOS CON BÚSQUEDA MEJORADA
   useEffect(() => {
     async function fetchProductos() {
       setLoading(true);
       setError("");
       try {
-        let url = "http://localhost:8080/producto";
-        const params = [];
-        if (query) params.push(`nombre=${encodeURIComponent(query)}`);
-        if (marcas.length > 0) params.push(`marca=${marcas.join(",")}`);
-        if (categorias.length > 0)
-          params.push(`categoriaId=${categorias[0]}`);
-        if (subcategorias.length > 0)
-          params.push(`subcategoriaId=${subcategorias.join(",")}`);
-        if (precioMin) params.push(`precioMin=${precioMin}`);
-        if (precioMax) params.push(`precioMax=${precioMax}`);
-        params.push(`page=${page}`);
-        params.push(`size=${pageSize}`);
-        if (params.length > 0) url += "?" + params.join("&");
-
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Error al cargar productos");
+        const baseUrl = "http://localhost:8080/producto";
+        const searchParams = new URLSearchParams();
+        
+        // ✅ DIFERENCIAMOS: búsqueda general vs filtros específicos
+        const esBusquedaGeneral = qParam && qParam.trim();
+        
+        if (esBusquedaGeneral) {
+          // ✅ Si es búsqueda general, NO enviamos el parámetro 'nombre' al backend
+          // Traemos MÁS productos para filtrar en el frontend
+          searchParams.append('page', 0);
+          searchParams.append('size', 200); // ✅ Traer hasta 200 productos
+        } else {
+          // Búsqueda específica del sidebar
+          if (query && query.trim()) {
+            searchParams.append('nombre', query.trim());
+          }
+          
+          searchParams.append('page', page);
+          searchParams.append('size', pageSize);
+        }
+        
+        // ✅ Filtros que siempre se aplican
+        if (marcas.length > 0) {
+          searchParams.append('marca', marcas.join(','));
+        }
+        
+        if (categorias.length > 0) {
+          const categoriaId = parseInt(categorias[0], 10);
+          if (!isNaN(categoriaId) && categoriaId > 0) {
+            searchParams.append('categoriaId', categoriaId);
+          }
+        }
+        
+        if (subcategorias.length > 0) {
+          searchParams.append('subcategoriaId', subcategorias.join(','));
+        }
+        
+        if (precioMin && precioMin.trim()) {
+          searchParams.append('precioMin', precioMin);
+        }
+        
+        if (precioMax && precioMax.trim()) {
+          searchParams.append('precioMax', precioMax);
+        }
+        
+        const finalUrl = `${baseUrl}?${searchParams.toString()}`;
+        
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('🔍 PARÁMETRO Q:', qParam);
+        console.log('🔍 BÚSQUEDA SIDEBAR:', query);
+        console.log('🔍 CATEGORÍAS SELECCIONADAS:', categorias);
+        console.log('🌐 URL FINAL:', finalUrl);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        
+        const res = await fetch(finalUrl);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
         const data = await res.json();
-
-        // ✅ CORRECCIÓN: El backend devuelve { mensaje, total, productos }
-        const productosArr = Array.isArray(data.productos) ? data.productos : [];
+        console.log('📦 RESPUESTA DEL SERVIDOR:', data);
+        
+        let productosArr = Array.isArray(data.productos) ? data.productos : [];
+        
+        // ✅ Si hay búsqueda general (q), filtrar en el FRONTEND por nombre, marca Y categoría
+        if (esBusquedaGeneral) {
+          const searchLower = qParam.trim().toLowerCase();
+          console.log('🔎 Filtrando en frontend por:', searchLower);
+          
+          productosArr = productosArr.filter(p => {
+            const nombreMatch = p.nombre && p.nombre.toLowerCase().includes(searchLower);
+            const marcaMatch = p.marca && p.marca.toLowerCase().includes(searchLower);
+            const categoriaMatch = p.categoria && p.categoria.toLowerCase().includes(searchLower);
+            
+            return nombreMatch || marcaMatch || categoriaMatch;
+          });
+          
+          console.log('✅ Productos filtrados:', productosArr.length);
+        }
+        
         setProductos(productosArr);
 
+        // Extraer marcas disponibles
         const marcasSet = new Set();
         productosArr.forEach((p) => {
           if (p.marca && typeof p.marca === "string" && p.marca.trim() !== "") {
@@ -281,15 +351,14 @@ export default function BuscarPage() {
         });
         setMarcasDisponibles(Array.from(marcasSet).sort((a, b) => a.localeCompare(b)));
 
-        setTotalPages(
-        data.totalPages ||
-          Math.ceil(
-            (data.total || productosArr.length || 0) / pageSize)
-                                        );
-            setTotalElements(data.total || 0);
-      
+        // ✅ Paginación: si es búsqueda general, calculamos en base a resultados filtrados
+        const totalProductos = productosArr.length;
+        setTotalElements(totalProductos);
+        setTotalPages(Math.ceil(totalProductos / pageSize) || 1);
+        
       } catch (err) {
-        setError("No se pudieron cargar los productos.");
+        console.error('❌ ERROR AL CARGAR PRODUCTOS:', err);
+        setError(`No se pudieron cargar los productos: ${err.message}`);
         setProductos([]);
         setMarcasDisponibles([]);
         setTotalPages(1);
@@ -298,24 +367,16 @@ export default function BuscarPage() {
         setLoading(false);
       }
     }
+    
     fetchProductos();
-  }, [
-    query,
-    marcas,
-    categorias,
-    subcategorias,
-    promo,
-    precioMin,
-    precioMax,
-    page,
-    pageSize,
-    categoriaIdParam,
-  ]);
+  }, [qParam, query, marcas, categorias, subcategorias, precioMin, precioMax, page, pageSize]);
 
+  // ✅ Sincronizar query con parámetros de URL
   useEffect(() => {
-    setQuery(searchParam);
+    setQuery(searchParam || "");
   }, [searchParam]);
 
+  // ✅ Filtrar y ordenar productos
   const productosFiltrados = [...productos]
     .filter((p) => Number(p.stock) > 0)
     .filter((p) => !promo || Number(p.descuento) > 0)
@@ -329,20 +390,36 @@ export default function BuscarPage() {
       return 0;
     });
 
+  // ✅ PAGINACIÓN EN EL FRONTEND (solo si hay búsqueda general)
+  const esBusquedaGeneral = qParam && qParam.trim();
+  const productosPaginados = esBusquedaGeneral 
+    ? productosFiltrados.slice(page * pageSize, (page + 1) * pageSize)
+    : productosFiltrados;
+
+  // ✅ HANDLERS
   function handleMarcaChange(marca) {
     setMarcas((marcas) =>
       marcas.includes(marca)
         ? marcas.filter((m) => m !== marca)
         : [...marcas, marca]
     );
+    setPage(0);
   }
 
   function handleCategoriaChange(catId) {
-    setCategorias((categorias) =>
-      categorias.includes(catId)
-        ? categorias.filter((c) => c !== catId)
-        : [...categorias, catId]
-    );
+    console.log('🔘 CLICK EN CATEGORÍA:', catId);
+    
+    setCategorias((prevCategorias) => {
+      const isAlreadySelected = prevCategorias.includes(catId);
+      const newCategorias = isAlreadySelected ? [] : [catId];
+      
+      console.log('📋 CATEGORÍAS ANTERIOR:', prevCategorias);
+      console.log('📋 CATEGORÍAS NUEVA:', newCategorias);
+      
+      return newCategorias;
+    });
+    
+    setPage(0);
   }
 
   function handleSubcategoriaChange(subId) {
@@ -351,6 +428,7 @@ export default function BuscarPage() {
         ? subcategorias.filter((s) => s !== subId)
         : [...subcategorias, subId]
     );
+    setPage(0);
   }
 
   async function handleAddToCart(producto, cantidad) {
@@ -418,20 +496,24 @@ export default function BuscarPage() {
               </label>
               <div>
                 <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
-                  {categoriasApi.map((c) => (
-                    <label
-                      key={c.id}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={categorias.includes(String(c.id))}
-                        onChange={() => handleCategoriaChange(String(c.id))}
-                        className="rounded border-gray-300 text-primary focus:ring-primary"
-                      />
-                      {c.nombre}
-                    </label>
-                  ))}
+                  {categoriasApi.length === 0 ? (
+                    <span className="text-xs text-gray-400">No hay categorías</span>
+                  ) : (
+                    categoriasApi.map((c) => (
+                      <label
+                        key={c.id}
+                        className="flex items-center gap-2 text-sm"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={categorias.includes(String(c.id))}
+                          onChange={() => handleCategoriaChange(String(c.id))}
+                          className="rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                        {c.nombre}
+                      </label>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
@@ -517,7 +599,7 @@ export default function BuscarPage() {
             </div>
           ) : error ? (
             <div className="text-red-500">{error}</div>
-          ) : productosFiltrados.length === 0 ? (
+          ) : productosPaginados.length === 0 ? (
             <div className="text-gray-500">
               No se encontraron productos con esos filtros.
             </div>
@@ -532,17 +614,14 @@ export default function BuscarPage() {
                   alignItems: "stretch",
                 }}
               >
-                {productosFiltrados.map((p, i) => (
+                {productosPaginados.map((p, i) => (
                   <ProductCard
                     key={p.id || i}
                     id={p.id}
                     name={p.nombre}
                     brand={p.marca}
                     img={
-                      (Array.isArray(p.imagenes) && p.imagenes[0]?.imagen) ||
-                      (Array.isArray(p.imagenes) &&
-                        typeof p.imagenes[0] === "string" &&
-                        p.imagenes[0]) ||
+                      (Array.isArray(p.imagenes) && p.imagenes.length > 0 && p.imagenes[0]?.imagen) ||
                       undefined
                     }
                     price={p.precio}
@@ -578,8 +657,8 @@ export default function BuscarPage() {
                     →
                   </button>
                   <span className="ml-4 text-xs text-gray-500">
-                    Mostrando {productosFiltrados.length} de{" "}
-                    {totalElements || productosFiltrados.length} productos
+                    Mostrando {productosPaginados.length} de{" "}
+                    {totalElements} productos
                   </span>
                 </div>
               )}
