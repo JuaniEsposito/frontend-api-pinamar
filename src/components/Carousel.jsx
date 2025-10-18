@@ -9,7 +9,6 @@ export default function Carousel({ items = [] }) { // Acepta 'items' como prop
   const [idx, setIdx] = useState(0);
   const [imgSrc, setImgSrc] = useState(null);
 
-  // Ya no se definen los banners aquí, se reciben de HomePage.jsx
 
   // Actualiza la imagen cuando cambia el índice o los items
   useEffect(() => {
