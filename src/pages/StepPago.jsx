@@ -1,18 +1,20 @@
+// StepPago.jsx
+
 import { motion } from "framer-motion";
-import Cards from 'react-credit-cards-2'; // Usamos la librería que instalaste
+import Cards from 'react-credit-cards-2';
 import 'react-credit-cards-2/dist/es/styles-compiled.css';
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
-// 💡 Costo de Envío Fijo (ajustar si es variable)
-const COSTO_ENVIO = 2000.00; 
+// Costo de Envío Fijo (ajustar si es variable)
+const COSTO_ENVIO = 2000.00;
 
 export default function StepPago({
     envio,
     direcciones,
     direccionId,
     setDireccionId,
-    cart, // ✅ RECIBE EL CARRITO REAL
+    cart, // RECIBE EL CARRITO REAL
     card,
     setCard,
     calcularTotal,
@@ -22,59 +24,54 @@ export default function StepPago({
     setStep, // Mantener si StepPago es parte de un flujo multipaso
 }) {
     const navigate = useNavigate();
-    
-    // --- LÓGICA DE ESTADO (MANTENIDA) ---
+
+    // --- LÓGICA DE ESTADO ---
     const [fieldErrors, setFieldErrors] = useState({});
     const [cuponInput, setCuponInput] = useState("");
     const [cuponAplicado, setCuponAplicado] = useState(false);
     const [cuponMsg, setCuponMsg] = useState({ text: "", type: "" });
     const [focus, setFocus] = useState('');
 
-    // --- LÓGICA DE VALIDACIÓN (MANTENIDA) ---
+    // --- LÓGICA DE VALIDACIÓN (Usando card.cvc y errors.cvc) ---
     const validateCard = () => {
         const errors = {};
         const number = card.number.replace(/\s/g, "");
-        if (!/^\d{16}$/.test(number)) {
-            errors.number = "El número debe tener 16 dígitos.";
-        }
-        if (!card.name.trim() || !/^[a-zA-Z\s]+$/.test(card.name.trim())) {
-            errors.name = "Ingresá un nombre válido.";
-        }
-        if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(card.expiry)) {
-            errors.expiry = "El formato debe ser MM/AA.";
-        } else {
+        if (!/^\d{16}$/.test(number)) errors.number = "El número debe tener 16 dígitos.";
+        if (!card.name.trim() || !/^[a-zA-Z\s]+$/.test(card.name.trim())) errors.name = "Ingresá un nombre válido.";
+        if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(card.expiry)) errors.expiry = "El formato debe ser MM/AA.";
+        else {
             const currentYearLastTwoDigits = new Date().getFullYear() % 100;
             const [expMonth, expYear] = card.expiry.split('/');
             if (parseInt(expYear, 10) < currentYearLastTwoDigits || (parseInt(expYear, 10) === currentYearLastTwoDigits && parseInt(expMonth, 10) < new Date().getMonth() + 1)) {
                 errors.expiry = "La tarjeta está vencida.";
             }
         }
-        if (!/^\d{3,4}$/.test(card.cvv)) {
-            errors.cvv = "Debe tener 3 o 4 dígitos.";
+        // Usa card.cvc Y errors.cvc
+        if (!/^\d{3,4}$/.test(card.cvc)) {
+            errors.cvc = "Debe tener 3 o 4 dígitos."; // Usa errors.cvc
         }
         setFieldErrors(errors);
         return Object.keys(errors).length === 0;
     };
 
+    // --- HANDLER DE INPUT (Usando cvc) ---
     const handleCardInputChange = (e) => {
         const { name, value } = e.target;
         if (name === "number") {
             const digitsOnly = value.replace(/\D/g, "").substring(0, 16);
-            // Formateo de 4 en 4 para visualización si lo necesitas, aunque Cards lo hace automáticamente
-            setCard({ ...card, number: digitsOnly }); 
+            setCard({ ...card, number: digitsOnly });
         } else if (name === "expiry") {
             let formattedValue = value.replace(/\D/g, "").substring(0, 4);
-            if (formattedValue.length > 2) {
-                formattedValue = `${formattedValue.slice(0, 2)}/${formattedValue.slice(2)}`;
-            }
+            if (formattedValue.length > 2) formattedValue = `${formattedValue.slice(0, 2)}/${formattedValue.slice(2)}`;
             setCard({ ...card, expiry: formattedValue });
-        } else if (name === "cvv") {
-            setCard({ ...card, cvv: value.replace(/\D/g, "").substring(0, 4) });
+        // Usa 'cvc' para actualizar el estado
+        } else if (name === "cvc") {
+            setCard({ ...card, cvc: value.replace(/\D/g, "").substring(0, 4) });
         } else {
             setCard({ ...card, [name]: value });
         }
     };
-    
+
     const handleInputFocus = (e) => {
         setFocus(e.target.name);
     };
@@ -89,29 +86,35 @@ export default function StepPago({
         }
     };
 
-    // --- CÁLCULO DE TOTALES (CORREGIDO Y SEGURO) ---
-    // El totalOriginal incluye el envío si se utiliza tu lógica calcularTotal.
-    // Necesitas recalcular el subtotal real sin envío si quieres mostrar el desglose.
+    // --- CÁLCULO DE TOTALES ---
     const totalConEnvio = useMemo(() => (calcularTotal ? calcularTotal() : 0), [calcularTotal]);
-    
-    // Calculamos el subtotal real (totalOriginal)
     const totalOriginal = totalConEnvio - (envio ? COSTO_ENVIO : 0);
-    
-    const descuento = cuponAplicado ? totalOriginal * 0.10 : 0;
-    const totalFinal = totalConEnvio - descuento; // Total a pagar
+    const [descuento, setDescuento] = useState(0);
+    const totalFinal = totalConEnvio - descuento;
 
+    // --- HANDLER DE SUBMIT ---
     const handleSubmit = (e) => {
         e.preventDefault();
         console.log("StepPago: handleSubmit triggered.");
-        console.log("StepPago: Card validation result:", validateCard());
-        if (!validateCard()) return;
-        // Navegar a /carrito si no hay productos (aunque el padre debería manejarlo)
+
+        setFieldErrors({}); // Limpia errores antes de validar
+
+        const isValid = validateCard();
+        console.log("StepPago: Card validation result:", isValid, fieldErrors);
+
+        if (!isValid) {
+             console.error("StepPago: Card validation failed.");
+             return;
+        }
+
         if (!cart || cart.length === 0) {
-          console.warn("StepPago: Cart is empty, navigating back.");
+            console.warn("StepPago: Cart is empty, navigating back.");
             navigate("/carrito");
             return;
         }
+
         console.log("StepPago: Calling handlePagar from parent...");
+        // Llama a la función del componente padre
         handlePagar(e, { totalFinal, totalOriginal, descuento });
     };
 
@@ -140,42 +143,38 @@ export default function StepPago({
                     </select>
                 </div>
             )}
-            
-            {/* ❌ SECCIÓN DE PRODUCTOS (SIMPLIFICADA) */}
+
+            {/* SECCIÓN DE PRODUCTOS (SIMPLIFICADA) */}
             <div className="mb-8 p-4 bg-gray-50 rounded-lg">
                 <h3 className="text-xl font-bold text-gray-800 mb-2">Productos en tu compra</h3>
                 <p className="text-gray-600">Total de artículos: <span className="font-semibold">{cart?.length || 0}</span></p>
-                {/* Opcional: Si quieres mostrar una lista simple: */}
-                {/* <ul>
-                    {cart?.map((item) => <li key={item.id} className="text-sm">{item.name} x {item.quantity}</li>)}
-                </ul> */}
             </div>
-            
+
             {/* FORMULARIO DE PAGO */}
             <form className="mb-6" onSubmit={handleSubmit} autoComplete="off">
                 <h3 className="text-xl font-bold text-gray-800 mb-4">Detalles de la Tarjeta</h3>
-                
+
                 {/* VISUALIZADOR DE TARJETA */}
                 <div className="mb-5 flex justify-center">
                     <Cards
                         number={card.number}
                         expiry={card.expiry}
-                        cvc={card.cvv}
+                        cvc={card.cvc} // Usa cvc
                         name={card.name}
                         focused={focus}
                     />
                 </div>
-                
+
                 {/* CAMPOS DE LA TARJETA */}
                 <div className="flex flex-col gap-2 mb-4">
                     <label className="text-sm font-medium text-gray-700 mb-1">Número de tarjeta</label>
                     <input type="text" name="number" placeholder="1111 1111 1111 1111" value={card.number} onChange={handleCardInputChange} onFocus={handleInputFocus} className={`border rounded p-2 ${fieldErrors.number ? "border-red-400" : ""}`} required disabled={loading} inputMode="numeric" />
                     {fieldErrors.number && <div className="text-xs text-red-600 mt-1">{fieldErrors.number}</div>}
-                    
+
                     <label className="text-sm font-medium text-gray-700 mb-1 mt-2">Nombre en la tarjeta</label>
                     <input type="text" name="name" placeholder="Ej: Juan Pérez" value={card.name} onChange={handleCardInputChange} onFocus={handleInputFocus} className={`border rounded p-2 ${fieldErrors.name ? "border-red-400" : ""}`} required disabled={loading} />
                     {fieldErrors.name && <div className="text-xs text-red-600 mt-1">{fieldErrors.name}</div>}
-                    
+
                     <div className="flex gap-4 mt-2">
                         <div className="flex-1">
                             <label className="text-sm font-medium text-gray-700 mb-1">Vencimiento</label>
@@ -183,7 +182,8 @@ export default function StepPago({
                             {fieldErrors.expiry && <div className="text-xs text-red-600 mt-1">{fieldErrors.expiry}</div>}
                         </div>
                         <div className="flex-1">
-                            <label className="text-sm font-medium text-gray-700 mb-1">CVV</label>
+                            <label className="text-sm font-medium text-gray-700 mb-1">CVC</label>
+                            {/* Usa name="cvc" y value={card.cvc} */}
                             <input type="password" name="cvc" placeholder="Ej: 123" maxLength={4} value={card.cvc} onChange={handleCardInputChange} onFocus={handleInputFocus} className={`border rounded p-2 w-full ${fieldErrors.cvc ? "border-red-400" : ""}`} required disabled={loading} inputMode="numeric" />
                             {fieldErrors.cvc && <div className="text-xs text-red-600 mt-1">{fieldErrors.cvc}</div>}
                         </div>

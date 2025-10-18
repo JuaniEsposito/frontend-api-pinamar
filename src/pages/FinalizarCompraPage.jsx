@@ -51,10 +51,13 @@ export default function FinalizarCompraPage() {
         //setLoading(true);
         setError("");
 
+        console.log("FinalizarCompraPage: handlePagar triggered.");
+
         const direccionSeleccionada = direcciones.find(d => d.id === parseInt(direccionId));
 
         if (envio && !direccionSeleccionada) {
             setError("Por favor, selecciona una dirección de envío.");
+            console.error("FinalizarCompraPage: No shipping address selected.");
             //setLoading(false);
             return;
         }
@@ -76,6 +79,7 @@ export default function FinalizarCompraPage() {
         
         // Manejo del resultado del Thunk
         if (checkoutThunk.fulfilled.match(resultAction)) {
+          console.log("FinalizarCompraPage: Checkout successful, navigating...", ordenConfirmada); // <-- Log 11: Success navigation
             const ordenConfirmada = resultAction.payload;
             navigate(`/mis-pedidos/${ordenConfirmada.ordenId}`, { 
               state: { orden: 
@@ -87,9 +91,11 @@ export default function FinalizarCompraPage() {
                 }
                } });
         } else {
+          const errorMsg = resultAction.payload || "Ocurrió un error al procesar el pago.";
+          console.error("FinalizarCompraPage: checkoutThunk rejected:", errorMsg); // <-- Log 12: Thunk failed
              // El error está en el store de Redux (state.cart.error), pero lo actualizamos localmente si es necesario
              // Si el thunk devolvió un error específico (ej. stock), se lo pasamos al StepPago
-            setError(resultAction.payload || "Ocurrió un error al procesar el pago.");
+            setError(errorMsg);
         }
     };
 
