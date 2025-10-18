@@ -37,7 +37,7 @@ const ProductItem = ({ product, onEdit, onDelete }) => {
     // Obtener la primera imagen o usar placeholder
     const imagenUrl = product.imagenes && product.imagenes.length > 0 
         ? `http://localhost:8080/${product.imagenes[0].imagen || product.imagenes[0]}`
-        : `https://via.placeholder.com/64x64?text=${product.nombre[0]}`;
+        : `https://placehold.co/64x64?text=${product.nombre[0]}`;
 
     return (
         <div className="flex items-center justify-between p-3 bg-background-light dark:bg-background-dark rounded-lg border border-gray-100 dark:border-gray-700 transition-shadow hover:shadow-md">
@@ -47,7 +47,8 @@ const ProductItem = ({ product, onEdit, onDelete }) => {
                     className="w-16 h-16 object-cover rounded-md flex-shrink-0" 
                     src={imagenUrl}
                     onError={(e) => {
-                        e.target.src = `https://via.placeholder.com/64x64?text=${product.nombre[0]}`;
+                        // ✅ CORREGIDO: URL alternativa
+                        e.target.src = `https://placehold.co/64x64?text=${product.nombre[0] || '?'}`;
                     }}
                 />
                 <div>
@@ -105,8 +106,8 @@ const CategoryItem = ({ category, onEdit, onDelete }) => (
 /**
  * Modal para Crear/Editar Producto con soporte para imágenes
  */
-const ProductFormModal = ({ product, onClose, onSave, categorias }) => {
-    const [formData, setFormData] = useState(product || {
+const ProductFormModal = ({ product, onClose, onSave, categorias, token }) => {
+const [formData, setFormData] = useState(product || {
         nombre: '',
         descripcion: '',
         precio: 0,
@@ -166,7 +167,6 @@ const ProductFormModal = ({ product, onClose, onSave, categorias }) => {
     const uploadImages = async (productId) => {
         if (selectedFiles.length === 0) return;
 
-        setUploadingImages(true);
         try {
             for (const file of selectedFiles) {
                 const formDataImg = new FormData();
@@ -174,6 +174,9 @@ const ProductFormModal = ({ product, onClose, onSave, categorias }) => {
 
                 const response = await fetch(`http://localhost:8080/producto/${productId}/imagen`, {
                     method: 'POST',
+                    headers: { // ✅ AÑADE ESTOS HEADERS
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: formDataImg,
                 });
 
@@ -196,6 +199,9 @@ const ProductFormModal = ({ product, onClose, onSave, categorias }) => {
         try {
             const response = await fetch(`http://localhost:8080/producto/imagen/${imagenId}`, {
                 method: 'DELETE',
+                headers: { // ✅ AÑADE ESTOS HEADERS
+                    'Authorization': `Bearer ${token}`
+                }
             });
 
             if (response.ok) {
@@ -537,8 +543,22 @@ const DashboardPage = () => {
     }, []);
 
     // Handlers de Productos
-    const handleCreateProduct = () => {
-        setProductToEdit(null); 
+   const handleCreateProduct = () => {
+        // ✅ FIX: Crea una plantilla para el nuevo producto
+        const newProductTemplate = {
+            nombre: '',
+            descripcion: '',
+            precio: 0,
+            marca: '',
+            stock: 0,
+            descuento: 0,
+            estado: 'activo',
+            // Asigna el ID de la primera categoría de la lista, si existe
+            categoria_id: categorias.length > 0 ? categorias[0].id : undefined, 
+            stock_minimo: 0,
+            imagenes: [],
+        };
+        setProductToEdit(newProductTemplate); // Pasa la plantilla al estado
         setIsModalOpen(true);
     };
 
@@ -564,24 +584,40 @@ const DashboardPage = () => {
     };
 
     const handleSaveProduct = async (productData) => {
+        // ✅ Determina el método y la URL
         const isNew = !productData.id || productData.id <= 0;
         const method = isNew ? 'POST' : 'PUT';
-        const productIdForUrl = productData.id; 
-        const url = isNew ? API_BASE_URL : `${API_BASE_URL}/${productIdForUrl}`;
+        // Usa productData.id para la URL si estás editando
+        const url = isNew ? API_BASE_URL : `${API_BASE_URL}/${productData.id}`;
         
         try {
-            const dataToSend = { ...productData }; 
-            dataToSend.categoria_id = productData.categoria_id || 1;
-            dataToSend.stock_minimo = productData.stock_minimo || 0;
-            delete dataToSend.categoria; 
-            delete dataToSend.imagenes; // No enviar imágenes en el cuerpo
-            if (dataToSend.id) {
-                delete dataToSend.id; 
+            // ✅ FIX: Valida que la categoría_id exista ANTES de enviar
+if (!productData.categoria_id) {
+                    throw new Error("La categoría es obligatoria. Por favor, selecciona una.");
             }
+            
+            // ✅ Prepara el body EXACTAMENTE como lo espera ProductoRequest.java
+            const dataToSend = {
+                nombre: productData.nombre,
+                descripcion: productData.descripcion,
+                precio: Number(productData.precio) || 0,
+                marca: productData.marca || "Sin marca",
+                stock: Number(productData.stock) || 0,
+                descuento: Number(productData.descuento) || 0,
+                estado: productData.estado || 'activo',
+                
+                // ✅ FIX: Quita el '|| 1' que causaba el Error 400
+                categoria_id: Number(productData.categoria_id), 
+                
+                stockMinimo: Number(productData.stock_minimo) || 0
+            };
             
             const response = await fetch(url, {
                 method: method,
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` // ✅ Envía el Token
+                },
                 body: JSON.stringify(dataToSend), 
             });
 
@@ -596,16 +632,20 @@ const DashboardPage = () => {
             }
 
             const result = await response.json();
-            await fetchProducts(); 
-            setIsModalOpen(false);
             
-            // Devolver el producto guardado (con su ID)
-            return result.producto || result;
+            // Devuelve el producto guardado (para el modal)
+            const savedProduct = result.producto || result.productoActualizado || result;
+
+            // Refresca la lista de productos
+            await fetchProducts(); 
+            
+            // Devuelve el producto para que el modal suba las imágenes
+            return savedProduct; 
 
         } catch (err) {
             console.error("Error saving product:", err);
             alert(`Error al guardar el producto: ${err.message}`);
-            throw err;
+            throw err; // Lanza el error para que el modal lo sepa
         }
     };
 
@@ -660,6 +700,7 @@ const DashboardPage = () => {
                     onClose={() => setIsModalOpen(false)}
                     onSave={handleSaveProduct}
                     categorias={categorias}
+                    token={token}
                 />
             )}
 
