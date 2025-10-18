@@ -79,8 +79,8 @@ export default function FinalizarCompraPage() {
         
         // Manejo del resultado del Thunk
         if (checkoutThunk.fulfilled.match(resultAction)) {
+          const ordenConfirmada = resultAction.payload;
           console.log("FinalizarCompraPage: Checkout successful, navigating...", ordenConfirmada); // <-- Log 11: Success navigation
-            const ordenConfirmada = resultAction.payload;
             navigate(`/mis-pedidos/${ordenConfirmada.ordenId}`, { 
               state: { orden: 
                 {
@@ -122,10 +122,10 @@ export default function FinalizarCompraPage() {
     }
     
     // Si el carrito está vacío, no debería llegar aquí, pero es buena práctica verificar
-    if (!cartItems || cartItems.length === 0) {
+    /*if (!cartItems || cartItems.length === 0) {
         navigate("/carrito");
         return null;
-    }
+    }*/
 
 
     return (

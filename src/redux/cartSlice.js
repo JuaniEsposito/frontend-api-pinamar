@@ -88,6 +88,7 @@ export const removeProductFromCart = createAsyncThunk(
             Authorization: `Bearer ${token}`,
           },
         }
+        
       );
     } catch (error) {
       return rejectWithValue("Error al eliminar del carrito.");
