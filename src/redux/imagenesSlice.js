@@ -1,28 +1,23 @@
-// src/redux/imagenesSlice.js
-
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import api from "../api"; // Asume que api.js está en el nivel superior
+import api from "../api";
 
-// ✅ THUNK PARA SUBIR UN ARCHIVO DE IMAGEN
 export const uploadImage = createAsyncThunk(
     'imagenes/uploadImage',
     async ({ productId, file, token }, { rejectWithValue }) => {
         try {
             const formData = new FormData();
-            formData.append('archivo', file); // 'archivo' es el parámetro esperado por el backend
+            formData.append('archivo', file);
 
             const response = await api.post(
-                `/producto/${productId}/imagen`, // Endpoint: /producto/{id}/imagen
+                `/producto/${productId}/imagen`,
                 formData,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
-                        // No necesitamos Content-Type: 'multipart/form-data', Axios lo pone solo.
                     },
                 }
             );
-            
-            // Retorna la respuesta de tu backend: { mensaje, idImagen, path }
+
             return response.data; 
 
         } catch (error) {
@@ -32,18 +27,15 @@ export const uploadImage = createAsyncThunk(
     }
 );
 
-// ✅ THUNK PARA BORRAR UNA IMAGEN
 export const deleteImage = createAsyncThunk(
   'imagenes/deleteImage',
   async ({ imageId, token }, { rejectWithValue }) => {
     try {
-      // Endpoint: /producto/imagen/{imagenId}
       const response = await api.delete(`/producto/imagen/${imageId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      // Devolvemos el ID de la imagen borrada y el mensaje
       return { id: imageId, message: response.data.message };
     } catch (error) {
       const errorMsg = error.response?.data?.message || "Fallo al eliminar la imagen.";
@@ -66,7 +58,6 @@ const imagenesSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            // Cases para uploadImage
             .addCase(uploadImage.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -78,9 +69,8 @@ const imagenesSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
-            // ✅ Cases para deleteImage
             .addCase(deleteImage.pending, (state) => {
-                state.loading = true; // Reusamos el loading
+                state.loading = true;
                 state.error = null;
             })
             .addCase(deleteImage.fulfilled, (state) => {

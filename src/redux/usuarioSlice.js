@@ -1,34 +1,27 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios"; // 👈 Importamos Axios
+import axios from "axios";
 
-const API_URL = "http://localhost:8080/usuarios"; // 👈 URL Base ajustada a 8080
+const API_URL = "http://localhost:8080/usuarios"; 
 
-// Helper para manejar errores de Axios y devolver un mensaje limpio
 const getAxiosErrorMessage = (error, defaultMsg) => {
   if (error.response && error.response.data) {
-    // Si el backend devuelve un mensaje (propiedad 'mensaje' o 'message'), úsalo
     return error.response.data.mensaje || error.response.data.message || defaultMsg;
   }
   return error.message || defaultMsg;
 };
 
-// -----------------------------------------------------------------
-// Traer perfil de usuario
-// -----------------------------------------------------------------
 export const fetchPerfil = createAsyncThunk(
   "usuario/fetchPerfil",
   async ({ token, id }, { rejectWithValue }) => {
     try {
-      // Usamos axios.get (o fetch adaptado, lo haré con fetch para compatibilidad con tu código actual)
-      const res = await fetch(`http://localhost:8080/usuarios/${id}`, { // 🚨 Usar 8080 si corresponde
+      const res = await fetch(`http://localhost:8080/usuarios/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("No se pudo cargar el perfil.");
        
       const responseJson = await res.json();
       
-      // 🔑 CAMBIO CLAVE: Devolver solo la propiedad 'data'
-      return responseJson.data; // <--- Devolvemos el objeto de perfil limpio
+      return responseJson.data;
       
     } catch (e) {
       return rejectWithValue(e.message || "Error al cargar perfil.");
@@ -36,27 +29,20 @@ export const fetchPerfil = createAsyncThunk(
   }
 );
 
-// -----------------------------------------------------------------
-// Traer lista de usuarios
-// -----------------------------------------------------------------
 export const fetchUsuarios = createAsyncThunk(
   "usuario/fetchUsuarios",
   async (token, { rejectWithValue }) => {
     try {
-      // Usamos axios.get
       const response = await axios.get(API_URL, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      return response.data; // Ajustá según lo que devuelva tu backend
+      return response.data;
     } catch (e) {
       return rejectWithValue(getAxiosErrorMessage(e, "Error al cargar lista de usuarios."));
     }
   }
 );
 
-// -----------------------------------------------------------------
-// Editar perfil de usuario
-// -----------------------------------------------------------------
 export const updatePerfil = createAsyncThunk(
   "usuario/updatePerfil",
   async ({ token, formData }, { getState, rejectWithValue }) => {
@@ -68,15 +54,12 @@ export const updatePerfil = createAsyncThunk(
         throw new Error("No se encontró el ID del usuario autenticado para actualizar.");
       }
 
-      // 1. Llamada a la API (asumiendo que usas Axios y puerto 8080)
       const response = await axios.patch(`http://localhost:8080/usuarios/${userId}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      // 🔑 CAMBIO CLAVE AQUÍ: Devolver solo la propiedad 'data'
-      // El backend responde: {"mensaje": "...", "data": {datos_actualizados}}
       return response.data.data; 
 
     } catch (e) {
@@ -87,10 +70,6 @@ export const updatePerfil = createAsyncThunk(
     }
   }
 );
-
-// -----------------------------------------------------------------
-// Slice y Reducers (Sin cambios funcionales en la lógica)
-// -----------------------------------------------------------------
 
 const usuarioSlice = createSlice({
   name: "usuario",
@@ -108,7 +87,6 @@ const usuarioSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // fetchPerfil
       .addCase(fetchPerfil.pending, (state) => {
         state.loading = true;
         state.error = "";
@@ -119,10 +97,10 @@ const usuarioSlice = createSlice({
       })
       .addCase(fetchPerfil.rejected, (state, action) => {
         state.loading = false;
-        state.perfil = null; // Limpiar perfil si la carga falla
+        state.perfil = null;
         state.error = action.payload;
       })
-      // updatePerfil
+      
       .addCase(updatePerfil.pending, (state) => {
         state.loading = true;
         state.error = "";
@@ -130,7 +108,6 @@ const usuarioSlice = createSlice({
       })
       .addCase(updatePerfil.fulfilled, (state, action) => {
         state.loading = false;
-        // El perfil se actualiza con los nuevos datos devueltos por la API
         state.perfil = action.payload; 
         state.success = "Perfil actualizado correctamente.";
       })

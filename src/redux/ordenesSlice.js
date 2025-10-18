@@ -10,11 +10,9 @@ export const fetchOrdenesUsuario = createAsyncThunk(
       });
       if (!res.ok) throw new Error("No se pudieron cargar los pedidos.");
       const data = await res.json();
-      // Normalización mínima: soporte para array directo o paginado (content)
       let pedidosData = [];
       if (Array.isArray(data)) pedidosData = data;
       else if (data && Array.isArray(data.content)) pedidosData = data.content;
-      // Ordenar por fecha (más nuevo primero)
       const pedidosOrdenados = pedidosData.sort((a, b) => {
         const fechaA = a.fechaCreacion || a.fecha;
         const fechaB = b.fechaCreacion || b.fecha;

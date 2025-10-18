@@ -1,11 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-// El Thunk (sin cambios)
 export const fetchMisPedidos = createAsyncThunk(
   "pedidos/fetchMisPedidos",
   async (_, { getState }) => {
     const { auth } = getState();
-    const usuarioId = auth.usuario?.id; // Ajusta esto a tu estado de auth
+    const usuarioId = auth.usuario?.id;
 
     if (!usuarioId) {
       throw new Error("Usuario no autenticado");
@@ -24,10 +23,9 @@ export const fetchMisPedidos = createAsyncThunk(
   }
 );
 
-// El Slice
 const initialState = {
   pedidos: [],
-  status: "idle", // 'idle' | 'loading' | 'succeeded' | 'failed'
+  status: "idle",
   error: null,
 };
 
@@ -43,16 +41,11 @@ const pedidosSlice = createSlice({
       .addCase(fetchMisPedidos.fulfilled, (state, action) => {
         state.status = "succeeded";
         
-        // --- INICIO DE LA MODIFICACIÓN ---
-        // Manejamos la estructura [[...]] que devuelve tu API.
-        // Asumimos que la lista real de pedidos está en el primer elemento.
         if (Array.isArray(action.payload) && action.payload.length > 0 && Array.isArray(action.payload[0])) {
-          state.pedidos = action.payload[0]; // Asignamos la lista interna
+          state.pedidos = action.payload[0];
         } else {
-          // Fallback por si la API cambia a una lista simple [...]
           state.pedidos = action.payload;
         }
-        // --- FIN DE LA MODIFICACIÓN ---
       })
       .addCase(fetchMisPedidos.rejected, (state, action) => {
         state.status = "failed";

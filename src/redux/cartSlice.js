@@ -1,13 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { getToken } from "../utils/auth";
-import api from "../api"; // ✅ Usamos la instancia de Axios configurada
+import api from "../api"; 
 
-// Helper para obtener el ID del usuario de forma segura
 const getUserId = (getState) => getState().auth.usuario?.id;
 
-// -----------------------------------------------------------------
-// Thunk para OBTENER el carrito del usuario logueado
-// -----------------------------------------------------------------
 export const fetchCarrito = createAsyncThunk(
   "cart/fetchCarrito",
   async (_, { rejectWithValue, getState }) => {
@@ -16,7 +12,6 @@ export const fetchCarrito = createAsyncThunk(
     if (!token || !userId) return rejectWithValue("Usuario no autenticado");
 
     try {
-      // ✅ Endpoint: GET /carritos/usuario/{userId}
       const response = await api.get(`/carritos/usuario/${userId}`, { 
           headers: {
               Authorization: `Bearer ${token}`,
@@ -25,7 +20,6 @@ export const fetchCarrito = createAsyncThunk(
 
       const data = response.data;
       
-      // Asumimos que la respuesta es directa o que 'data' contiene 'items' y 'total'
       return {
           items: data.items || [],
           total: data.total || 0,
@@ -36,9 +30,6 @@ export const fetchCarrito = createAsyncThunk(
   }
 );
 
-// -----------------------------------------------------------------
-// Thunk para AGREGAR un producto (o sumar cantidad)
-// -----------------------------------------------------------------
 export const addProductToCart = createAsyncThunk(
   "cart/addProductToCart",
   async ({ productoId, cantidad }, { dispatch, rejectWithValue, getState }) => {
@@ -47,7 +38,6 @@ export const addProductToCart = createAsyncThunk(
     if (!token || !userId) return rejectWithValue("Debe iniciar sesión.");
 
     try {
-      // ✅ Endpoint: PATCH /carritos/usuario/{userId}/producto/{productoId}?cantidad={cantidad}
       await api.patch(
         `/carritos/usuario/${userId}/producto/${productoId}?cantidad=${cantidad}`,
         {}, 
@@ -62,14 +52,11 @@ export const addProductToCart = createAsyncThunk(
       return rejectWithValue(errorMessage);
     }
     
-    // 💡 Actualiza el carrito después del cambio
+    //actualiza el carrito despues del cambio
     dispatch(fetchCarrito());
   }
 );
 
-// -----------------------------------------------------------------
-// Thunk para ELIMINAR un producto (o restar cantidad/eliminar item)
-// -----------------------------------------------------------------
 export const removeProductFromCart = createAsyncThunk(
   "cart/removeProductFromCart",
   async ({ productoId, cantidad }, { dispatch, rejectWithValue, getState }) => {
@@ -78,11 +65,9 @@ export const removeProductFromCart = createAsyncThunk(
     if (!token || !userId) return rejectWithValue("Debe iniciar sesión.");
 
     try {
-      // ✅ Endpoint: DELETE /carritos/usuario/{userId}/producto/{productoId}?cantidad={cantidad}
       await api.delete(
         `/carritos/usuario/${userId}/producto/${productoId}?cantidad=${cantidad}`,
         { 
-          // Necesario para DELETE en Axios cuando se envían headers
           data: {}, 
           headers: {
             Authorization: `Bearer ${token}`,
@@ -94,14 +79,10 @@ export const removeProductFromCart = createAsyncThunk(
       return rejectWithValue("Error al eliminar del carrito.");
     }
 
-    // 💡 Actualiza el carrito después del cambio
     dispatch(fetchCarrito());
   }
 );
 
-// -----------------------------------------------------------------
-// Thunk para FINALIZAR LA COMPRA (CHECKOUT)
-// -----------------------------------------------------------------
 export const checkoutThunk = createAsyncThunk(
   "cart/checkout",
   async (orderData, { dispatch, rejectWithValue, getState }) => {
@@ -110,7 +91,6 @@ export const checkoutThunk = createAsyncThunk(
     
     if (!token || !userId) return rejectWithValue("Debe iniciar sesión para finalizar la compra.");
 
-    // 🔑 Construimos el body de la petición (UsuarioId es necesario según el backend)
     const requestBody = {
         usuarioId: userId, 
         direccionId: orderData.direccionId, 
@@ -119,17 +99,14 @@ export const checkoutThunk = createAsyncThunk(
     };
 
     try {
-      // ✅ Endpoint: POST /ordenes
       const response = await api.post(`/ordenes`, requestBody, { 
           headers: {
               Authorization: `Bearer ${token}`,
           },
       });
 
-      // 🚨 La respuesta del backend es el objeto de la orden directamente (no anidado)
       const ordenConfirmada = response.data;
       
-      // Limpiamos el carrito localmente al éxito
       dispatch(resetCarrito());
 
       return ordenConfirmada;
@@ -147,9 +124,9 @@ const cartSlice = createSlice({
   initialState: {
     items: [],
     total: 0,
-    status: "idle", // 'idle', 'loading', 'succeeded', 'failed'
+    status: "idle",
     error: null,
-    checkoutStatus: "idle", // 'idle', 'loading', 'succeeded', 'failed'
+    checkoutStatus: "idle",
     ordenConfirmada: null,
   },
   reducers: {
@@ -162,7 +139,6 @@ const cartSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch Carrito
       .addCase(fetchCarrito.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -178,11 +154,9 @@ const cartSlice = createSlice({
         state.items = [];
         state.total = 0;
       })
-      // Add Product (solo maneja errores, fetchCarrito hace la actualización)
       .addCase(addProductToCart.rejected, (state, action) => {
           state.error = action.payload;
       })
-      // Checkout
       .addCase(checkoutThunk.pending, (state) => {
         state.checkoutStatus = "loading";
         state.error = null;
@@ -190,7 +164,6 @@ const cartSlice = createSlice({
       .addCase(checkoutThunk.fulfilled, (state, action) => {
         state.checkoutStatus = "succeeded";
         state.ordenConfirmada = action.payload;
-        // El carrito se reseteó por el dispatch de resetCarrito en el thunk
       })
       .addCase(checkoutThunk.rejected, (state, action) => {
         state.checkoutStatus = "failed";
@@ -199,7 +172,5 @@ const cartSlice = createSlice({
   },
 });
 
-export const { resetCarrito } = cartSlice.actions;
-
-// Exportamos todos los thunks y el reducer
+export const { resetCarrito } = cartSlice.a
 export default cartSlice.reducer;

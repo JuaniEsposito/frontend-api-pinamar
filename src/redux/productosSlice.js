@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../api";
 
-// ✅ Traer productos (con filtros opcionales)
 export const fetchProductos = createAsyncThunk(
   "productos/fetchProductos",
   async (params = {}, { rejectWithValue }) => {
@@ -30,7 +29,7 @@ export const fetchProductos = createAsyncThunk(
   }
 );
 
-// ✅ Traer un producto por su ID
+
 export const fetchProductoById = createAsyncThunk(
   "productos/fetchProductoById",
   async (id, { rejectWithValue }) => {
@@ -44,7 +43,6 @@ export const fetchProductoById = createAsyncThunk(
   }
 );
 
-// ✅ Productos relacionados
 export const fetchRelatedProducts = createAsyncThunk(
   "productos/fetchRelatedProducts",
   async (id, { rejectWithValue }) => {
@@ -143,7 +141,7 @@ const productosSlice = createSlice({
       })
       .addCase(fetchProductos.fulfilled, (state, action) => {
         state.loading = false;
-        // ✅ Manejo de respuesta del backend
+       
         if (action.payload && action.payload.productos) {
           state.productos = action.payload.productos;
         } else if (Array.isArray(action.payload)) {
