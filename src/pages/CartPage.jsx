@@ -125,7 +125,11 @@ export default function CartPage() {
               >
                 <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border">
     {/* ✅ CORRECCIÓN: Si item.imageUrl es "" o null, usamos FALLBACK_IMG */}
-    <img src={item.imageUrl || "https://placehold.co/100x100/f3f4f6/333333?text=Sin+Imagen"} alt={item.nombreProducto} className="w-full h-full object-contain" />
+    <img 
+    src={item.imageUrl ? `http://localhost:8080/${item.imageUrl}` : "https://placehold.co/100x100/f3f4f6/333333?text=Sin+Imagen"} 
+    alt={item.nombreProducto} 
+    className="w-full h-full object-contain" 
+/>
 </div>
                 <div className="flex-1 w-full sm:w-auto text-center sm:text-left">
                   <div className="font-bold text-lg text-gray-800">{item.nombreProducto}</div>

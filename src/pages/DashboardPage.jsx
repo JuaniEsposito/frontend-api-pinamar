@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { FaTag } from 'react-icons/fa';
 import { fetchCategorias, addCategoria, editCategoria, deleteCategoria } from '../redux/categoriesSlice';
+import { toast } from 'react-toastify'; // ✅ FIX: Importamos toastify
 
 // --- Componentes Reutilizables ---
 
@@ -19,7 +20,6 @@ const Card = ({ title, buttonText, children, onButtonClick }) => (
                     onClick={onButtonClick}
                     className="bg-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-opacity-90 transition transform hover:scale-[1.02] shadow-md"
                 >
-                    <span className="material-icons text-lg">add</span>
                     <span>{buttonText}</span>
                 </button>
             )}
@@ -34,7 +34,7 @@ const Card = ({ title, buttonText, children, onButtonClick }) => (
  * Componente para mostrar un Producto dentro de la lista de administración.
  */
 const ProductItem = ({ product, onEdit, onDelete }) => {
-    // Obtener la primera imagen o usar placeholder
+    // Usamos placehold.co como alternativa a via.placeholder (que parece caído)
     const imagenUrl = product.imagenes && product.imagenes.length > 0 
         ? `http://localhost:8080/${product.imagenes[0].imagen || product.imagenes[0]}`
         : `https://placehold.co/64x64?text=${product.nombre[0]}`;
@@ -47,14 +47,13 @@ const ProductItem = ({ product, onEdit, onDelete }) => {
                     className="w-16 h-16 object-cover rounded-md flex-shrink-0" 
                     src={imagenUrl}
                     onError={(e) => {
-                        // ✅ CORREGIDO: URL alternativa
                         e.target.src = `https://placehold.co/64x64?text=${product.nombre[0] || '?'}`;
                     }}
                 />
                 <div>
                     <p className="font-semibold text-text-light dark:text-text-dark">{product.nombre}</p>
                     <p className="text-sm text-subtle-light dark:text-subtle-dark">
-                        Stock: {product.stock} | Cat: {product.categoria || 'N/A'}
+                        Stock: {product.stock} | Cat: {product.categoria?.nombre || product.categoria || 'N/A'}
                     </p>
                 </div>
             </div>
@@ -107,23 +106,26 @@ const CategoryItem = ({ category, onEdit, onDelete }) => (
  * Modal para Crear/Editar Producto con soporte para imágenes
  */
 const ProductFormModal = ({ product, onClose, onSave, categorias, token }) => {
-const [formData, setFormData] = useState(product || {
-        nombre: '',
-        descripcion: '',
-        precio: 0,
-        marca: '',
-        stock: 0,
-        descuento: 0,
-        estado: 'activo',
-        categoria_id: product?.categoria_id || (categorias.length > 0 ? categorias[0].id : 1),
-        stock_minimo: product?.stock_minimo || 0,
-        imagenes: product?.imagenes || [],
-    });
+    // ✅ FIX: El estado se inicializa solo con la prop 'product'
+    const [formData, setFormData] = useState(product);
 
     // Estado para manejar imágenes
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [uploadingImages, setUploadingImages] = useState(false);
     const [imageError, setImageError] = useState('');
+
+    // ✅ FIX: Este Effect soluciona el bug de la categoría
+    // Sincroniza el ID de la categoría por defecto cuando se crea un producto nuevo
+    useEffect(() => {
+        // Si es un producto nuevo (no tiene ID) Y las categorías ya cargaron
+        // Y el formData todavía no tiene una categoría_id
+        if (!formData.id && categorias.length > 0 && !formData.categoria_id) {
+            setFormData(prev => ({
+                ...prev,
+                categoria_id: categorias[0].id // Asigna la primera categoría de la lista
+            }));
+        }
+    }, [categorias, formData.id, formData.categoria_id]); // Dependencias
 
     const handleChange = (e) => {
         const { name, value, type } = e.target;
@@ -135,30 +137,20 @@ const [formData, setFormData] = useState(product || {
 
     // Handler para seleccionar archivos
     const handleFileChange = (e) => {
+        // ... (Tu lógica de validación de archivos está bien)
         const files = Array.from(e.target.files);
-        
-        // Validar cantidad (máximo 10 imágenes)
         if (files.length + formData.imagenes.length > 10) {
-            setImageError('No puedes agregar más de 10 imágenes en total.');
-            return;
+            setImageError('No puedes agregar más de 10 imágenes en total.'); return;
         }
-
-        // Validar tipo de archivo
         const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
         const invalidFiles = files.filter(f => !validTypes.includes(f.type));
-        
         if (invalidFiles.length > 0) {
-            setImageError('Solo se permiten imágenes (JPG, PNG, GIF, WEBP).');
-            return;
+            setImageError('Solo se permiten imágenes (JPG, PNG, GIF, WEBP).'); return;
         }
-
-        // Validar tamaño (máx 5MB por imagen)
         const oversizedFiles = files.filter(f => f.size > 5 * 1024 * 1024);
         if (oversizedFiles.length > 0) {
-            setImageError('Las imágenes no pueden superar 5MB cada una.');
-            return;
+            setImageError('Las imágenes no pueden superar 5MB cada una.'); return;
         }
-
         setImageError('');
         setSelectedFiles(files);
     };
@@ -166,7 +158,7 @@ const [formData, setFormData] = useState(product || {
     // Subir imágenes después de crear el producto
     const uploadImages = async (productId) => {
         if (selectedFiles.length === 0) return;
-
+        setUploadingImages(true); // Muestra el spinner
         try {
             for (const file of selectedFiles) {
                 const formDataImg = new FormData();
@@ -174,21 +166,20 @@ const [formData, setFormData] = useState(product || {
 
                 const response = await fetch(`http://localhost:8080/producto/${productId}/imagen`, {
                     method: 'POST',
-                    headers: { // ✅ AÑADE ESTOS HEADERS
-                        'Authorization': `Bearer ${token}`
-                    },
+                    headers: { 'Authorization': `Bearer ${token}` },
                     body: formDataImg,
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Error al subir imagen: ${file.name}`);
+                    throw new Error(`Error al subir imagen: ${file.name}. Failed to fetch.`);
                 }
             }
         } catch (err) {
             console.error('Error uploading images:', err);
-            alert(`Error al subir imágenes: ${err.message}`);
+            // ✅ FIX: Cambia alert por toast
+            toast.error(`Error al subir imágenes: ${err.message}`);
         } finally {
-            setUploadingImages(false);
+            setUploadingImages(false); // Oculta el spinner
         }
     };
 
@@ -199,19 +190,19 @@ const [formData, setFormData] = useState(product || {
         try {
             const response = await fetch(`http://localhost:8080/producto/imagen/${imagenId}`, {
                 method: 'DELETE',
-                headers: { // ✅ AÑADE ESTOS HEADERS
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (response.ok) {
+                toast.success("Imagen eliminada"); // Feedback
                 setFormData(prev => ({
                     ...prev,
                     imagenes: prev.imagenes.filter(img => img.id !== imagenId)
                 }));
             }
         } catch (err) {
-            alert('Error al eliminar la imagen');
+            // ✅ FIX: Cambia alert por toast
+            toast.error('Error al eliminar la imagen');
         }
     };
 
@@ -219,18 +210,24 @@ const [formData, setFormData] = useState(product || {
         e.preventDefault();
         
         try {
-            // 1. Guardar el producto
+            // 1. Guardar el producto (onSave ahora es handleSaveProduct)
             const savedProduct = await onSave(formData);
             
             // 2. Si hay imágenes seleccionadas, subirlas
             if (selectedFiles.length > 0) {
-                const productId = savedProduct?.id || product?.id;
+                // Usa el ID del producto que acaba de guardar, o el ID existente si es edición
+                const productId = savedProduct?.id || formData.id; 
                 if (productId) {
                     await uploadImages(productId);
                 }
             }
+            
+            // ✅ FIX: Toast de éxito al guardar
+            toast.success('Producto guardado con éxito!');
+            onClose(); // Cierra el modal
 
         } catch (err) {
+            // El toast de error ya lo maneja 'handleSaveProduct', no hace falta repetirlo
             console.error('Error in submit:', err);
         }
     };
@@ -238,8 +235,9 @@ const [formData, setFormData] = useState(product || {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-card-dark p-6 rounded-xl shadow-2xl w-full max-w-2xl m-4 max-h-[90vh] overflow-y-auto">
+                {/* ✅ FIX: Título dinámico que comprueba el ID del formData */}
                 <h2 className="text-2xl font-bold mb-4 text-text-light dark:text-text-dark">
-                    {product ? 'Editar Producto' : 'Crear Producto'}
+                    {formData && formData.id ? 'Editar Producto' : 'Crear Producto'}
                 </h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     
@@ -270,11 +268,14 @@ const [formData, setFormData] = useState(product || {
                         <label className="block text-sm font-medium text-subtle-light dark:text-subtle-dark">Categoría *</label>
                         <select
                             name="categoria_id"
-                            value={formData.categoria_id}
+                            // ✅ FIX: Asegura que el valor no sea 'undefined'
+                            value={formData.categoria_id || ''} 
                             onChange={handleChange}
                             required
                             className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark"
                         >
+                            {/* Opción deshabilitada si no hay categoría seleccionada */}
+                            {!formData.categoria_id && <option value="" disabled>Cargando...</option>}
                             {categorias.map((cat) => (
                                 <option key={cat.id} value={cat.id}>
                                     {cat.nombre}
@@ -329,7 +330,7 @@ const [formData, setFormData] = useState(product || {
                         </label>
 
                         {/* Mostrar imágenes existentes */}
-                        {product && formData.imagenes && formData.imagenes.length > 0 && (
+                        {formData.imagenes && formData.imagenes.length > 0 && (
                             <div className="mb-4">
                                 <p className="text-xs text-gray-500 mb-2">Imágenes actuales:</p>
                                 <div className="grid grid-cols-3 gap-2">
@@ -340,7 +341,7 @@ const [formData, setFormData] = useState(product || {
                                                 alt="Producto" 
                                                 className="w-full h-24 object-cover rounded border"
                                                 onError={(e) => {
-                                                    e.target.src = 'https://via.placeholder.com/100x100?text=No+Image';
+                                                    e.target.src = 'https://placehold.co/100x100?text=Error';
                                                 }}
                                             />
                                             <button
@@ -417,13 +418,9 @@ const [formData, setFormData] = useState(product || {
  * Modal para Crear/Editar Categoría
  */
 const CategoryFormModal = ({ category, onClose, onSave }) => {
+    // ... (Este componente parece estar bien, no lo toco)
     const [nombre, setNombre] = useState(category?.nombre || '');
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        onSave({ nombre });
-    };
-
+    const handleSubmit = (e) => { e.preventDefault(); onSave({ nombre }); };
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white dark:bg-card-dark p-6 rounded-xl shadow-2xl w-full max-w-md m-4">
@@ -441,19 +438,11 @@ const CategoryFormModal = ({ category, onClose, onSave }) => {
                             className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm p-2 bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark"
                         />
                     </div>
-                    
                     <div className="flex justify-end space-x-3 mt-6">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
-                        >
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition">
                             Cancelar
                         </button>
-                        <button
-                            type="submit"
-                            className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-opacity-90 transition"
-                        >
+                        <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-opacity-90 transition">
                             Guardar
                         </button>
                     </div>
@@ -516,20 +505,15 @@ const DashboardPage = () => {
         setError(null);
         try {
             const response = await fetch(API_BASE_URL);
-            
             if (!response.ok) {
                 throw new Error(`Error ${response.status}: El servidor no respondió correctamente.`);
             }
-            
             const data = await response.json();
             const productsArray = data.productos; 
-
             if (!Array.isArray(productsArray)) {
                  throw new Error("Formato de datos inválido: La propiedad 'productos' no es una lista.");
             }
-            
             setProducts(productsArray);
-
         } catch (err) {
             console.error("Error fetching products:", err);
             setError(`Error de Conexión: ${err.message}`); 
@@ -543,7 +527,7 @@ const DashboardPage = () => {
     }, []);
 
     // Handlers de Productos
-   const handleCreateProduct = () => {
+    const handleCreateProduct = () => {
         // ✅ FIX: Crea una plantilla para el nuevo producto
         const newProductTemplate = {
             nombre: '',
@@ -553,7 +537,7 @@ const DashboardPage = () => {
             stock: 0,
             descuento: 0,
             estado: 'activo',
-            // Asigna el ID de la primera categoría de la lista, si existe
+            // Asigna la primera categoría si ya cargó, si no, undefined
             categoria_id: categorias.length > 0 ? categorias[0].id : undefined, 
             stock_minimo: 0,
             imagenes: [],
@@ -568,35 +552,55 @@ const DashboardPage = () => {
     };
 
     const handleDeleteProduct = async (id) => {
-        if (!window.confirm(`¿Estás seguro de que quieres eliminar el producto con ID ${id}?`)) return;
+    if (!window.confirm(`¿Estás seguro de que quieres desactivar este producto? Ya no aparecerá en la tienda.`)) return;
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
-            if (response.ok || response.status === 204) {
-                setProducts(prev => prev.filter(p => p.id !== id));
-            } else {
-                throw new Error('Error al eliminar el producto.');
-            }
-        } catch (err) {
-            console.error("Error deleting product:", err);
-            alert("No se pudo eliminar el producto.");
-        }
+    // 1. Encontrar el producto
+    const productToDeactivate = products.find(p => p.id === id);
+    if (!productToDeactivate) {
+        toast.error("Error: No se encontró el producto.");
+        return;
+    }
+
+    // ✅ FIX: Buscar el ID de la categoría
+    // (Usamos la lista 'categorias' del estado de Redux)
+    const categoriaObj = categorias.find(cat => cat.nombre === productToDeactivate.categoria);
+
+    // 2. Crear el objeto con el estado cambiado
+    const updatedProductData = {
+        ...productToDeactivate,
+        estado: "inactivo",
+        // ✅ FIX: Añadimos el 'categoria_id' que encontramos
+        // (Si ya lo tenía, lo usa. Si no, usa el que encontró en la lista)
+        categoria_id: productToDeactivate.categoria_id || (categoriaObj ? categoriaObj.id : undefined)
     };
 
+    try {
+        // 3. Llamar a la función de GUARDAR (PUT)
+        await handleSaveProduct(updatedProductData);
+
+        // 4. Actualizar la UI
+        toast.success("Producto desactivado correctamente.");
+        // (fetchProducts() en handleSaveProduct ya actualiza la lista)
+
+    } catch (err) {
+        console.error("Error deactivating product:", err);
+        // El toast de error ya lo maneja 'handleSaveProduct'
+    }
+};
+
     const handleSaveProduct = async (productData) => {
-        // ✅ Determina el método y la URL
         const isNew = !productData.id || productData.id <= 0;
         const method = isNew ? 'POST' : 'PUT';
-        // Usa productData.id para la URL si estás editando
         const url = isNew ? API_BASE_URL : `${API_BASE_URL}/${productData.id}`;
         
         try {
             // ✅ FIX: Valida que la categoría_id exista ANTES de enviar
-if (!productData.categoria_id) {
-                    throw new Error("La categoría es obligatoria. Por favor, selecciona una.");
+            if (!productData.categoria_id) {
+                // ✅ FIX: Cambia alert por toast
+                toast.error("La categoría es obligatoria. Por favor, selecciona una.");
+                throw new Error("La categoría es obligatoria."); // Detiene la ejecución
             }
             
-            // ✅ Prepara el body EXACTAMENTE como lo espera ProductoRequest.java
             const dataToSend = {
                 nombre: productData.nombre,
                 descripcion: productData.descripcion,
@@ -605,18 +609,16 @@ if (!productData.categoria_id) {
                 stock: Number(productData.stock) || 0,
                 descuento: Number(productData.descuento) || 0,
                 estado: productData.estado || 'activo',
-                
-                // ✅ FIX: Quita el '|| 1' que causaba el Error 400
+                // ✅ FIX: Ya no usa '|| 1', usa el valor del estado
                 categoria_id: Number(productData.categoria_id), 
-                
-                stockMinimo: Number(productData.stock_minimo) || 0
+                stockMinimo: Number(productData.stock_minimo) || 0 
             };
             
             const response = await fetch(url, {
                 method: method,
                 headers: { 
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` // ✅ Envía el Token
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(dataToSend), 
             });
@@ -632,20 +634,16 @@ if (!productData.categoria_id) {
             }
 
             const result = await response.json();
-            
-            // Devuelve el producto guardado (para el modal)
             const savedProduct = result.producto || result.productoActualizado || result;
 
-            // Refresca la lista de productos
-            await fetchProducts(); 
-            
-            // Devuelve el producto para que el modal suba las imágenes
-            return savedProduct; 
+            await fetchProducts(); // Refresca la lista
+            return savedProduct; // Devuelve el producto al modal
 
         } catch (err) {
             console.error("Error saving product:", err);
-            alert(`Error al guardar el producto: ${err.message}`);
-            throw err; // Lanza el error para que el modal lo sepa
+            // ✅ FIX: Cambia alert por toast
+            toast.error(`Error al guardar: ${err.message}`);
+            throw err; // Lanza el error para que el modal sepa
         }
     };
 
@@ -654,39 +652,39 @@ if (!productData.categoria_id) {
         setCategoryToEdit(null);
         setIsCategoryModalOpen(true);
     };
-
     const handleEditCategory = (category) => {
         setCategoryToEdit(category);
         setIsCategoryModalOpen(true);
     };
-
     const handleDeleteCategory = async (category) => {
         if (!window.confirm(`¿Estás seguro de eliminar "${category.nombre}"?`)) return;
-        
-        await dispatch(deleteCategoria({ id: category.id, token }));
+        try {
+            await dispatch(deleteCategoria({ id: category.id, token })).unwrap();
+            toast.success("Categoría eliminada");
+        } catch(e) {
+            toast.error("Error al eliminar categoría");
+        }
     };
-
     const handleSaveCategory = async (categoryData) => {
         try {
             if (categoryToEdit) {
-                // Editar
                 await dispatch(editCategoria({ 
                     id: categoryToEdit.id, 
                     nombre: categoryData.nombre, 
                     parentId: null, 
                     token 
-                }));
+                })).unwrap();
             } else {
-                // Crear
                 await dispatch(addCategoria({ 
                     nombre: categoryData.nombre, 
                     parentId: null, 
                     token 
-                }));
+                })).unwrap();
             }
+            toast.success("Categoría guardada");
             setIsCategoryModalOpen(false);
         } catch (err) {
-            alert("Error al guardar la categoría");
+            toast.error("Error al guardar la categoría");
         }
     };
 
@@ -720,7 +718,6 @@ if (!productData.categoria_id) {
                 
                 <hr className="border-t border-gray-200 dark:border-gray-700 my-8" />
 
-                {/* Sección de Administración de Productos y Categorías */}
                 <h2 className="text-3xl font-bold text-text-light dark:text-text-dark mb-6">Gestión de Inventario 📦</h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                     
@@ -771,9 +768,8 @@ if (!productData.categoria_id) {
                                 onDelete={handleDeleteCategory}
                             />
                         ))}
-</Card>
+                    </Card>
                 </div>
-
             </main>
         </div>
     );
