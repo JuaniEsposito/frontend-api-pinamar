@@ -39,7 +39,7 @@ export default function CategoryEditPage({ modo = "editar" }) {
   // Carga una sola categoría por ID (solo en modo editar)
   async function fetchCategoriaById() {
     try {
-      const res = await fetch(`http://localhost:4040/categorias/${id}`, {
+      const res = await fetch(`http://localhost:8080/categorias/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

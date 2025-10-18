@@ -178,7 +178,7 @@ export default function AdminPage() {
           usuarios.map(async (u) => {
             try {
               const r = await axios.get(
-                `http://localhost:4040/ordenes/usuarios/${u.id}`,
+                `http://localhost:8080/ordenes/usuarios/${u.id}`,
                 {
                   headers: { Authorization: `Bearer ${token}` },
                 }
