@@ -552,41 +552,36 @@ const DashboardPage = () => {
     };
 
     const handleDeleteProduct = async (id) => {
-    if (!window.confirm(`¿Estás seguro de que quieres desactivar este producto? Ya no aparecerá en la tienda.`)) return;
+        // 1. Preguntar (cambié el mensaje para que sea más claro)
+        if (!window.confirm(`¿Estás seguro de que quieres ELIMINAR este producto PERMANENTEMENTE? Esta acción no se puede deshacer.`)) return;
 
-    // 1. Encontrar el producto
-    const productToDeactivate = products.find(p => p.id === id);
-    if (!productToDeactivate) {
-        toast.error("Error: No se encontró el producto.");
-        return;
-    }
+        try {
+            // 2. Llamar al endpoint DELETE
+            const response = await fetch(`${API_BASE_URL}/${id}`, { 
+                method: 'DELETE',
+                headers: { 
+                    'Authorization': `Bearer ${token}` // El token ya está disponible
+                } 
+            });
 
-    // ✅ FIX: Buscar el ID de la categoría
-    // (Usamos la lista 'categorias' del estado de Redux)
-    const categoriaObj = categorias.find(cat => cat.nombre === productToDeactivate.categoria);
-
-    // 2. Crear el objeto con el estado cambiado
-    const updatedProductData = {
-        ...productToDeactivate,
-        estado: "inactivo",
-        // ✅ FIX: Añadimos el 'categoria_id' que encontramos
-        // (Si ya lo tenía, lo usa. Si no, usa el que encontró en la lista)
-        categoria_id: productToDeactivate.categoria_id || (categoriaObj ? categoriaObj.id : undefined)
+            // 3. Manejar la respuesta
+            if (response.ok || response.status === 204) {
+                toast.success("Producto eliminado permanentemente.");
+                
+                // 4. Actualizar la UI (quitar el producto de la lista)
+                setProducts(prevProducts => prevProducts.filter(p => p.id !== id));
+                
+            } else {
+                // Si el backend da un error (ej. 400 o 500)
+                const errorData = await response.json();
+                const errorMsg = errorData.mensaje || 'Error al eliminar el producto.';
+                toast.error(errorMsg);
+            }
+        } catch (err) {
+            console.error("Error deleting product:", err);
+            toast.error("No se pudo eliminar el producto.");
+        }
     };
-
-    try {
-        // 3. Llamar a la función de GUARDAR (PUT)
-        await handleSaveProduct(updatedProductData);
-
-        // 4. Actualizar la UI
-        toast.success("Producto desactivado correctamente.");
-        // (fetchProducts() en handleSaveProduct ya actualiza la lista)
-
-    } catch (err) {
-        console.error("Error deactivating product:", err);
-        // El toast de error ya lo maneja 'handleSaveProduct'
-    }
-};
 
     const handleSaveProduct = async (productData) => {
         const isNew = !productData.id || productData.id <= 0;
