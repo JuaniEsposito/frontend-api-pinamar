@@ -17,7 +17,6 @@ const store = configureStore({
     productos: productosReducer,
     ordenes: ordenesReducer,
     pedidos: pedidosReducer,
-
   },
 });
 

@@ -1,28 +1,32 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchMisPedidos } from "../redux/pedidosSlice"; // Ajusta la ruta
+import { fetchMisPedidos } from "../redux/pedidosSlice"; // Asegúrate que esta ruta sea correcta
 
 export default function MisPedidosPage() {
   const dispatch = useDispatch();
 
+  // Lee los datos del estado de Redux
   const {
     pedidos,
     status: pedidosStatus,
     error,
   } = useSelector((state) => state.pedidos);
 
+  // Llama a la API solo si los datos no han sido cargados
   useEffect(() => {
     if (pedidosStatus === "idle") {
       dispatch(fetchMisPedidos());
     }
   }, [pedidosStatus, dispatch]);
 
+  // Función para formatear la fecha
   const formatFecha = (fechaString) => {
     const opciones = { year: "numeric", month: "long", day: "numeric" };
     return new Date(fechaString).toLocaleDateString("es-ES", opciones);
   };
 
+  // Renderiza el contenido según el estado
   const renderContent = () => {
     if (pedidosStatus === "loading") {
       return <p className="text-center text-gray-500">Cargando pedidos...</p>;
@@ -55,7 +59,6 @@ export default function MisPedidosPage() {
     if (pedidosStatus === "succeeded" && pedidos.length > 0) {
       return (
         <div className="space-y-4">
-          {/* Esto mapea y muestra TODAS las órdenes que encontró el slice */}
           {pedidos.map((pedido) => (
             <div
               key={pedido.ordenId}
@@ -88,7 +91,6 @@ export default function MisPedidosPage() {
                   Total: ${pedido.total.toFixed(2)}
                 </p>
               </div>
-              {/* --- LINK ELIMINADO --- */}
             </div>
           ))}
         </div>
@@ -102,6 +104,6 @@ export default function MisPedidosPage() {
     <div className="max-w-3xl mx-auto mt-10 p-4">
       <h1 className="text-2xl font-bold mb-6 text-primary">Mis Pedidos</h1>
       {renderContent()}
-    </div>
-  );
+    </div>
+  );
 }

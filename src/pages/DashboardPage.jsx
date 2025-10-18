@@ -158,28 +158,40 @@ const ProductFormModal = ({ product, onClose, onSave, categorias, token }) => {
     // Subir imágenes después de crear el producto
     const uploadImages = async (productId) => {
         if (selectedFiles.length === 0) return;
-        setUploadingImages(true); // Muestra el spinner
+        setUploadingImages(true);
         try {
             for (const file of selectedFiles) {
                 const formDataImg = new FormData();
                 formDataImg.append('archivo', file);
 
+                // Use Headers object for compatibility
+                const myHeaders = new Headers();
+                myHeaders.append('Authorization', `Bearer ${token}`);
+
                 const response = await fetch(`http://localhost:8080/producto/${productId}/imagen`, {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
+                    headers: myHeaders, // Use the Headers object
                     body: formDataImg,
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Error al subir imagen: ${file.name}. Failed to fetch.`);
+                    let errorMsg = `Error al subir imagen: ${file.name}.`;
+                    try {
+                        const errData = await response.json();
+                        errorMsg = errData.mensaje || errorMsg;
+                    } catch(e) {
+                        errorMsg = `${errorMsg} (Status: ${response.status})`;
+                    }
+                    throw new Error(errorMsg);
                 }
             }
+            // Optionally: Show success toast after all files are uploaded
+            // toast.success("Imágenes subidas correctamente");
         } catch (err) {
             console.error('Error uploading images:', err);
-            // ✅ FIX: Cambia alert por toast
-            toast.error(`Error al subir imágenes: ${err.message}`);
+            toast.error(err.message || 'Error al subir imágenes.'); // Show specific error
         } finally {
-            setUploadingImages(false); // Oculta el spinner
+            setUploadingImages(false);
         }
     };
 

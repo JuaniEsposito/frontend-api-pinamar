@@ -1,8 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
+// El Thunk: Va a tu backend a buscar los pedidos del usuario logueado.
 export const fetchMisPedidos = createAsyncThunk(
   "pedidos/fetchMisPedidos",
   async (_, { getState }) => {
+    // Asume que la info del usuario está en el slice de 'auth'
     const { auth } = getState();
     const usuarioId = auth.usuario?.id;
 
@@ -10,6 +12,7 @@ export const fetchMisPedidos = createAsyncThunk(
       throw new Error("Usuario no autenticado");
     }
 
+    // Llama a tu endpoint del backend
     const response = await fetch(
       `http://localhost:8080/ordenes/usuarios/${usuarioId}`
     );
@@ -23,12 +26,14 @@ export const fetchMisPedidos = createAsyncThunk(
   }
 );
 
+// Define el estado inicial para este slice
 const initialState = {
   pedidos: [],
-  status: "idle",
+  status: "idle", // 'idle' | 'loading' | 'succeeded' | 'failed'
   error: null,
 };
 
+// Crea el slice que maneja los estados de la llamada
 const pedidosSlice = createSlice({
   name: "pedidos",
   initialState,
@@ -40,7 +45,7 @@ const pedidosSlice = createSlice({
       })
       .addCase(fetchMisPedidos.fulfilled, (state, action) => {
         state.status = "succeeded";
-        
+        // Maneja la estructura de array anidado [[...]] que devuelve tu API
         if (Array.isArray(action.payload) && action.payload.length > 0 && Array.isArray(action.payload[0])) {
           state.pedidos = action.payload[0];
         } else {
