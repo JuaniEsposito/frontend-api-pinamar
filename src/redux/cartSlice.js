@@ -172,5 +172,5 @@ const cartSlice = createSlice({
   },
 });
 
-export const { resetCarrito } = cartSlice.a
+export const { resetCarrito } = cartSlice
 export default cartSlice.reducer;

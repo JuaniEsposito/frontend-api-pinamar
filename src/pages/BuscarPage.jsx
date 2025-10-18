@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
-import { useLocation, Link } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import { useDispatch, useSelector } from "react-redux";
 import { addProductToCart } from "../redux/cartSlice";
+import { fetchProductos } from "../redux/productosSlice";
+import { fetchCategorias } from "../redux/categoriesSlice"; 
 import { toast } from 'react-toastify';
 
 const SORT_OPTIONS = [
@@ -12,6 +14,8 @@ const SORT_OPTIONS = [
   { value: "nombre-asc", label: "Nombre: A-Z" },
   { value: "nombre-desc", label: "Nombre: Z-A" },
 ];
+
+const FALLBACK_IMG = "https://placehold.co/100x100/55aaff/ffffff?text=Producto";
 
 function SkeletonCard() {
   return (
@@ -49,9 +53,9 @@ function ProductQuickView({ product, onClose, onAddToCart }) {
 
   const stock = product.stock ?? 0;
   const description = product.descripcion || product.description || "";
-  const price = product.precio ?? product.price;
-  const name = product.nombre ?? product.name;
-  const brand = product.marca ?? product.brand;
+  const price = product.precio ?? product.price ?? 0;
+  const name = product.nombre ?? product.name ?? "Producto";
+  const brand = product.marca ?? product.brand ?? "Marca";
   const img =
     (product.imagenes &&
       Array.isArray(product.imagenes) &&
@@ -61,7 +65,8 @@ function ProductQuickView({ product, onClose, onAddToCart }) {
       typeof product.imagenes[0] === "string" &&
       product.imagenes[0]) ||
     product.imagenUrl ||
-    product.img;
+    product.img ||
+    FALLBACK_IMG;
 
   function handleBgClick(e) {
     if (e.target === e.currentTarget) onClose();
@@ -79,108 +84,128 @@ function ProductQuickView({ product, onClose, onAddToCart }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={handleBgClick}
       aria-modal="true"
       role="dialog"
     >
-      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-0 relative flex flex-col md:flex-row overflow-hidden">
-        <div className="flex-1 flex items-center justify-center bg-gray-50 p-6 md:p-8">
-          {img ? (
-            <img
-              src={img}
-              alt={name}
-              className="w-40 h-40 md:w-56 md:h-56 object-cover rounded-xl shadow-lg transition-transform duration-300 hover:scale-105"
-              draggable={false}
-            />
-          ) : (
-            <div className="w-40 h-40 md:w-56 md:h-56 bg-gray-100 rounded-xl shadow-lg flex items-center justify-center text-5xl">
-              🛒
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-y-auto relative">
+        
+        {/* BOTÓN DE CERRAR (X) */}
+        <button 
+          className="absolute top-3 right-3 z-20 w-10 h-10 flex items-center justify-center bg-red-500 hover:bg-red-600 rounded-full shadow-lg text-white text-2xl font-bold transition-all" 
+          onClick={onClose} 
+          aria-label="Cerrar"
+        >
+          ×
+        </button>
+
+        {/* Contenido del Modal */}
+        <div className="p-6">
+          {/* Título */}
+          <h2 className="text-2xl font-bold text-primary mb-4 pr-12">{name}</h2>
+          
+          <div className="grid md:grid-cols-5 gap-6">
+            {/* Imagen - Columna izquierda */}
+            <div className="md:col-span-2 flex items-start justify-center bg-gray-50 rounded-xl p-6">
+              <img 
+                src={img} 
+                alt={name} 
+                className="w-full max-w-[200px] h-auto object-contain rounded-lg shadow-lg" 
+                draggable={false}
+              />
             </div>
-          )}
-        </div>
-        <div className="flex-1 flex flex-col p-6 md:p-8">
-          <button
-            className="absolute top-3 right-3 text-gray-400 hover:text-primary text-2xl font-bold"
-            onClick={onClose}
-            aria-label="Cerrar"
-            tabIndex={0}
-          >
-            ×
-          </button>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="font-bold text-xl text-dark">{name}</span>
-            {product.descuento > 0 && (
-              <span className="bg-accent text-dark text-xs font-bold px-2 py-0.5 rounded-full shadow">
-                {product.descuento}% OFF
-              </span>
-            )}
-          </div>
-          <div className="text-sm text-muted mb-1">{brand}</div>
-          <div className="text-primary font-bold text-2xl mb-1">${price}</div>
-          <div className="text-xs text-gray-400 mb-3">
-            Precio sin impuestos nacionales: $
-            {price ? Math.round(price / 1.21) : 0}
-          </div>
-          <div className="text-gray-600 text-sm mb-4">{description}</div>
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-xs font-medium text-secondary">En stock</span>
-          </div>
-          <div className="flex items-center gap-2 mb-6">
-            <label htmlFor="qty" className="text-sm text-gray-700">
-              Cantidad:
-            </label>
-            <input
-              id="qty"
-              type="number"
-              min={1}
-              max={stock}
-              value={qty}
-              onChange={(e) =>
-                setQty(Math.max(1, Math.min(stock, Number(e.target.value))))
-              }
-              className="w-16 px-2 py-1 border border-gray-200 rounded text-center focus:ring-2 focus:ring-primary"
-            />
-          </div>
-          <button
-            className={`bg-primary text-white font-semibold px-6 py-3 rounded-lg shadow transition text-base w-full flex items-center justify-center gap-2 relative
-              ${added ? "bg-green-600" : "hover:bg-secondary"}
-              ${loading ? "opacity-70 cursor-not-allowed" : ""}
-            `}
-            onClick={handleAdd}
-            disabled={loading}
-          >
-            {added ? (
-              <span className="inline-flex items-center gap-1">
-                <svg
-                  className="w-4 h-4 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                  viewBox="0 0 24 24"
+
+            {/* Información - Columna derecha */}
+            <div className="md:col-span-3 flex flex-col gap-4">
+              <div>
+                <span className="text-sm text-gray-500">{brand}</span>
+              </div>
+
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <span className="text-4xl font-bold text-primary">${typeof price === 'number' ? price.toFixed(2) : price}</span>
+                {product.descuento > 0 && (
+                  <span className="bg-red-100 text-red-600 text-sm font-bold px-3 py-1 rounded-full">
+                    {product.descuento}% OFF
+                  </span>
+                )}
+              </div>
+
+              <div className="text-sm text-gray-500">
+                Precio sin IVA: ${price ? Math.round(price / 1.21) : 0}
+              </div>
+
+              <div className="border-t border-gray-200 pt-4">
+                <h3 className="font-semibold text-lg mb-2 text-primary">Descripción</h3>
+                <p className="text-gray-600">{description || 'Sin descripción disponible'}</p>
+              </div>
+
+              <div className="border-t border-gray-200 pt-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Stock disponible:</span>
+                  <span className={`text-sm font-bold ${stock > 10 ? 'text-green-600' : 'text-orange-600'}`}>
+                    {stock} unidades
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 mt-2">
+                <label htmlFor="qty" className="text-sm text-gray-700">Cantidad:</label>
+                <input 
+                  id="qty" 
+                  type="number" 
+                  min={1} 
+                  max={stock} 
+                  value={qty} 
+                  onChange={(e) => setQty(Math.max(1, Math.min(stock, Number(e.target.value))))} 
+                  className="w-16 px-2 py-1 border border-gray-200 rounded text-center focus:ring-2 focus:ring-primary"
+                />
+              </div>
+
+              {/* Botón Agregar al Carrito */}
+              <div className="mt-4">
+                <button
+                  className={`w-full bg-primary text-white font-semibold px-6 py-3 rounded-lg shadow-md transition text-lg flex items-center justify-center gap-2 relative
+                    ${added ? "bg-green-600" : "hover:bg-secondary"}
+                    ${loading ? "opacity-70 cursor-not-allowed" : ""}
+                  `}
+                  onClick={handleAdd}
+                  disabled={loading}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                ¡Agregado!
-              </span>
-            ) : loading ? (
-              "Agregando..."
-            ) : (
-              <>
-                <span>Agregar al carrito</span>
-                <span className="font-bold">×{qty}</span>
-              </>
-            )}
-            {units > 0 && (
-              <span className="absolute right-3 bottom-2 bg-[#6DB33F]-100 text-[#6DB33F]-700 text-xs px-2 py-0.5 rounded-full font-bold pointer-events-none">
-                x{units}
-              </span>
-            )}
-          </button>
+                  {added ? (
+                    <span className="inline-flex items-center gap-1">
+                      <svg
+                        className="w-4 h-4 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2.5}
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      ¡Agregado!
+                    </span>
+                  ) : loading ? (
+                    "Agregando..."
+                  ) : (
+                    <>
+                      <span>Agregar al carrito</span>
+                      <span className="font-bold">×{qty}</span>
+                    </>
+                  )}
+                  {units > 0 && (
+                    <span className="absolute right-3 bottom-2 bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-bold pointer-events-none">
+                      x{units}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -193,14 +218,21 @@ function useQueryParam(name) {
 }
 
 export default function BuscarPage() {
-  const categoriaIdParam = useQueryParam("categoriaId");
   const dispatch = useDispatch();
-  const searchParam = useQueryParam("search");
-  const qParam = useQueryParam("q"); // ✅ Búsqueda general desde el navbar
   
+  // LEER DESDE REDUX
+  const { productos: productosRedux, loading: loadingProductos, error: errorProductos } = useSelector((state) => state.productos);
+  const { categoriasParent, loading: loadingCategorias } = useSelector((state) => state.categorias); // ✅ NUEVO
+  const cart = useSelector((state) => state.cart.items);
+  
+  // PARÁMETROS DE URL
+  const categoriaIdParam = useQueryParam("categoriaId");
+  const searchParam = useQueryParam("search");
+  const qParam = useQueryParam("q");
+  
+  // ESTADOS LOCALES
   const [query, setQuery] = useState(searchParam || "");
   const [marcas, setMarcas] = useState([]);
-  const [marcasDisponibles, setMarcasDisponibles] = useState([]);
   const [precioMin, setPrecioMin] = useState("");
   const [precioMax, setPrecioMax] = useState("");
   const [promo, setPromo] = useState(false);
@@ -208,195 +240,125 @@ export default function BuscarPage() {
   const [subcategorias, setSubcategorias] = useState([]);
   const [sortBy, setSortBy] = useState("relevancia");
   const [quickView, setQuickView] = useState(null);
-  const [productos, setProductos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [categoriasApi, setCategoriasApi] = useState([]);
 
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(12);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalElements, setTotalElements] = useState(0);
   const [addedId, setAddedId] = useState(null);
-  const [unitsMap, setUnitsMap] = useState({});
 
-  // ✅ Cargar categorías al montar
-  useEffect(() => {
-    async function fetchCategorias() {
-      try {
-        const res = await fetch("http://localhost:8080/categorias/all");
-        if (!res.ok) throw new Error("Error al cargar categorías");
-        
-        const data = await res.json();
-        console.log("📂 Categorías recibidas:", data);
-        
-        const categoriasParent = Array.isArray(data)
-          ? data.filter((cat) => cat.parentId === null || cat.parentId === undefined)
-          : [];
-          
-        console.log("📂 Categorías padre filtradas:", categoriasParent);
-        setCategoriasApi(categoriasParent);
-        
-      } catch (err) {
-        console.error("❌ Error al cargar categorías:", err);
-        setCategoriasApi([]);
+  // Unidades en el carrito
+  const unitsMap = useMemo(() => {
+    const map = {};
+    if (cart) {
+      for (const item of cart) {
+        map[item.id] = item.quantity;
       }
     }
-    fetchCategorias();
-  }, []);
+    return map;
+  }, [cart]);
 
-  // ✅ Si viene categoriaId por URL, seleccionarla automáticamente
+  //  Cargar categorías al montar (USANDO REDUX)
   useEffect(() => {
-    if (categoriaIdParam && categoriasApi.length > 0) {
+    dispatch(fetchCategorias());
+  }, [dispatch]);
+
+  // Si viene categoriaId por URL, seleccionarla automáticamente
+  useEffect(() => {
+    if (categoriaIdParam && categoriasParent.length > 0) {
       setCategorias([String(categoriaIdParam)]);
       setPage(0);
     }
-  }, [categoriaIdParam, categoriasApi]);
+  }, [categoriaIdParam, categoriasParent]);
 
-  // ✅ FETCH DE PRODUCTOS CON BÚSQUEDA MEJORADA
+  //  FETCH DE PRODUCTOS USANDO REDUX
   useEffect(() => {
-    async function fetchProductos() {
-      setLoading(true);
-      setError("");
-      try {
-        const baseUrl = "http://localhost:8080/producto";
-        const searchParams = new URLSearchParams();
-        
-        // ✅ DIFERENCIAMOS: búsqueda general vs filtros específicos
-        const esBusquedaGeneral = qParam && qParam.trim();
-        
-        if (esBusquedaGeneral) {
-          // ✅ Si es búsqueda general, NO enviamos el parámetro 'nombre' al backend
-          // Traemos MÁS productos para filtrar en el frontend
-          searchParams.append('page', 0);
-          searchParams.append('size', 200); // ✅ Traer hasta 200 productos
-        } else {
-          // Búsqueda específica del sidebar
-          if (query && query.trim()) {
-            searchParams.append('nombre', query.trim());
-          }
-          
-          searchParams.append('page', page);
-          searchParams.append('size', pageSize);
-        }
-        
-        // ✅ Filtros que siempre se aplican
-        if (marcas.length > 0) {
-          searchParams.append('marca', marcas.join(','));
-        }
-        
-        if (categorias.length > 0) {
-          const categoriaId = parseInt(categorias[0], 10);
-          if (!isNaN(categoriaId) && categoriaId > 0) {
-            searchParams.append('categoriaId', categoriaId);
-          }
-        }
-        
-        if (subcategorias.length > 0) {
-          searchParams.append('subcategoriaId', subcategorias.join(','));
-        }
-        
-        if (precioMin && precioMin.trim()) {
-          searchParams.append('precioMin', precioMin);
-        }
-        
-        if (precioMax && precioMax.trim()) {
-          searchParams.append('precioMax', precioMax);
-        }
-        
-        const finalUrl = `${baseUrl}?${searchParams.toString()}`;
-        
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('🔍 PARÁMETRO Q:', qParam);
-        console.log('🔍 BÚSQUEDA SIDEBAR:', query);
-        console.log('🔍 CATEGORÍAS SELECCIONADAS:', categorias);
-        console.log('🌐 URL FINAL:', finalUrl);
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        
-        const res = await fetch(finalUrl);
-        
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        }
-        
-        const data = await res.json();
-        console.log('📦 RESPUESTA DEL SERVIDOR:', data);
-        
-        let productosArr = Array.isArray(data.productos) ? data.productos : [];
-        
-        // ✅ Si hay búsqueda general (q), filtrar en el FRONTEND por nombre, marca Y categoría
-        if (esBusquedaGeneral) {
-          const searchLower = qParam.trim().toLowerCase();
-          console.log('🔎 Filtrando en frontend por:', searchLower);
-          
-          productosArr = productosArr.filter(p => {
-            const nombreMatch = p.nombre && p.nombre.toLowerCase().includes(searchLower);
-            const marcaMatch = p.marca && p.marca.toLowerCase().includes(searchLower);
-            const categoriaMatch = p.categoria && p.categoria.toLowerCase().includes(searchLower);
-            
-            return nombreMatch || marcaMatch || categoriaMatch;
-          });
-          
-          console.log('✅ Productos filtrados:', productosArr.length);
-        }
-        
-        setProductos(productosArr);
-
-        // Extraer marcas disponibles
-        const marcasSet = new Set();
-        productosArr.forEach((p) => {
-          if (p.marca && typeof p.marca === "string" && p.marca.trim() !== "") {
-            marcasSet.add(p.marca.trim());
-          }
-        });
-        setMarcasDisponibles(Array.from(marcasSet).sort((a, b) => a.localeCompare(b)));
-
-        // ✅ Paginación: si es búsqueda general, calculamos en base a resultados filtrados
-        const totalProductos = productosArr.length;
-        setTotalElements(totalProductos);
-        setTotalPages(Math.ceil(totalProductos / pageSize) || 1);
-        
-      } catch (err) {
-        console.error('❌ ERROR AL CARGAR PRODUCTOS:', err);
-        setError(`No se pudieron cargar los productos: ${err.message}`);
-        setProductos([]);
-        setMarcasDisponibles([]);
-        setTotalPages(1);
-        setTotalElements(0);
-      } finally {
-        setLoading(false);
+    const params = { page: 0, size: 200 };
+    
+    if (marcas.length > 0) {
+      params.marca = marcas.join(',');
+    }
+    
+    if (categorias.length > 0) {
+      const categoriaId = parseInt(categorias[0], 10);
+      if (!isNaN(categoriaId) && categoriaId > 0) {
+        params.categoriaId = categoriaId;
       }
     }
     
-    fetchProductos();
-  }, [qParam, query, marcas, categorias, subcategorias, precioMin, precioMax, page, pageSize]);
+    if (subcategorias.length > 0) {
+      params.subcategoriaId = subcategorias.join(',');
+    }
+    
+    if (precioMin && precioMin.trim()) {
+      params.precioMin = precioMin;
+    }
+    
+    if (precioMax && precioMax.trim()) {
+      params.precioMax = precioMax;
+    }
+    
+    dispatch(fetchProductos(params));
+  }, [dispatch, marcas, categorias, subcategorias, precioMin, precioMax]);
 
-  // ✅ Sincronizar query con parámetros de URL
+  //  Sincronizar query con parámetros de URL
   useEffect(() => {
     setQuery(searchParam || "");
   }, [searchParam]);
 
-  // ✅ Filtrar y ordenar productos
-  const productosFiltrados = [...productos]
-    .filter((p) => Number(p.stock) > 0)
-    .filter((p) => !promo || Number(p.descuento) > 0)
-    .sort((a, b) => {
+  //  FILTRAR Y ORDENAR PRODUCTOS
+  const { productosFiltrados, totalElements, totalPages } = useMemo(() => {
+    if (loadingProductos) return { productosFiltrados: [], totalElements: 0, totalPages: 1 };
+
+    let productos = Array.isArray(productosRedux) ? [...productosRedux] : [];
+    
+    const searchTerm = qParam?.trim() || query?.trim();
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      productos = productos.filter(p => {
+        const nombreMatch = p.nombre && p.nombre.toLowerCase().includes(searchLower);
+        const marcaMatch = p.marca && p.marca.toLowerCase().includes(searchLower);
+        const categoriaMatch = p.categoria && p.categoria.toLowerCase().includes(searchLower);
+        return nombreMatch || marcaMatch || categoriaMatch;
+      });
+    }
+    
+    productos = productos.filter((p) => Number(p.stock) > 0);
+    
+    if (promo) {
+      productos = productos.filter((p) => Number(p.descuento) > 0);
+    }
+    
+    productos.sort((a, b) => {
       if (sortBy === "precio-asc") return a.precio - b.precio;
       if (sortBy === "precio-desc") return b.precio - a.precio;
-      if (sortBy === "nombre-asc")
-        return (a.nombre || "").localeCompare(b.nombre || "");
-      if (sortBy === "nombre-desc")
-        return (b.nombre || "").localeCompare(a.nombre || "");
+      if (sortBy === "nombre-asc") return (a.nombre || "").localeCompare(b.nombre || "");
+      if (sortBy === "nombre-desc") return (b.nombre || "").localeCompare(a.nombre || "");
       return 0;
     });
 
-  // ✅ PAGINACIÓN EN EL FRONTEND (solo si hay búsqueda general)
-  const esBusquedaGeneral = qParam && qParam.trim();
-  const productosPaginados = esBusquedaGeneral 
-    ? productosFiltrados.slice(page * pageSize, (page + 1) * pageSize)
-    : productosFiltrados;
+    const totalCount = productos.length;
+    const startIndex = page * pageSize;
+    const endIndex = startIndex + pageSize;
 
-  // ✅ HANDLERS
+    return {
+      productosFiltrados: productos.slice(startIndex, endIndex),
+      totalElements: totalCount,
+      totalPages: Math.ceil(totalCount / pageSize) || 1
+    };
+  }, [productosRedux, qParam, query, promo, sortBy, page, pageSize, loadingProductos]);
+
+  //  Marcas disponibles
+  const marcasDisponibles = useMemo(() => {
+    if (!productosRedux) return [];
+    const marcasSet = new Set();
+    productosRedux.forEach((p) => {
+      if (p.marca && typeof p.marca === "string" && p.marca.trim() !== "") {
+        marcasSet.add(p.marca.trim());
+      }
+    });
+    return Array.from(marcasSet).sort((a, b) => a.localeCompare(b));
+  }, [productosRedux]);
+
+  // HANDLERS
   function handleMarcaChange(marca) {
     setMarcas((marcas) =>
       marcas.includes(marca)
@@ -407,18 +369,10 @@ export default function BuscarPage() {
   }
 
   function handleCategoriaChange(catId) {
-    console.log('🔘 CLICK EN CATEGORÍA:', catId);
-    
     setCategorias((prevCategorias) => {
       const isAlreadySelected = prevCategorias.includes(catId);
-      const newCategorias = isAlreadySelected ? [] : [catId];
-      
-      console.log('📋 CATEGORÍAS ANTERIOR:', prevCategorias);
-      console.log('📋 CATEGORÍAS NUEVA:', newCategorias);
-      
-      return newCategorias;
+      return isAlreadySelected ? [] : [catId];
     });
-    
     setPage(0);
   }
 
@@ -446,13 +400,13 @@ export default function BuscarPage() {
 
   const handleAddToCartWithAnim = async (producto, cantidad) => {
     if (!producto) return;
-
     await handleAddToCart(producto, cantidad);
-
-    setUnitsMap((prev) => ({ ...prev, [producto.id]: (prev[producto.id] || 0) + cantidad }));
     setAddedId(producto.id);
     setTimeout(() => setAddedId(null), 1200);
   };
+
+  const loading = loadingProductos || loadingCategorias;
+  const error = errorProductos;
 
   return (
     <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-6 py-8">
@@ -474,7 +428,9 @@ export default function BuscarPage() {
               <label className="block text-sm font-medium mb-1">Marca</label>
               <div className="flex flex-col gap-1 max-h-32 overflow-y-auto">
                 {marcasDisponibles.length === 0 ? (
-                  <span className="text-xs text-gray-400">No hay marcas</span>
+                  <span className="text-xs text-gray-400">
+                    {loadingProductos ? "Cargando..." : "No hay marcas"}
+                  </span>
                 ) : (
                   marcasDisponibles.map((m) => (
                     <label key={m} className="flex items-center gap-2 text-sm">
@@ -496,10 +452,12 @@ export default function BuscarPage() {
               </label>
               <div>
                 <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
-                  {categoriasApi.length === 0 ? (
-                    <span className="text-xs text-gray-400">No hay categorías</span>
+                  {categoriasParent.length === 0 ? (
+                    <span className="text-xs text-gray-400">
+                      {loadingCategorias ? "Cargando..." : "No hay categorías"}
+                    </span>
                   ) : (
-                    categoriasApi.map((c) => (
+                    categoriasParent.map((c) => (
                       <label
                         key={c.id}
                         className="flex items-center gap-2 text-sm"
@@ -547,7 +505,7 @@ export default function BuscarPage() {
         </aside>
         <main className="flex-1">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
-            <h2 className="text-xl font-semibold text-dark">Resultados</h2>
+            <h2 className="text-xl font-semibold text-dark">Resultados ({totalElements})</h2>
             <div className="flex items-center gap-2">
               <label htmlFor="sortBy" className="text-sm text-gray-700">
                 Ordenar por:
@@ -583,14 +541,13 @@ export default function BuscarPage() {
               </select>
             </div>
           </div>
+          
           {loading ? (
             <div
               className="grid"
               style={{
                 gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
                 gap: "2rem 2.5rem",
-                justifyContent: "center",
-                alignItems: "stretch",
               }}
             >
               {Array.from({ length: pageSize }).map((_, i) => (
@@ -598,8 +555,8 @@ export default function BuscarPage() {
               ))}
             </div>
           ) : error ? (
-            <div className="text-red-500">{error}</div>
-          ) : productosPaginados.length === 0 ? (
+            <div className="text-red-500 p-3 bg-red-100 rounded">{error}</div>
+          ) : productosFiltrados.length === 0 ? (
             <div className="text-gray-500">
               No se encontraron productos con esos filtros.
             </div>
@@ -610,11 +567,9 @@ export default function BuscarPage() {
                 style={{
                   gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
                   gap: "2rem 2.5rem",
-                  justifyContent: "center",
-                  alignItems: "stretch",
                 }}
               >
-                {productosPaginados.map((p, i) => (
+                {productosFiltrados.map((p, i) => (
                   <ProductCard
                     key={p.id || i}
                     id={p.id}
@@ -657,7 +612,7 @@ export default function BuscarPage() {
                     →
                   </button>
                   <span className="ml-4 text-xs text-gray-500">
-                    Mostrando {productosPaginados.length} de{" "}
+                    Mostrando {productosFiltrados.length} de{" "}
                     {totalElements} productos
                   </span>
                 </div>
