@@ -225,29 +225,33 @@ export default function BuscarPage() {
     }
   }, [categoriaIdParam, categoriasApi]);
 
-  useEffect(() => {
-    async function fetchCategorias() {
-      try {
-        const res = await fetch("http://localhost:4040/categorias");
-        const data = await res.json();
-        setCategoriasApi(
-          Array.isArray(data.content)
-            ? data.content.filter((cat) => cat.parentId === null)
-            : []
-        );
-      } catch (err) {
-        setCategoriasApi([]);
-      }
+ useEffect(() => {
+  async function fetchCategorias() {
+    try {
+      // ✅ Usar el endpoint /all que ya tenés en el backend
+      const res = await fetch("http://localhost:8080/categorias/all");
+      const data = await res.json();
+      
+      // ✅ La respuesta de /all ya es un array directo
+      setCategoriasApi(
+        Array.isArray(data)
+          ? data.filter((cat) => cat.parentId === null || cat.parentId === undefined)
+          : []
+      );
+    } catch (err) {
+      console.error("Error al cargar categorías:", err);
+      setCategoriasApi([]);
     }
-    fetchCategorias();
-  }, []);
+  }
+  fetchCategorias();
+}, []);
 
   useEffect(() => {
     async function fetchProductos() {
       setLoading(true);
       setError("");
       try {
-        let url = "http://localhost:4040/producto";
+        let url = "http://localhost:8080/producto";
         const params = [];
         if (query) params.push(`nombre=${encodeURIComponent(query)}`);
         if (marcas.length > 0) params.push(`marca=${marcas.join(",")}`);
@@ -264,7 +268,9 @@ export default function BuscarPage() {
         const res = await fetch(url);
         if (!res.ok) throw new Error("Error al cargar productos");
         const data = await res.json();
-        const productosArr = Array.isArray(data.content) ? data.content : [];
+
+        // ✅ CORRECCIÓN: El backend devuelve { mensaje, total, productos }
+        const productosArr = Array.isArray(data.productos) ? data.productos : [];
         setProductos(productosArr);
 
         const marcasSet = new Set();
@@ -276,12 +282,12 @@ export default function BuscarPage() {
         setMarcasDisponibles(Array.from(marcasSet).sort((a, b) => a.localeCompare(b)));
 
         setTotalPages(
-          data.totalPages ||
-            Math.ceil(
-              (data.totalElements || data.content?.length || 0) / pageSize
-            )
-        );
-        setTotalElements(data.totalElements || 0);
+        data.totalPages ||
+          Math.ceil(
+            (data.total || productosArr.length || 0) / pageSize)
+                                        );
+            setTotalElements(data.total || 0);
+      
       } catch (err) {
         setError("No se pudieron cargar los productos.");
         setProductos([]);

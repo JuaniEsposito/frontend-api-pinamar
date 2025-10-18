@@ -3,7 +3,7 @@ export const fetchOrdenesUsuario = createAsyncThunk(
   "orden/fetchOrdenesUsuario",
   async ({ token, usuarioId }, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:4040/ordenes/usuarios/${usuarioId}`, {
+      const res = await fetch(`http://localhost:8080/ordenes/usuarios/${usuarioId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -31,7 +31,7 @@ export const crearOrden = createAsyncThunk(
   async ({ token, direccionId }, { rejectWithValue }) => {
     try {
       const body = direccionId ? { direccionId } : {};
-      const res = await fetch("http://localhost:4040/ordenes", {
+      const res = await fetch("http://localhost:8080/ordenes", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -51,7 +51,7 @@ export const fetchPedidoPorId = createAsyncThunk(
   "orden/fetchPedidoPorId",
   async ({ token, usuarioId, pedidoId }, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:4040/ordenes/${pedidoId}/usuarios/${usuarioId}`, {
+      const res = await fetch(`http://localhost:8080/ordenes/${pedidoId}/usuarios/${usuarioId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
