@@ -15,7 +15,6 @@ export default function AdminRoute({ children }) {
     return children;
   }
 
-  // Si no cumple las condiciones, lo redirigimos a la página de inicio.
-  // 'replace' evita que el usuario pueda volver a la página de admin con el botón "atrás".
+  // Si no cumple las condiciones, lo redirigimos a la página de inicio.'replace' evita que el usuario pueda volver a la página de admin con el botón "atrás".
   return <Navigate to="/" state={{ from: location }} replace />;
 }
