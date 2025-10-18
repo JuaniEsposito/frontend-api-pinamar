@@ -48,12 +48,14 @@ export default function FinalizarCompraPage() {
 
     const handlePagar = async (e, { totalFinal, totalOriginal, descuento }) => {
         e.preventDefault();
-        // setError(""); // Limpieza de error se hace en el thunk
+        //setLoading(true);
+        setError("");
 
         const direccionSeleccionada = direcciones.find(d => d.id === parseInt(direccionId));
 
         if (envio && !direccionSeleccionada) {
             setError("Por favor, selecciona una dirección de envío.");
+            //setLoading(false);
             return;
         }
 
@@ -69,11 +71,21 @@ export default function FinalizarCompraPage() {
             })),
             // ... otros datos del pago si son necesarios en la API (ej. tarjeta)
         }));
+
+        //setLoading(false);
         
         // Manejo del resultado del Thunk
         if (checkoutThunk.fulfilled.match(resultAction)) {
             const ordenConfirmada = resultAction.payload;
-            navigate(`/mis-pedidos/${ordenConfirmada.id}`, { state: { orden: ordenConfirmada } });
+            navigate(`/mis-pedidos/${ordenConfirmada.ordenId}`, { 
+              state: { orden: 
+                {
+                  ...ordenConfirmada,
+                  totalOriginal: totalOriginal, 
+                  descuentoTotal: descuento,
+                  metodoPago: "Tarjeta de Crédito",
+                }
+               } });
         } else {
              // El error está en el store de Redux (state.cart.error), pero lo actualizamos localmente si es necesario
              // Si el thunk devolvió un error específico (ej. stock), se lo pasamos al StepPago

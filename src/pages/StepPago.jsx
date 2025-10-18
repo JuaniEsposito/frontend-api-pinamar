@@ -102,12 +102,16 @@ export default function StepPago({
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        console.log("StepPago: handleSubmit triggered.");
+        console.log("StepPago: Card validation result:", validateCard());
         if (!validateCard()) return;
         // Navegar a /carrito si no hay productos (aunque el padre debería manejarlo)
         if (!cart || cart.length === 0) {
+          console.warn("StepPago: Cart is empty, navigating back.");
             navigate("/carrito");
             return;
         }
+        console.log("StepPago: Calling handlePagar from parent...");
         handlePagar(e, { totalFinal, totalOriginal, descuento });
     };
 
