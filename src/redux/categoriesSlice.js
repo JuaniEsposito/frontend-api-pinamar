@@ -1,15 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-// Thunks
 export const fetchCategorias = createAsyncThunk(
   "categorias/fetchCategorias",
   async (_, { rejectWithValue }) => {
     try {
-      // 👇 Cambié el puerto y el endpoint
       const res = await fetch("http://localhost:8080/categorias/all");
       if (!res.ok) throw new Error("Error al cargar categorías");
       const data = await res.json();
-      // El endpoint /all devuelve directamente un array
       return Array.isArray(data) ? data : [];
     } catch (e) {
       return rejectWithValue(e.message || "No se pudieron cargar las categorías.");

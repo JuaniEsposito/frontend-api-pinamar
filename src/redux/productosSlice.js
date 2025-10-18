@@ -1,12 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import api from "../api"; // ✅ Usamos la instancia de Axios configurada (apunta a :8080)
+import api from "../api";
 
-// Traer productos (con filtros opcionales)
 export const fetchProductos = createAsyncThunk(
   "productos/fetchProductos",
   async (params = {}, { rejectWithValue }) => {
-    try {
-      // ✅ Usamos la ruta relativa y la instancia 'api'
+    try {//instancia api
       let url = "/producto"; 
       const query = [];
       if (params.nombre) query.push(`nombre=${encodeURIComponent(params.nombre)}`);
@@ -21,7 +19,7 @@ export const fetchProductos = createAsyncThunk(
       if (params.promo) query.push(`promo=true`);
       if (query.length > 0) url += "?" + query.join("&");
       
-      const res = await api.get(url); // ✅ Llamada corregida a :8080
+      const res = await api.get(url);
       
       if (res.status !== 200) throw new Error("No se pudieron cargar los productos.");
       return res.data;
@@ -31,12 +29,11 @@ export const fetchProductos = createAsyncThunk(
   }
 );
 
-// Traer un producto por su ID
 export const fetchProductoById = createAsyncThunk(
   "productos/fetchProductoById",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await api.get(`/producto/id/${id}`); // ✅ Usamos la ruta relativa y 'api'
+      const res = await api.get(`/producto/id/${id}`);
       if (res.status !== 200) throw new Error("No se pudo cargar el producto.");
       return res.data.producto;
     } catch (e) {
@@ -45,12 +42,11 @@ export const fetchProductoById = createAsyncThunk(
   }
 );
 
-// THUNK NUEVO PARA PRODUCTOS RELACIONADOS
 export const fetchRelatedProducts = createAsyncThunk(
   "productos/fetchRelatedProducts",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await api.get(`/producto/id/${id}/relacionados`); // ✅ Usamos la ruta relativa y 'api'
+      const res = await api.get(`/producto/id/${id}/relacionados`);
       if (res.status !== 200) throw new Error("No se pudo cargar los productos relacionados.");
       return res.data;
     } catch (e) {
@@ -63,7 +59,7 @@ export const deleteProducto = createAsyncThunk(
   "productos/deleteProducto",
   async ({ id, token }, { rejectWithValue }) => {
     try {
-      const res = await api.delete(`/producto/${id}`, { // ✅ Usamos la ruta relativa y 'api'
+      const res = await api.delete(`/producto/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.status === 200) {
@@ -79,8 +75,7 @@ export const createProducto = createAsyncThunk(
   "productos/createProducto",
   async ({ data, token }, { rejectWithValue }) => {
     try {
-      const res = await api.post( // ✅ Usamos la ruta relativa y 'api'
-        `/producto`,
+      const res = await api.post(`/producto`,
         data,
         {
           headers: {
@@ -103,8 +98,7 @@ export const updateProducto = createAsyncThunk(
   "productos/updateProducto",
   async ({ id, data, token }, { rejectWithValue }) => {
     try {
-      const res = await api.put( // ✅ Usamos la ruta relativa y 'api'
-        `/producto/${id}`,
+      const res = await api.put(`/producto/${id}`,
         data,
         {
           headers: {
@@ -179,7 +173,7 @@ const productosSlice = createSlice({
         state.productoDetalle = null;
       })
       .addCase(fetchRelatedProducts.pending, (state) => {
-        // Opcional: manejar un estado de carga específico si es necesario
+       
       })
       .addCase(fetchRelatedProducts.fulfilled, (state, action) => {
         state.relacionados = action.payload;

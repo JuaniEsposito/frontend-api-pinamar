@@ -3,7 +3,6 @@ import axios from "axios";
 
 const API_URL = "http://localhost:8080/usuarios"; 
 
-// Helper para manejar errores de Axios y devolver un mensaje limpio
 const getAxiosErrorMessage = (error) => {
   if (error.response && error.response.data) {
     return error.response.data.mensaje || error.response.data.message || "Error del servidor.";
@@ -11,9 +10,7 @@ const getAxiosErrorMessage = (error) => {
   return error.message || "Error de red o desconocido.";
 };
 
-// -----------------------------------------------------------------
-// Login (Se mantiene sin cambios)
-// -----------------------------------------------------------------
+// login 
 export const loginThunk = createAsyncThunk(
   "auth/login",
   async ({ username, password }, { rejectWithValue }) => {
@@ -21,7 +18,6 @@ export const loginThunk = createAsyncThunk(
       const response = await axios.post(`${API_URL}/login`, { username, password });
       const data = response.data;
       
-      // Persistir en localStorage
       localStorage.setItem(
         "auth",
         JSON.stringify({ token: data.token, usuario: data.usuario })
@@ -34,52 +30,36 @@ export const loginThunk = createAsyncThunk(
   }
 );
 
-// -----------------------------------------------------------------
-// Logout (Se mantiene sin cambios)
-// -----------------------------------------------------------------
+// logout
 export const logoutThunk = createAsyncThunk("auth/logout", async () => {
   localStorage.removeItem("auth");
 });
 
-// -----------------------------------------------------------------
-// 🔑 Registro de usuario (Login Mock implementado)
-// -----------------------------------------------------------------
 export const registerThunk = createAsyncThunk(
   "auth/register",
   async (userData, { rejectWithValue }) => {
     try {
-      // 1. Llamada de REGISTRO
       const response = await axios.post(API_URL, userData);
-      
-      // 🔑 CAMBIO CLAVE AQUÍ: Acceder a la propiedad 'data' de la respuesta del backend
-      const usuarioCreado = response.data.data; // <-- ¡Esto es lo que necesitamos!
-      
-      // 2. SIMULAR AUTENTICACIÓN: Generar token mock
-      // Aseguramos que usuarioCreado sea un objeto antes de acceder a username
+
+      const usuarioCreado = response.data.data;
       const username = usuarioCreado?.username || 'user_sin_nombre';
       const mockToken = `mock_token_for_${username}_${Date.now()}`;
 
-      // 3. Crear objeto de autenticación
       const authData = {
           token: mockToken, 
           usuario: usuarioCreado 
       };
 
-      // 4. Persistir en localStorage y devolver
       localStorage.setItem("auth", JSON.stringify(authData));
       
       return authData; 
 
     } catch (e) {
-      // ... manejo de errores ...
       return rejectWithValue(getAxiosErrorMessage(e) || "Error al registrar usuario.");
     }
   }
 );
 
-// -----------------------------------------------------------------
-// Resto de Thunks (Verificar email, Cambiar contraseña)
-// -----------------------------------------------------------------
 export const verificarEmailThunk = createAsyncThunk(
   "auth/verificarEmail",
   async (email, { rejectWithValue }) => {
@@ -126,10 +106,6 @@ export const cambiarPasswordLogThunk = createAsyncThunk(
   }
 );
 
-// -----------------------------------------------------------------
-// Estado Inicial y Slice (ExtraReducers no necesitan cambio, ya que esperan {token, usuario})
-// -----------------------------------------------------------------
-
 const initialState = (() => {
   const persisted = localStorage.getItem("auth");
   if (persisted) {
@@ -171,7 +147,7 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Login
+      // login
       .addCase(loginThunk.pending, (state) => {
         state.loading = true;
         state.error = "";
@@ -190,21 +166,20 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.error = action.payload;
       })
-      // Logout
+      // logout
       .addCase(logoutThunk.fulfilled, (state) => {
         state.token = null;
         state.usuario = null;
         state.isAuthenticated = false;
         state.error = "";
       })
-      // Registro (Ahora usa los datos del mock)
+      // registro
       .addCase(registerThunk.pending, (state) => {
         state.loading = true;
         state.error = "";
       })
       .addCase(registerThunk.fulfilled, (state, action) => {
         state.loading = false;
-        // Usa los datos de autenticación mock/real devueltos
         state.token = action.payload.token; 
         state.usuario = action.payload.usuario;
         state.isAuthenticated = true;
@@ -215,7 +190,6 @@ const authSlice = createSlice({
         state.error = action.payload;
       
       })
-      // Resto de casos (verificarEmail, cambiarPassword)
        .addCase(verificarEmailThunk.pending, (state) => { state.loading = true; state.error = ""; })
        .addCase(verificarEmailThunk.fulfilled, (state) => { state.loading = false; state.error = ""; })
        .addCase(verificarEmailThunk.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
